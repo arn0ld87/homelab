@@ -1,0 +1,61 @@
+# homelab
+
+Specs und Runbooks für das eigene Setup — Tailnet, VPS, CachyOS-Desktop,
+FritzBox. Jeder Infrastruktur-Plan landet hier *bevor* er auf die
+Maschinen kommt. Audit-fähig statt undokumentiert gewachsen.
+
+## Struktur
+
+```
+homelab/
+├── index.html              Übersichts-Seite (HTML-Build der Pläne)
+├── assets/                 Design-Tokens, CSS, Fonts (Anthropic-Vorlage)
+│   ├── colors_and_type.css
+│   ├── doc.css
+│   └── fonts/
+└── specs/                  Markdown + HTML pro Plan
+    └── YYYY-MM-DD-<slug>-design.{md,html}
+```
+
+## Konvention
+
+- **Source of Truth ist das Markdown.** HTML wird parallel gepflegt und
+  spiegelt 1:1 den MD-Stand. Bei Änderungen beide Dateien anfassen.
+- Datei-Schema: `YYYY-MM-DD-<slug>-design.md`
+- Frontmatter im MD enthält: `title`, `slug`, `version`, `status`,
+  `date`, `author`, `scope`, `reading_time`
+- HTML referenziert `../assets/colors_and_type.css` und
+  `../assets/doc.css` aus `specs/`
+
+## Lokal anzeigen
+
+Statischer Ordner — kein Build, kein Server-Pflicht. Reicht ein Browser:
+
+```bash
+open index.html              # macOS
+```
+
+Wer einen lokalen HTTP-Server möchte (z.B. damit Anker links sauber
+funktionieren):
+
+```bash
+python3 -m http.server 8000  # dann http://localhost:8000
+```
+
+## Aktuelle Specs
+
+| Datum       | Titel                  | Version | Status   |
+|-------------|------------------------|---------|----------|
+| 2026-05-20  | Tailnet-Werbeblocker   | 0.1.0   | Entwurf  |
+
+## Design-System
+
+Stil und Tokens stammen aus der Anthropic-Design-Vorlage
+"Dokumentations-HTML-Vorlage" — dark-first editorial, Fraunces +
+Geist + Geist Mono, Neon-Orange-Akzent. Theme-Toggle (dark/light) im
+HTML-Header.
+
+## Lizenz
+
+Persönliche Doku — alle Rechte vorbehalten. Code-Beispiele in den
+Snippets stehen unter MIT, sofern nicht anders gekennzeichnet.

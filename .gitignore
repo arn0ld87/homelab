@@ -1,0 +1,10 @@
+.DS_Store
+*.swp
+*.bak
+.env
+.env.*
+!.env.example
+
+# AGH-Runtime-Daten (lokale Tests)
+work/
+conf/AdGuardHome.yaml

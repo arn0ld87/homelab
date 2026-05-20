@@ -1,0 +1,776 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tailnet-Werbeblocker · homelab/specs</title>
+
+<link rel="stylesheet" href="../assets/colors_and_type.css">
+<link rel="stylesheet" href="../assets/doc.css">
+</head>
+<body class="doc-layout">
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <a href="../index.html" class="brand">alex<span class="n">le</span>135.de <span style="color:var(--fg-meta); font-family:var(--ff-mono); font-size:11px; letter-spacing:var(--ls-mono); text-transform:uppercase; margin-left:12px;">/ homelab</span></a>
+    <div class="crumbs">
+      <a href="../index.html">homelab</a>
+      <span class="sep">/</span>
+      <a href="../index.html#specs">specs</a>
+      <span class="sep">/</span>
+      <span class="cur">Tailnet-Werbeblocker</span>
+    </div>
+    <div class="topbar-right">
+      <span class="version">v 0.1.0</span>
+      <span class="status draft"><span class="dot"></span>Entwurf</span>
+      <button class="icon-btn" id="theme-toggle" title="Theme wechseln" aria-label="Theme">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      </button>
+      <button class="icon-btn" onclick="window.print()" title="Drucken / PDF" aria-label="Drucken">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="shell">
+
+  <aside class="left-rail" aria-label="Inhaltsverzeichnis">
+    <div class="toc-kicker">Inhalt</div>
+    <ol class="toc" id="toc">
+      <li><span class="n">01</span><a href="#uebersicht">Übersicht</a></li>
+      <li><span class="n">02</span><a href="#architektur">Architektur</a></li>
+      <li><span class="n">03</span><a href="#vps-agh">VPS-AGH (Primary)</a></li>
+      <li><span class="n">04</span><a href="#cachyos-agh">CachyOS-AGH (Replica)</a></li>
+      <li><span class="n">05</span><a href="#sync">adguardhome-sync</a></li>
+      <li><span class="n">06</span><a href="#fritzbox">FritzBox 7520</a></li>
+      <li><span class="n">07</span><a href="#tailscale">Tailscale MagicDNS</a></li>
+      <li><span class="n">08</span><a href="#filterlisten">Filterlisten</a></li>
+      <li><span class="n">09</span><a href="#rollback">Rollback &amp; Notfall</a></li>
+      <li><span class="n">10</span><a href="#verifikation">Verifikation</a></li>
+      <li><span class="n">11</span><a href="#changelog">Änderungen</a></li>
+    </ol>
+
+    <div class="rail-meta">
+      <div class="row">
+        <span class="l">Status</span>
+        <span class="v">Entwurf — Top-Level abgenickt</span>
+      </div>
+      <div class="row">
+        <span class="l">Autor</span>
+        <span class="v">Alexander Schneider</span>
+      </div>
+      <div class="row">
+        <span class="l">Repository</span>
+        <span class="v">homelab/specs</span>
+      </div>
+    </div>
+  </aside>
+
+  <main class="doc">
+
+    <!-- ===== HERO ===== -->
+    <header class="hero">
+      <div class="kicker">
+        <span><span class="a">№ 01</span> &nbsp;—&nbsp; INFRASTRUKTUR-PLAN</span>
+        <span>STAND 20. MAI 2026</span>
+      </div>
+
+      <h1>Tailnet-<br><span class="it">Werbeblocker</span>.</h1>
+
+      <p class="lead">Netzwerkweites DNS-Sinkhole für alle Geräte — IoT, Smartphone, Computer, Apple TV. Zwei AdGuard-Home-Instanzen im Tailnet: VPS primär, CachyOS sekundär, synchronisiert. Ohne YouTube-Wundermittel, ohne neues Loch im VPS-Hardening.</p>
+
+      <div class="meta-strip">
+        <div class="cell">
+          <span class="l">Version</span>
+          <span class="v mono">0.1.0</span>
+        </div>
+        <div class="cell">
+          <span class="l">Stand</span>
+          <span class="v">20. Mai 2026</span>
+        </div>
+        <div class="cell">
+          <span class="l">Autor</span>
+          <span class="v">Alexander Schneider</span>
+        </div>
+        <div class="cell">
+          <span class="l">Geltungsbereich</span>
+          <span class="v">Heim-LAN + Tailnet</span>
+        </div>
+        <div class="cell">
+          <span class="l">Lesedauer</span>
+          <span class="v">≈ 12 Min.</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ===== 01 ÜBERSICHT ===== -->
+    <section class="section" id="uebersicht" data-screen-label="01 Übersicht">
+      <div class="sec-head">
+        <div class="sec-num">01</div>
+        <div>
+          <div class="meta">№ 01 &nbsp;—&nbsp; ÜBERSICHT</div>
+          <h2>Was hier gebaut <span class="it">wird</span>, und was nicht.</h2>
+          <p class="sublead">Ein DNS-Sinkhole auf zwei Knoten im Tailnet. Contabo VPS in Frankreich als Primary, CachyOS Desktop als Replica. Konfig und Filterlisten werden über <code class="inline">adguardhome-sync</code> aktiv gehalten. Mobil greift die Tailscale-App, zu Hause die FritzBox.</p>
+        </div>
+      </div>
+
+      <div class="prose">
+        <p>Das Ziel ist <strong>passive Coverage</strong>: Jedes Gerät, das ins WLAN kommt oder Tailscale aktiviert, bekommt automatisch Werbe- und Tracker-Blocking, ohne dass jemand etwas pro Gerät konfigurieren muss. Das gilt explizit auch für Klassen, die sonst durch's Raster fallen — IoT-Sensoren, Apple TV, Drucker.</p>
+
+        <div class="with-margin">
+          <aside class="margin-meta">
+            <div class="row"><span class="l">Knoten</span><span class="v mono">2 × AGH</span></div>
+            <div class="row"><span class="l">Sync</span><span class="v">adguardhome-sync</span></div>
+            <div class="row"><span class="l">Upstream</span><span class="v">Quad9 DoT</span></div>
+            <div class="row"><span class="l">Container</span><span class="v mono">3 × Docker</span></div>
+          </aside>
+          <div class="prose" style="margin-top:0;">
+            <p>Eine Sache ist explizit nicht im Scope: <strong>YouTube-Werbung</strong>. Pre-Rolls werden vom gleichen <code class="inline">googlevideo.com</code>-CDN ausgeliefert wie das Video selbst — DNS-Blocking ist dort wirkungslos. Realistische Pfade wären YouTube Premium, ReVanced/SmartTube oder Magic Lasso auf Apple TV. Der User hat sich nach Abwägung gegen alle drei entschieden und nimmt YouTube-Werbung in Kauf.</p>
+            <p>Ebenfalls draußen: ein öffentlicher DoH-Endpoint, Tailscale-Subnet-Routes ins LAN, ein eigener rekursiver Resolver, Per-Client-Familien-Filter. Alles davon ist <em>nachziehbar</em>, wenn die Basis steht.</p>
+          </div>
+        </div>
+
+        <div class="callout note">
+          <div class="ctype">Hinweis</div>
+          <div class="ctext">
+            <p>Detail-Sektionen 03–10 sind <strong>Best-Entwurf</strong>. Die Top-Level-Architektur ist abgenickt, aber Konfig-Snippets und Werte sind noch nicht implementiert — sondern das, was nach Recherche-Stand sinnvoll ist. Beim Setup pro Sektion noch einmal sortieren.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 02 ARCHITEKTUR ===== -->
+    <section class="section" id="architektur" data-screen-label="02 Architektur">
+      <div class="sec-head">
+        <div class="sec-num">02</div>
+        <div>
+          <div class="meta">№ 02 &nbsp;—&nbsp; ARCHITEKTUR</div>
+          <h2>Zwei Knoten, ein Tailnet, drei Datenflüsse.</h2>
+          <p class="sublead">VPS-AGH ist die einzige Bedienoberfläche. CachyOS-AGH ist passiver Spiegel. FritzBox und Tailscale verteilen den DNS-Server an die Endgeräte.</p>
+        </div>
+      </div>
+
+      <div class="prose">
+
+        <figure class="fig">
+          <div class="figbody">
+            <div class="ascii"><span class="b">┌──────────────────────────────────────────────────────────────┐</span>
+<span class="b">│</span>  <span class="a">TAILNET</span> (Wireguard, 100.x.y.z/24, MagicDNS)                  <span class="b">│</span>
+<span class="b">│</span>                                                              <span class="b">│</span>
+<span class="b">│</span>   <span class="b">┌───────────────────┐         ┌────────────────────────┐</span>   <span class="b">│</span>
+<span class="b">│</span>   <span class="b">│</span>  Contabo VPS (FR) <span class="b">│◀───────▶│</span>  CachyOS Desktop (DE)  <span class="b">│</span>   <span class="b">│</span>
+<span class="b">│</span>   <span class="b">│</span>  <span class="a">AGH (master)</span>     <span class="b">│</span>  sync   <span class="b">│</span>  <span class="a">AGH (replica)</span>         <span class="b">│</span>   <span class="b">│</span>
+<span class="b">│</span>   <span class="b">│</span>  bind: tailscale0 <span class="b">│</span>  HTTPS  <span class="b">│</span>  bind: tailscale0+LAN  <span class="b">│</span>   <span class="b">│</span>
+<span class="b">│</span>   <span class="b">└────────┬──────────┘         └─────────┬──────────────┘</span>   <span class="b">│</span>
+<span class="b">│</span>            <span class="b">│</span>                              <span class="b">│</span>                  <span class="b">│</span>
+<span class="b">└────────────┼──────────────────────────────┼──────────────────┘</span>
+             <span class="b">│</span> DNS via Tailnet              <span class="b">│</span> DNS via LAN
+             <span class="a">↓</span>                              <span class="a">↓</span>
+   Handy/Laptop unterwegs        <span class="a">FritzBox 7520</span> (DHCP)
+   (Tailscale-App)                       <span class="b">│</span>
+                                         <span class="a">↓</span>
+                              IoT, Apple TV, Drucker, …</div>
+          </div>
+          <figcaption>
+            <span class="num">Abb. 01</span>
+            <span>Topologie — AGH-Knoten und Datenflüsse</span>
+          </figcaption>
+        </figure>
+
+        <h3 data-num="2.1 — Datenflüsse">Die drei Datenflüsse</h3>
+
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Pfad</th>
+              <th>Auslöser</th>
+              <th>Resolver</th>
+              <th>Upstream</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Heim-LAN / IoT</td>
+              <td>FritzBox-DHCP</td>
+              <td>CachyOS-AGH (LAN-IP)</td>
+              <td>Quad9 DoT</td>
+            </tr>
+            <tr>
+              <td>Mobil unterwegs</td>
+              <td>Tailscale-App + MagicDNS</td>
+              <td>VPS-AGH (Tailscale-IP)</td>
+              <td>Quad9 DoT</td>
+            </tr>
+            <tr>
+              <td>Mobil zu Hause (Tailscale on)</td>
+              <td>Tailscale "Override local DNS"</td>
+              <td>VPS-AGH (Tailscale-IP)</td>
+              <td>Quad9 DoT</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3 data-num="2.2 — Single Source of Truth">Single Source of Truth</h3>
+        <p>Bedienung läuft <strong>immer</strong> über das VPS-AGH-Web-UI. Die CachyOS-Instanz ist ein passiver Spiegel — Änderungen dort werden beim nächsten Sync-Lauf überschrieben. Diese Strikt­heit ist gewollt: kein „kurz hier was eingestellt, vergessen, später widersprüchlich".</p>
+
+        <div class="callout tip">
+          <div class="ctype">Tipp</div>
+          <div class="ctext">
+            <p>Wenn die CachyOS-UI muckt (Sync-Fehler, falsche Listen): immer zuerst <code class="inline">adguardhome-sync</code> stoppen, bevor du händisch reparierst. Sonst läuft dir der Sync in die Reparatur rein.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 03 VPS-AGH ===== -->
+    <section class="section" id="vps-agh" data-screen-label="03 VPS-AGH">
+      <div class="sec-head">
+        <div class="sec-num">03</div>
+        <div>
+          <div class="meta">№ 03 &nbsp;—&nbsp; VPS-AGH (PRIMARY)</div>
+          <h2>Tailscale-only Bind, kein Loch in <span class="it">eth0</span>.</h2>
+          <p class="sublead">AGH läuft als Docker-Container, gebunden ausschließlich an die Tailscale-IP. Das VPS-Hardening bleibt unangetastet — kein neuer Public-Port, keine UFW/nftables-Anpassung.</p>
+        </div>
+      </div>
+
+      <div class="prose">
+
+        <h3 data-num="3.1 — Bind-Strategie">Bind-Strategie</h3>
+        <p>Docker bindet die Ports so an die Tailscale-IP, dass sie nur aus dem Tailnet erreichbar sind. <code class="inline">0.0.0.0</code> ist <em>verboten</em> — beim Compose-File explizit darauf achten.</p>
+
+        <div class="codeblock">
+          <div class="cb-head">
+            <div class="cb-file"><span class="lang">YAML</span>/home/admin/agh/docker-compose.yml</div>
+            <button class="cb-copy" data-copy>Kopieren</button>
+          </div>
+<pre><span class="tok-k">services</span><span class="tok-p">:</span>
+  <span class="tok-k">adguardhome</span><span class="tok-p">:</span>
+    <span class="tok-k">image</span><span class="tok-p">:</span> <span class="tok-s">adguard/adguardhome:latest</span>
+    <span class="tok-k">container_name</span><span class="tok-p">:</span> <span class="tok-s">agh-primary</span>
+    <span class="tok-k">restart</span><span class="tok-p">:</span> <span class="tok-s">unless-stopped</span>
+    <span class="tok-k">ports</span><span class="tok-p">:</span>
+      <span class="tok-c"># DNS — NUR auf Tailscale-IP</span>
+      <span class="tok-p">- </span><span class="tok-s">"${TAILSCALE_IP_VPS}:53:53/udp"</span>
+      <span class="tok-p">- </span><span class="tok-s">"${TAILSCALE_IP_VPS}:53:53/tcp"</span>
+      <span class="tok-c"># Web-UI — ebenfalls Tailnet-only</span>
+      <span class="tok-p">- </span><span class="tok-s">"${TAILSCALE_IP_VPS}:3000:3000/tcp"</span>
+    <span class="tok-k">volumes</span><span class="tok-p">:</span>
+      <span class="tok-p">- </span><span class="tok-s">./work:/opt/adguardhome/work</span>
+      <span class="tok-p">- </span><span class="tok-s">./conf:/opt/adguardhome/conf</span>
+    <span class="tok-k">network_mode</span><span class="tok-p">:</span> <span class="tok-s">bridge</span></pre>
+        </div>
+
+        <div class="callout warn">
+          <div class="ctype">Warnung</div>
+          <div class="ctext">
+            <p>Wenn Docker auf <code class="inline">network_mode: host</code> umgestellt wird (z.B. für IPv6-DNS), umgeht das den IP-Bind und exponiert Port 53 auf <em>allen</em> Interfaces — inklusive eth0. Niemals ohne explizite UFW-Regel <code class="inline">deny 53/udp on eth0</code>.</p>
+          </div>
+        </div>
+
+        <h3 data-num="3.2 — Upstream-Konfiguration">Upstream</h3>
+        <p>Quad9 mit DoT als Primary (Malware-Blocking inklusive). Cloudflare DoT als Fallback. Kein UDP-Fallback auf ungesichertes DNS.</p>
+
+        <div class="codeblock">
+          <div class="cb-head">
+            <div class="cb-file"><span class="lang">YAML</span>conf/AdGuardHome.yaml (excerpt)</div>
+            <button class="cb-copy" data-copy>Kopieren</button>
+          </div>
+<pre><span class="tok-k">dns</span><span class="tok-p">:</span>
+  <span class="tok-k">upstream_dns</span><span class="tok-p">:</span>
+    <span class="tok-p">- </span><span class="tok-s">tls://dns.quad9.net</span>
+    <span class="tok-p">- </span><span class="tok-s">tls://1.1.1.1</span>
+  <span class="tok-k">upstream_mode</span><span class="tok-p">:</span> <span class="tok-s">parallel</span>
+  <span class="tok-k">fastest_addr</span><span class="tok-p">:</span> <span class="tok-k">true</span>
+  <span class="tok-k">cache_size</span><span class="tok-p">:</span> <span class="tok-n">8388608</span>
+  <span class="tok-k">cache_ttl_min</span><span class="tok-p">:</span> <span class="tok-n">600</span>
+  <span class="tok-k">ratelimit</span><span class="tok-p">:</span> <span class="tok-n">0</span>      <span class="tok-c"># Tailnet-only, kein Rate-Limit nötig</span>
+  <span class="tok-k">bootstrap_dns</span><span class="tok-p">:</span>
+    <span class="tok-p">- </span><span class="tok-s">9.9.9.9</span>
+    <span class="tok-p">- </span><span class="tok-s">1.1.1.1</span></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 04 CACHYOS-AGH ===== -->
+    <section class="section" id="cachyos-agh" data-screen-label="04 CachyOS-AGH">
+      <div class="sec-head">
+        <div class="sec-num">04</div>
+        <div>
+          <div class="meta">№ 04 &nbsp;—&nbsp; CACHYOS-AGH (REPLICA)</div>
+          <h2>Lokal für IoT, Tailnet für mobil.</h2>
+          <p class="sublead">Zweite AGH-Instanz auf dem Desktop. Bedienung aus — nur Spiegelbild des VPS. Bindet auf LAN-IP (für FritzBox-Clients) und Tailscale-IP (für Tailnet-Geräte zu Hause).</p>
+        </div>
+      </div>
+
+      <div class="prose">
+        <h3 data-num="4.1 — Bind-Strategie">Bind-Strategie</h3>
+        <p>Drei Bind-Adressen: LAN für IoT, Tailscale für Mobil, Loopback als Sicherheitsnetz gegen lokale DNS-Tools, die Public-Resolver verwenden würden.</p>
+
+        <div class="codeblock">
+          <div class="cb-head">
+            <div class="cb-file"><span class="lang">YAML</span>~/.local/share/agh/docker-compose.yml</div>
+            <button class="cb-copy" data-copy>Kopieren</button>
+          </div>
+<pre><span class="tok-k">services</span><span class="tok-p">:</span>
+  <span class="tok-k">adguardhome</span><span class="tok-p">:</span>
+    <span class="tok-k">image</span><span class="tok-p">:</span> <span class="tok-s">adguard/adguardhome:latest</span>
+    <span class="tok-k">container_name</span><span class="tok-p">:</span> <span class="tok-s">agh-replica</span>
+    <span class="tok-k">restart</span><span class="tok-p">:</span> <span class="tok-s">unless-stopped</span>
+    <span class="tok-k">network_mode</span><span class="tok-p">:</span> <span class="tok-s">host</span>      <span class="tok-c"># nötig für mehrere IPs</span>
+    <span class="tok-k">volumes</span><span class="tok-p">:</span>
+      <span class="tok-p">- </span><span class="tok-s">./work:/opt/adguardhome/work</span>
+      <span class="tok-p">- </span><span class="tok-s">./conf:/opt/adguardhome/conf</span></pre>
+        </div>
+
+        <p>Mit <code class="inline">network_mode: host</code> bindet AGH selbst — die Bind-Adressen werden in der AGH-Konfig festgelegt:</p>
+
+        <div class="codeblock">
+          <div class="cb-head">
+            <div class="cb-file"><span class="lang">YAML</span>conf/AdGuardHome.yaml (excerpt)</div>
+            <button class="cb-copy" data-copy>Kopieren</button>
+          </div>
+<pre><span class="tok-k">dns</span><span class="tok-p">:</span>
+  <span class="tok-k">bind_hosts</span><span class="tok-p">:</span>
+    <span class="tok-p">- </span><span class="tok-s">${CACHYOS_LAN_IP}</span>
+    <span class="tok-p">- </span><span class="tok-s">${TAILSCALE_IP_CACHYOS}</span>
+    <span class="tok-p">- </span><span class="tok-s">127.0.0.1</span>
+  <span class="tok-k">port</span><span class="tok-p">:</span> <span class="tok-n">53</span></pre>
+        </div>
+
+        <div class="callout note">
+          <div class="ctype">Hinweis</div>
+          <div class="ctext">
+            <p>Auf CachyOS belegt <code class="inline">systemd-resolved</code> standardmäßig Port 53 auf <code class="inline">127.0.0.53</code>. Falls Konflikt: <code class="inline">DNSStubListener=no</code> in <code class="inline">/etc/systemd/resolved.conf</code>, dann <code class="inline">systemctl restart systemd-resolved</code>.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 05 SYNC ===== -->
+    <section class="section" id="sync" data-screen-label="05 Sync">
+      <div class="sec-head">
+        <div class="sec-num">05</div>
+        <div>
+          <div class="meta">№ 05 &nbsp;—&nbsp; ADGUARDHOME-SYNC</div>
+          <h2>Master pusht, Replica empfängt.</h2>
+          <p class="sublead">Sync-Container läuft auf dem VPS, pollt alle 5 Minuten das eigene AGH-API und überträgt Diffs an die CachyOS-Replica per HTTPS+API-Token.</p>
+        </div>
+      </div>
+
+      <div class="prose">
+        <div class="codeblock">
+          <div class="cb-head">
+            <div class="cb-file"><span class="lang">YAML</span>/home/admin/agh-sync/docker-compose.yml</div>
+            <button class="cb-copy" data-copy>Kopieren</button>
+          </div>
+<pre><span class="tok-k">services</span><span class="tok-p">:</span>
+  <span class="tok-k">agh-sync</span><span class="tok-p">:</span>
+    <span class="tok-k">image</span><span class="tok-p">:</span> <span class="tok-s">ghcr.io/bakito/adguardhome-sync:latest</span>
+    <span class="tok-k">container_name</span><span class="tok-p">:</span> <span class="tok-s">agh-sync</span>
+    <span class="tok-k">restart</span><span class="tok-p">:</span> <span class="tok-s">unless-stopped</span>
+    <span class="tok-k">env_file</span><span class="tok-p">:</span> <span class="tok-s">./.env</span>
+    <span class="tok-k">command</span><span class="tok-p">:</span> <span class="tok-s">run</span></pre>
+        </div>
+
+        <div class="codeblock">
+          <div class="cb-head">
+            <div class="cb-file"><span class="lang">ENV</span>/home/admin/agh-sync/.env (chmod 600)</div>
+            <button class="cb-copy" data-copy>Kopieren</button>
+          </div>
+<pre>ORIGIN_URL=http://${TAILSCALE_IP_VPS}:3000
+ORIGIN_USERNAME=admin
+ORIGIN_PASSWORD=&lt;secret&gt;
+REPLICA1_URL=http://${TAILSCALE_IP_CACHYOS}:3000
+REPLICA1_USERNAME=admin
+REPLICA1_PASSWORD=&lt;secret&gt;
+CRON=*/5 * * * *
+RUN_ON_START=true
+FEATURES_FILTERS=true
+FEATURES_CLIENTS=true
+FEATURES_DNS_SERVER_CONFIG=true
+FEATURES_DNS_REWRITES=true</pre>
+        </div>
+
+        <p>Der Sync-Container braucht selbst keinen Port nach außen. Er nutzt nur ausgehende Verbindungen zum Tailnet — also durch die Tailscale-Schnittstelle.</p>
+      </div>
+    </section>
+
+    <!-- ===== 06 FRITZBOX ===== -->
+    <section class="section" id="fritzbox" data-screen-label="06 FritzBox">
+      <div class="sec-head">
+        <div class="sec-num">06</div>
+        <div>
+          <div class="meta">№ 06 &nbsp;—&nbsp; FRITZBOX 7520</div>
+          <h2>Ein Feld, alle Geräte.</h2>
+          <p class="sublead">Die FritzBox verteilt einen einzigen DNS-Wert per DHCP an alle Clients im Heim-Netz, inklusive IoT, Apple TV und Drucker. Eintrag in der Box, fertig.</p>
+        </div>
+      </div>
+
+      <div class="prose">
+        <h3 data-num="6.1 — Pfad in der UI">Pfad in der UI</h3>
+        <p>FritzBox-Webinterface (<code class="inline">http://fritz.box</code>) → <strong>Heimnetz</strong> → <strong>Netzwerk</strong> → <strong>Netzwerkeinstellungen</strong> → <strong>IP-Adressen</strong> → <strong>IPv4-Konfiguration</strong> → unter „Heimnetz" das Feld <strong>„Lokaler DNS-Server"</strong> auf <code class="inline">${CACHYOS_LAN_IP}</code> setzen.</p>
+
+        <h3 data-num="6.2 — Wirksamkeit beschleunigen">Wirksamkeit beschleunigen</h3>
+        <p>Clients ziehen den neuen DNS erst beim nächsten DHCP-Renew. Schnellster Pfad:</p>
+        <ol>
+          <li>DHCP-Lease-Zeit kurzfristig auf 5 Minuten senken (gleiche Seite, weiter unten).</li>
+          <li>Alle Geräte einmal aus dem WLAN nehmen und wieder hinein (oder neu booten).</li>
+          <li>Lease-Zeit zurück auf 24 Stunden, sobald alles läuft.</li>
+        </ol>
+
+        <h3 data-num="6.3 — Verifikation am Client">Verifikation am Client</h3>
+        <p>Auf einem MacBook im WLAN:</p>
+        <div class="codeblock">
+          <div class="cb-head">
+            <div class="cb-file"><span class="lang">Bash</span>Terminal — Client</div>
+            <button class="cb-copy" data-copy>Kopieren</button>
+          </div>
+<pre>$ scutil --dns | grep <span class="tok-s">"nameserver\[0\]"</span>
+  nameserver[0] : <span class="tok-s">${CACHYOS_LAN_IP}</span>
+
+$ dig doubleclick.net +short
+<span class="tok-s">0.0.0.0</span>      <span class="tok-c"># Block durch AGH</span></pre>
+        </div>
+
+        <div class="callout warn">
+          <div class="ctype">Limit</div>
+          <div class="ctext">
+            <p>Das Gäste-WLAN ignoriert den lokalen DNS-Eintrag — die FritzBox setzt sich dort immer selbst als DNS. Für Besucher meist egal, aber wenn das eigene Telefon im Gäste-Netz hängt, läuft es ohne AGH. Lösung im Bedarfsfall: Tailscale auf dem Telefon einschalten.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 07 TAILSCALE ===== -->
+    <section class="section" id="tailscale" data-screen-label="07 Tailscale">
+      <div class="sec-head">
+        <div class="sec-num">07</div>
+        <div>
+          <div class="meta">№ 07 &nbsp;—&nbsp; TAILSCALE MAGICDNS</div>
+          <h2>Globaler Resolver, überall identisch.</h2>
+          <p class="sublead">Im Tailscale-Admin-Panel den VPS-AGH als globalen Nameserver eintragen. „Override local DNS" an. Jedes Mobilgerät blockt dann unterwegs genauso wie zu Hause.</p>
+        </div>
+      </div>
+
+      <div class="prose">
+        <h3 data-num="7.1 — Konfiguration">Admin Console → DNS</h3>
+        <dl class="deflist">
+          <div class="row">
+            <div class="key">Global nameserver<span class="type">required</span></div>
+            <div class="val"><code class="inline">${TAILSCALE_IP_VPS}</code> — die Tailscale-IP des VPS-Knotens, nicht die Public-IP. Ist eingetragen in Tailscale-Admin → DNS → „Add nameserver".</div>
+          </div>
+          <div class="row">
+            <div class="key">Override local DNS<span class="type">boolean, true</span></div>
+            <div class="val">Setzt den AGH als <em>einzigen</em> DNS auf allen Tailscale-Clients, auch wenn das WLAN einen eigenen DNS verteilt. <em>Verhindert Leak in fremde Resolver</em></div>
+          </div>
+          <div class="row">
+            <div class="key">MagicDNS<span class="type">boolean, true</span></div>
+            <div class="val">Bleibt aktiv — kollidiert nicht mit dem globalen Nameserver, weil Tailscale Tailnet-Hostnamen direkt auflöst, ohne durch AGH zu gehen.</div>
+          </div>
+        </dl>
+
+        <h3 data-num="7.2 — Verifikation am Handy">Verifikation am Handy</h3>
+        <p>iPhone/Android mit Tailscale-App, Mobilfunk (nicht im Heim-WLAN), Tailscale aktiv:</p>
+        <ul>
+          <li>Browser-Test: <a href="https://d3ward.github.io/toolz/adblock.html">d3ward.github.io/toolz/adblock.html</a> sollte ≥ 85 % Block-Rate zeigen.</li>
+          <li>App-Test: Eine App, die normalerweise viel Werbung zeigt (Wetter-App, Spiele-App), öffnet die Werbung als leere Box.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ===== PULL QUOTE ===== -->
+    <div class="pullquote">
+      <div class="k">№ 07.5 — HALTUNG</div>
+      <div>
+        <q>Ein Werbeblocker, der nur am Schreibtisch funktioniert, hat genau dort versagt, wo er gebraucht wird.</q>
+        <span class="attrib">— Begründung für den Tailnet-Pfad</span>
+      </div>
+    </div>
+
+    <!-- ===== 08 FILTERLISTEN ===== -->
+    <section class="section" id="filterlisten" data-screen-label="08 Filterlisten">
+      <div class="sec-head">
+        <div class="sec-num">08</div>
+        <div>
+          <div class="meta">№ 08 &nbsp;—&nbsp; FILTERLISTEN</div>
+          <h2>Vier Listen, ein realistischer Erwartungshorizont.</h2>
+          <p class="sublead">Mehr Listen heißt nicht mehr Blocking — heißt mehr False-Positives. Diese Auswahl deckt ~95 % der klassischen Werbung ab, ohne dass legitime Seiten brechen.</p>
+        </div>
+      </div>
+
+      <div class="prose">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Liste</th>
+              <th>Quelle</th>
+              <th>Zweck</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>AdGuard DNS Default</td>
+              <td>adguardteam.github.io/AdGuardSDNSFilter</td>
+              <td>Werbung + Tracker (Default)</td>
+            </tr>
+            <tr>
+              <td>OISD Big</td>
+              <td>big.oisd.nl</td>
+              <td>Werbung breit, low False-Positive</td>
+            </tr>
+            <tr>
+              <td>Hagezi Multi PRO</td>
+              <td>github.com/hagezi/dns-blocklists</td>
+              <td>Werbung + Telemetrie, inkl. Smart-TV</td>
+            </tr>
+            <tr>
+              <td>Steven Black Hosts</td>
+              <td>stevenblack.github.io/hosts</td>
+              <td>Klassische hosts-Konsolidierung</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3 data-num="8.1 — Erwartungen">Was tatsächlich blockt — und was nicht</h3>
+        <ul>
+          <li><strong>Klassische Web-Werbung:</strong> ~95 % geblockt.</li>
+          <li><strong>App-Telemetrie</strong> auf iOS/Android: ~60–80 %.</li>
+          <li><strong>YouTube-Pre-Rolls:</strong> nicht geblockt. Werbung kommt vom gleichen <code class="inline">googlevideo.com</code>-CDN wie das Video — DNS kann nicht differenzieren.</li>
+          <li><strong>YouTube-Tracking-Endpoints:</strong> teilweise geblockt — bricht Google-Empfehlungs-Statistik, nicht den Ad-Auslieferer.</li>
+          <li><strong>Smart-TV-Telemetrie:</strong> stark geblockt durch Hagezi (LG, Samsung, Sony, Vizio-Listen).</li>
+        </ul>
+
+        <div class="callout note">
+          <div class="ctype">YouTube</div>
+          <div class="ctext">
+            <p>Falls die YouTube-Werbung später doch stört: clientseitige Lösungen pro Plattform — <strong>SmartTube</strong> auf Android TV, <strong>ReVanced</strong> auf Android, <strong>uBlock Origin</strong> im Browser. Apple TV bleibt ohne YouTube Premium oder Magic Lasso Adblock for tvOS außen vor. Diese Erweiterungen sind kompatibel mit dem AGH-Setup, brauchen aber jeweils eigenen Wartungsaufwand.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 09 ROLLBACK ===== -->
+    <section class="section" id="rollback" data-screen-label="09 Rollback">
+      <div class="sec-head">
+        <div class="sec-num">09</div>
+        <div>
+          <div class="meta">№ 09 &nbsp;—&nbsp; ROLLBACK &amp; NOTFALL</div>
+          <h2>Drei Hebel, drei Sekunden bis offline ist es nicht.</h2>
+          <p class="sublead">Wenn DNS bricht und Webseiten nicht mehr laden: drei Eingriffsstellen, je nach Schadensquelle. Jede einzelne setzt das Heim wieder auf den ISP-DNS zurück.</p>
+        </div>
+      </div>
+
+      <div class="prose">
+        <h3 data-num="9.1 — FritzBox-Rollback">FritzBox-Rollback (Heim-LAN sofort)</h3>
+        <p>FritzBox → <em>Heimnetz → Netzwerk → … → Lokaler DNS-Server</em> leeren, speichern. Heim-Clients laufen ab nächstem DHCP-Renew wieder über ISP-DNS. Sofort-Effekt via Lease-Verkürzung.</p>
+
+        <h3 data-num="9.2 — Tailscale-Rollback">Tailscale-Rollback (Mobil-Geräte)</h3>
+        <p>Tailscale Admin → DNS → „Override local DNS" abschalten und globalen Nameserver entfernen. Mobilgeräte fallen auf OS-Default-DNS (Mobilfunk-Resolver oder fremdes WLAN).</p>
+
+        <h3 data-num="9.3 — Container-Rollback">Container-Rollback (Resolver tot)</h3>
+        <div class="codeblock">
+          <div class="cb-head">
+            <div class="cb-file"><span class="lang">Bash</span>VPS oder CachyOS</div>
+            <button class="cb-copy" data-copy>Kopieren</button>
+          </div>
+<pre><span class="tok-c"># Notfall-Stop</span>
+<span class="tok-k">cd</span> /home/admin/agh    <span class="tok-c"># oder ~/.local/share/agh</span>
+docker compose stop
+
+<span class="tok-c"># Wenn nur Sync amok läuft</span>
+<span class="tok-k">cd</span> /home/admin/agh-sync
+docker compose stop</pre>
+        </div>
+        <p>Geräte fallen via Resolver-Timeout auf den nächsten konfigurierten DNS zurück. Unangenehm (5–10 s pro erstem Lookup), aber überlebbar.</p>
+
+        <div class="callout warn">
+          <div class="ctype">Sync vor Reparatur stoppen</div>
+          <div class="ctext">
+            <p>Bei Reparaturen an der CachyOS-Instanz <em>immer</em> zuerst <code class="inline">agh-sync</code> auf dem VPS stoppen. Sonst überschreibt der nächste Sync-Lauf alle Korrekturen mit dem alten VPS-Stand.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 10 VERIFIKATION ===== -->
+    <section class="section" id="verifikation" data-screen-label="10 Verifikation">
+      <div class="sec-head">
+        <div class="sec-num">10</div>
+        <div>
+          <div class="meta">№ 10 &nbsp;—&nbsp; VERIFIKATION</div>
+          <h2>Sechs Befehle, alles grün.</h2>
+          <p class="sublead">Sequenzielle Checks. Wenn einer rot ist, weitergehen ist sinnlos — erst Wurzel finden.</p>
+        </div>
+      </div>
+
+      <div class="prose">
+        <div class="codeblock">
+          <div class="cb-head">
+            <div class="cb-file"><span class="lang">Bash</span>Verifikations-Sequenz</div>
+            <button class="cb-copy" data-copy>Kopieren</button>
+          </div>
+<pre><span class="tok-c"># 1) VPS-AGH antwortet im Tailnet</span>
+dig @${TAILSCALE_IP_VPS} example.com +short
+<span class="tok-c"># erwartet: gültige IP</span>
+
+<span class="tok-c"># 2) Block greift auf VPS-AGH</span>
+dig @${TAILSCALE_IP_VPS} doubleclick.net +short
+<span class="tok-c"># erwartet: 0.0.0.0</span>
+
+<span class="tok-c"># 3) CachyOS-AGH ist synchron</span>
+dig @${CACHYOS_LAN_IP} doubleclick.net +short
+<span class="tok-c"># erwartet: 0.0.0.0</span>
+
+<span class="tok-c"># 4) eth0 ist DICHT (vom Internet aus)</span>
+dig @${VPS_PUBLIC_IP} example.com +short
+<span class="tok-c"># erwartet: timeout — NICHT eine IP</span>
+
+<span class="tok-c"># 5) FritzBox verteilt korrekten DNS</span>
+scutil --dns | grep <span class="tok-s">"nameserver\[0\]"</span>
+<span class="tok-c"># erwartet: ${CACHYOS_LAN_IP}</span>
+
+<span class="tok-c"># 6) Mobil unterwegs (Tailscale on, Mobilfunk)</span>
+nslookup doubleclick.net
+<span class="tok-c"># erwartet: 0.0.0.0</span></pre>
+        </div>
+
+        <p>Anschließend Browser-Test auf <a href="https://d3ward.github.io/toolz/adblock.html">d3ward.github.io/toolz/adblock.html</a> — im Inkognito-Mode, damit Browser-Extensions nicht mit-blocken. Erwartung: ≥ 85 % Block-Rate.</p>
+      </div>
+    </section>
+
+    <!-- ===== 11 CHANGELOG ===== -->
+    <section class="section" id="changelog" data-screen-label="11 Änderungen">
+      <div class="sec-head">
+        <div class="sec-num">11</div>
+        <div>
+          <div class="meta">№ 11 &nbsp;—&nbsp; ÄNDERUNGEN</div>
+          <h2>Versionshistorie.</h2>
+          <p class="sublead">Nur Änderungen am Plan selbst. Die Implementation steht aus.</p>
+        </div>
+      </div>
+
+      <div class="prose">
+        <ul class="changelog">
+          <li>
+            <span class="date">20. Mai 2026</span>
+            <span class="ver">v0.1.0</span>
+            <span class="summary"><strong>Erstentwurf.</strong> Top-Level-Architektur durch Brainstorming-Session abgenickt. Detail-Sektionen sind Best-Entwurf — Konfig-Snippets noch nicht im Live-Betrieb verifiziert. YouTube explizit out-of-scope.</span>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <nav class="page-nav">
+      <a href="../index.html">
+        <span class="l">← Zurück</span>
+        <span class="t">homelab — Index</span>
+      </a>
+      <a href="#" class="next" aria-disabled="true" style="opacity:0.4; pointer-events:none;">
+        <span class="l">Nachher →</span>
+        <span class="t">(noch keine weiteren Specs)</span>
+      </a>
+    </nav>
+
+  </main>
+
+  <aside class="right-rail" aria-label="Auf dieser Seite">
+    <div class="rr-kicker">Auf dieser Seite</div>
+    <ul class="rr-list" id="rr-list"><!-- auto --></ul>
+
+    <div class="edit-link">
+      <a href="2026-05-20-tailnet-adblock-design.md">Markdown-Quelle</a>
+      <a href="#">Issue anlegen</a>
+    </div>
+  </aside>
+
+</div>
+
+<footer class="docfoot">
+  <div class="col">
+    <span class="l">Letzte Änderung</span>
+    <span class="v">20. Mai 2026</span>
+    <span>Plan-Version 0.1.0</span>
+  </div>
+  <div class="col">
+    <span class="l">Status</span>
+    <span class="v">Entwurf — Top-Level abgenickt</span>
+    <span>Implementation steht aus</span>
+  </div>
+  <div class="col">
+    <span class="l">Autor</span>
+    <span class="v">Alexander Schneider</span>
+    <span><a href="mailto:schneider@alexle135.de">schneider@alexle135.de</a></span>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const html = document.documentElement;
+  const themeBtn = document.getElementById('theme-toggle');
+  const saved = localStorage.getItem('doc-theme');
+  if (saved) html.setAttribute('data-theme', saved);
+  themeBtn?.addEventListener('click', () => {
+    const cur = html.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+    html.setAttribute('data-theme', cur);
+    localStorage.setItem('doc-theme', cur);
+  });
+
+  document.querySelectorAll('[data-copy]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const pre = btn.closest('.codeblock').querySelector('pre');
+      try {
+        await navigator.clipboard.writeText(pre.innerText);
+        btn.textContent = 'Kopiert ✓';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = 'Kopieren'; btn.classList.remove('copied'); }, 1500);
+      } catch (e) { btn.textContent = 'Fehler'; }
+    });
+  });
+
+  function buildRightRail() {
+    const ul = document.getElementById('rr-list');
+    if (!ul) return;
+    const headings = document.querySelectorAll('section.section h3');
+    ul.innerHTML = '';
+    headings.forEach(h => {
+      if (!h.id) {
+        h.id = (h.textContent || '').toLowerCase()
+          .replace(/[^a-z0-9äöüß ]/gi, '').trim().replace(/\s+/g, '-');
+      }
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+      a.href = '#' + h.id; a.textContent = h.textContent.trim();
+      li.appendChild(a); ul.appendChild(li);
+    });
+  }
+  buildRightRail();
+
+  const tocLinks = document.querySelectorAll('#toc a');
+  const sections = document.querySelectorAll('section.section');
+  const sectionObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const id = e.target.id;
+        tocLinks.forEach(a => a.parentElement.classList.toggle('active', a.getAttribute('href') === '#' + id));
+      }
+    });
+  }, { rootMargin: '-30% 0px -60% 0px' });
+  sections.forEach(s => sectionObserver.observe(s));
+
+  const headings = document.querySelectorAll('section.section h3');
+  const rrLinks = () => document.querySelectorAll('#rr-list a');
+  const headingObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const id = e.target.id;
+        rrLinks().forEach(a => a.parentElement.classList.toggle('active', a.getAttribute('href') === '#' + id));
+      }
+    });
+  }, { rootMargin: '-25% 0px -65% 0px' });
+  headings.forEach(h => headingObserver.observe(h));
+})();
+</script>
+
+</body>
+</html>

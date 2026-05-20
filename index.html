@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>homelab — Infrastruktur-Pläne · alexle135.de</title>
+
+<link rel="stylesheet" href="assets/colors_and_type.css">
+
+<style>
+  html[data-theme="light"] {
+    --bg:             var(--mono-50);
+    --bg-elevated:    #fff;
+    --bg-panel:       color-mix(in srgb, var(--mono-950) 4%, transparent);
+    --fg:             var(--mono-950);
+    --fg-body:        var(--mono-700);
+    --fg-muted:       var(--mono-500);
+    --fg-meta:        var(--mono-500);
+    --rule:           color-mix(in srgb, var(--mono-950) 12%, transparent);
+    --rule-strong:    color-mix(in srgb, var(--mono-950) 28%, transparent);
+    --bg-page:
+      radial-gradient(circle at top left, rgba(255, 106, 0, 0.10), transparent 24rem),
+      linear-gradient(180deg, rgba(13, 12, 12, 0.04), transparent 24rem),
+      var(--mono-50);
+  }
+
+  body { font-feature-settings: "ss01", "cv11"; }
+
+  .icon-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px;
+    border: 1px solid var(--rule); border-radius: var(--r-1);
+    background: transparent; color: var(--fg);
+    cursor: pointer; transition: border-color 120ms, color 120ms;
+  }
+  .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .topbar-actions { display: flex; gap: 8px; align-items: center; }
+
+  .topbar {
+    position: sticky; top: 0; z-index: 50;
+    backdrop-filter: blur(18px) saturate(1.2);
+    background: color-mix(in srgb, var(--bg) 70%, transparent);
+    border-bottom: 1px solid var(--rule);
+  }
+  .topbar-inner {
+    max-width: 1280px; margin: 0 auto;
+    padding: 14px 48px;
+    display: grid; grid-template-columns: auto 1fr auto;
+    gap: 24px; align-items: center;
+  }
+  .brand { font-family: var(--ff-serif); font-weight: 500; font-size: 18px; letter-spacing: -0.015em; color: var(--fg); text-decoration: none; }
+  .brand .n { color: var(--accent); }
+  .topbar nav { display: flex; gap: 28px; justify-self: center; }
+  .topbar nav a {
+    font-family: var(--ff-sans); font-size: 13.5px; color: var(--fg);
+    text-decoration: none; padding: 4px 0;
+  }
+  .topbar nav a.active { border-bottom: 1px solid var(--accent); color: var(--accent); }
+  .topbar nav a:hover { color: var(--accent); }
+
+  @media (max-width: 900px) {
+    .topbar-inner { grid-template-columns: 1fr auto; }
+    .topbar nav { display: none; }
+  }
+
+  .shell { max-width: 1280px; margin: 0 auto; padding: 0 48px; }
+
+  .index-hero {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 48px;
+    padding: 96px 0 64px;
+    align-items: end;
+    border-bottom: 1px solid var(--rule);
+  }
+  @media (max-width: 800px) {
+    .index-hero { grid-template-columns: 1fr; padding: 56px 0 40px; }
+  }
+  .index-hero .kicker {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-family: var(--ff-mono); font-size: 11px;
+    letter-spacing: var(--ls-mono); text-transform: uppercase;
+    color: var(--fg-muted);
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--rule);
+    margin-bottom: 40px;
+  }
+  .index-hero .kicker .a { color: var(--accent); }
+  .index-hero h1 {
+    font-family: var(--ff-serif);
+    font-weight: 300;
+    font-size: clamp(56px, 8vw, 112px);
+    line-height: 0.96;
+    letter-spacing: -0.03em;
+    margin: 0;
+    color: var(--fg);
+    text-wrap: balance;
+  }
+  .index-hero h1 .it { font-style: italic; font-weight: 400; color: var(--accent); }
+  .index-hero .lead {
+    font-family: var(--ff-sans);
+    font-size: 18px; line-height: 1.55;
+    color: var(--fg-body);
+    max-width: 44ch;
+    margin: 0;
+    text-wrap: pretty;
+  }
+  .index-hero .stats {
+    margin-top: 24px;
+    display: flex; gap: 32px;
+    font-family: var(--ff-mono); font-size: 11px;
+    letter-spacing: var(--ls-mono); text-transform: uppercase;
+    color: var(--fg-muted);
+  }
+  .index-hero .stats .n {
+    display: block;
+    font-family: var(--ff-serif); font-weight: 400;
+    font-size: 44px; line-height: 1;
+    color: var(--fg);
+    letter-spacing: -0.02em;
+    margin-bottom: 4px;
+  }
+
+  section.group { padding: 96px 0 24px; }
+  .group-head {
+    display: grid;
+    grid-template-columns: 96px 1fr auto;
+    gap: 32px;
+    align-items: end;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .group-head .num {
+    font-family: var(--ff-serif); font-weight: 300;
+    font-size: 84px; line-height: 0.88;
+    color: var(--fg);
+    letter-spacing: -0.04em;
+  }
+  .group-head .text { display: flex; flex-direction: column; gap: 8px; }
+  .group-head .k {
+    font-family: var(--ff-mono); font-size: 11px;
+    letter-spacing: var(--ls-mono); text-transform: uppercase;
+    color: var(--accent);
+  }
+  .group-head h2 {
+    font-family: var(--ff-serif); font-weight: 400;
+    font-size: 36px; line-height: 1.15;
+    letter-spacing: -0.015em; margin: 0; color: var(--fg);
+  }
+  .group-head .count {
+    font-family: var(--ff-mono); font-size: 11px;
+    letter-spacing: var(--ls-mono); text-transform: uppercase;
+    color: var(--fg-meta);
+  }
+
+  .index { margin-top: 8px; }
+  .row {
+    display: grid;
+    grid-template-columns: 56px 1fr 160px 100px 120px;
+    gap: 24px;
+    align-items: baseline;
+    padding: 24px 0;
+    border-bottom: 1px solid var(--rule);
+    text-decoration: none;
+    color: inherit;
+    transition: padding 180ms, background 180ms;
+  }
+  .row:hover { background: var(--bg-panel); padding-left: 12px; padding-right: 12px; }
+  @media (max-width: 900px) {
+    .row { grid-template-columns: 40px 1fr; }
+    .row .tag, .row .ver, .row .yr { display: none; }
+  }
+  .row .idx {
+    font-family: var(--ff-mono); font-size: 12px;
+    letter-spacing: var(--ls-mono-tight);
+    color: var(--fg-meta);
+  }
+  .row .title {
+    font-family: var(--ff-serif); font-weight: 400;
+    font-size: 28px; line-height: 1.15;
+    letter-spacing: -0.012em;
+    color: var(--fg);
+  }
+  .row .title .sub {
+    display: block;
+    font-family: var(--ff-sans); font-size: 13.5px;
+    color: var(--fg-muted); margin-top: 6px;
+    letter-spacing: 0;
+  }
+  .row .tag {
+    font-family: var(--ff-mono); font-size: 11px;
+    letter-spacing: var(--ls-mono); text-transform: uppercase;
+    color: var(--fg-body);
+  }
+  .row .ver {
+    font-family: var(--ff-mono); font-size: 11px;
+    letter-spacing: var(--ls-mono-tight);
+    color: var(--accent);
+  }
+  .row .yr {
+    font-family: var(--ff-mono); font-size: 11px;
+    letter-spacing: var(--ls-mono); text-transform: uppercase;
+    color: var(--fg-meta);
+    text-align: right;
+  }
+  .row .status-dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+  .row .status-dot.stable { background: #5cdc8b; }
+  .row .status-dot.stale { background: var(--mono-500); }
+
+  .placeholder {
+    padding: 32px 0;
+    border-bottom: 1px solid var(--rule);
+    font-family: var(--ff-sans); font-size: 16px;
+    color: var(--fg-muted);
+    max-width: 56ch;
+    text-wrap: pretty;
+  }
+
+  footer.foot {
+    max-width: 1280px; margin: 0 auto;
+    padding: 80px 48px 56px;
+    margin-top: 96px;
+    border-top: 1px solid var(--rule);
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr 1fr;
+    gap: 48px;
+  }
+  @media (max-width: 800px) {
+    footer.foot { grid-template-columns: 1fr 1fr; padding: 56px 24px 40px; }
+  }
+  footer.foot .brand-big {
+    font-family: var(--ff-serif); font-size: 20px;
+    color: var(--fg); letter-spacing: -0.01em;
+  }
+  footer.foot .brand-big .n { color: var(--accent); }
+  footer.foot .col {
+    display: flex; flex-direction: column; gap: 8px;
+    font-family: var(--ff-mono); font-size: 11px;
+    letter-spacing: var(--ls-mono); text-transform: uppercase;
+    color: var(--fg-meta);
+  }
+  footer.foot .col .l { color: var(--fg-meta); }
+  footer.foot .col a { color: var(--fg-muted); text-decoration: none; }
+  footer.foot .col a:hover { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <a href="index.html" class="brand">alex<span class="n">le</span>135.de <span style="color:var(--fg-meta); font-family:var(--ff-mono); font-size:11px; letter-spacing:var(--ls-mono); text-transform:uppercase; margin-left:12px;">/ homelab</span></a>
+    <nav>
+      <a href="index.html" class="active">Übersicht</a>
+      <a href="#specs">Specs</a>
+      <a href="#runbooks">Runbooks</a>
+    </nav>
+    <div class="topbar-actions">
+      <button class="icon-btn" id="theme-toggle" title="Theme wechseln" aria-label="Theme">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="shell">
+
+  <section class="index-hero">
+    <div>
+      <div class="kicker" style="border-bottom:none; padding-bottom:0; margin-bottom:32px;">
+        <span><span class="a">№ 00</span> &nbsp;—&nbsp; HOMELAB</span>
+        <span>STAND MAI 2026</span>
+      </div>
+      <h1>Infrastruktur,<br><span class="it">geschrieben</span> bevor sie läuft.</h1>
+    </div>
+    <div>
+      <p class="lead">Specs und Runbooks für das eigene Setup — Tailnet, VPS, CachyOS-Desktop, FritzBox. Jeder Plan steht hier, bevor er auf die Maschinen kommt. Audit-fähig statt undokumentiert gewachsen.</p>
+      <div class="stats">
+        <div><span class="n">1</span>Spec</div>
+        <div><span class="n">0</span>Runbooks</div>
+        <div><span class="n">1</span>Im Entwurf</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="group" id="specs">
+    <div class="group-head">
+      <div class="num">01</div>
+      <div class="text">
+        <span class="k">№ 01 — SPECS</span>
+        <h2>Designs vor der Implementation</h2>
+      </div>
+      <div class="count">1 Eintrag</div>
+    </div>
+
+    <div class="index">
+      <a class="row" href="specs/2026-05-20-tailnet-adblock-design.html">
+        <span class="idx">01</span>
+        <span class="title">Tailnet-Werbeblocker<span class="sub">AdGuard Home auf VPS + CachyOS, FritzBox 7520, Tailscale MagicDNS</span></span>
+        <span class="tag">Tailnet · DNS</span>
+        <span class="ver"><span class="status-dot"></span>v 0.1.0</span>
+        <span class="yr">20.05.2026</span>
+      </a>
+    </div>
+  </section>
+
+  <section class="group" id="runbooks">
+    <div class="group-head">
+      <div class="num">02</div>
+      <div class="text">
+        <span class="k">№ 02 — RUNBOOKS</span>
+        <h2>Operative Anleitungen</h2>
+      </div>
+      <div class="count">0 Einträge</div>
+    </div>
+
+    <div class="placeholder">
+      <p>Noch leer. Wird gefüllt, sobald die ersten Specs implementiert und in den Live-Betrieb übergangen sind. Bis dahin steht hier nur diese Notiz.</p>
+    </div>
+  </section>
+
+</div>
+
+<footer class="foot">
+  <div class="brand-big">alex<span class="n">le</span>135.de</div>
+  <div class="col">
+    <span class="l">Quelle</span>
+    <a href="https://github.com/arn0ld87/homelab">github.com/arn0ld87/homelab</a>
+  </div>
+  <div class="col">
+    <span class="l">Kontakt</span>
+    <a href="mailto:schneider@alexle135.de">schneider@alexle135.de</a>
+  </div>
+  <div class="col">
+    <span class="l">Letzter Build</span>
+    <span>20.05.2026</span>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const html = document.documentElement;
+  const themeBtn = document.getElementById('theme-toggle');
+  const saved = localStorage.getItem('doc-theme');
+  if (saved) html.setAttribute('data-theme', saved);
+  themeBtn?.addEventListener('click', () => {
+    const cur = html.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+    html.setAttribute('data-theme', cur);
+    localStorage.setItem('doc-theme', cur);
+  });
+})();
+</script>
+
+</body>
+</html>

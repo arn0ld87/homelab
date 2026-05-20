@@ -320,7 +320,7 @@ Block-Liste aktiv.
 
 ---
 
-## 5. Filterlisten (in progress)
+## 5. Filterlisten
 
 ### Soll
 
@@ -334,27 +334,80 @@ Drei Listen ergänzend zur Default-Liste:
 
 ### Ist
 
-*— wird ergänzt, sobald die Listen im Dashboard hinzugefügt sind*
+Drei Listen über *Filters → DNS-Blocklisten → Eigene Liste hinzufügen*
+ergänzt. Download lief in wenigen Sekunden durch.
 
-### Lernpunkt (vorab)
+Verifikation per `dig` vom Mac aus:
+
+```bash
+dig @100.92.62.9 ads.youtube.com +short
+# → 0.0.0.0  ✅
+
+dig @100.92.62.9 graph.facebook.com +short
+# → star.c10r.facebook.com.
+#   57.144.248.141        ❌  NICHT geblockt
+
+dig @100.92.62.9 telemetry.microsoft.com +short
+# → 0.0.0.0  ✅
+```
+
+### Stolperstein 4 — `graph.facebook.com` wird nicht geblockt
+
+Erwartung war: alle drei Test-Domains werden geblockt. Tatsächlich
+zwei von drei.
+
+**Auflösung:** Kein Fehler in der Konfig, sondern absichtliches
+Verhalten der Listen.
+
+- Hagezi PRO und OISD halten `graph.facebook.com` bewusst frei. Das
+  ist die Graph-API. „Mit Facebook anmelden" und Facebook-Embeds
+  brauchen sie — wer das blockiert, bekommt kaputte Seiten an
+  unerwarteter Stelle.
+- Was diese Listen blockieren, sind die **echten** Tracker-Subdomains:
+  `connect.facebook.net` (Tracking-Pixel),
+  `pixel.facebook.com`. Diese ergeben `0.0.0.0`.
+
+Entscheidung: lassen wie es ist. Tracker sind abgedeckt, API bleibt
+funktional. Wer aggressiver will, hat drei Optionen:
+
+- Hagezi **Pro++** statt PRO:
+  `.../main/adblock/pro.plus.txt`
+- Hagezi **Ultimate**: deutlich aggressiver, höhere False-Positive-Rate.
+  Für ein Heim-LAN mit IoT-Geräten ungeeignet.
+- AGH Custom Rule: `||graph.facebook.com^` (eigene Regel, überstimmt
+  alle Listen).
+
+### Lernpunkt
 
 - **DNS-Blocklisten** sind Textdateien mit Domain-Mustern. AGH lädt
-  sie herunter, parst sie und matched eingehende DNS-Anfragen
-  dagegen. Trifft eine Anfrage einen Eintrag, antwortet AGH mit
-  `0.0.0.0` (oder `NXDOMAIN`, je nach Block-Mode).
+  sie herunter, parst sie, matched eingehende Anfragen dagegen.
+  Trifft eine Anfrage einen Eintrag, antwortet AGH mit `0.0.0.0` oder
+  `NXDOMAIN`, je nach Block-Mode.
 - **Mehr Listen ≠ besseres Blocking.** Ab einem gewissen Punkt
-  überlappen sich die Listen stark, und der Speicher-/CPU-Aufwand pro
-  Lookup wächst. Vier Listen reichen für die meisten Setups.
+  überlappen sie sich stark, und der Speicher-/CPU-Aufwand pro Lookup
+  wächst. Vier Listen reichen für die meisten Setups.
 - **`raw.githubusercontent.com`** ist die direkte Datei-URL für
   GitHub-Repos. Die `github.com/.../blob/...`-URL würde das HTML-UI
   ausliefern, AGH erwartet aber Plaintext.
+- **CNAME-Auflösung im `dig`-Output:** Ein Block-Test, der eine Zeile
+  mit einem Punkt am Ende (`star.c10r.facebook.com.`) gefolgt von
+  einer IP zeigt, ist eine CNAME-Kette. AGH konnte die Domain auflösen
+  → also nicht geblockt. Geblockt wäre eine einzelne `0.0.0.0`-Zeile
+  ohne CNAME.
+- **Konservative vs. aggressive Listen** sind eine Designentscheidung
+  der Maintainer. Hagezi dokumentiert die Stufen explizit
+  (`Light/Normal/Pro/Pro++/Ultimate`). Lieber die richtige Stufe
+  wählen, als nachträglich Whitelists pflegen.
+
+### Status
+
+VPS-AGH ist **komplett**. DNS-Auflösung läuft, Block-Listen aktiv,
+Default-Tracker werden blockiert, Facebook-API absichtlich nicht.
 
 ---
 
 ## Offen
 
-- Schritt 5 abschließen (Listen ergänzen, Verifikation, Query-Log
-  inspizieren)
 - Schritt 6: CachyOS-AGH als Replica
 - Schritt 7: `adguardhome-sync` auf dem VPS
 - Schritt 8: FritzBox-DHCP auf CachyOS-LAN-IP
@@ -362,6 +415,7 @@ Drei Listen ergänzend zur Default-Liste:
 
 ## Changelog
 
-| Datum       | Änderung                                              |
-|-------------|-------------------------------------------------------|
-| 2026-05-20  | Initial — Schritte 1 bis 4 dokumentiert, 5 begonnen   |
+| Datum       | Änderung                                                          |
+|-------------|-------------------------------------------------------------------|
+| 2026-05-20  | Initial — Schritte 1 bis 4 dokumentiert, 5 begonnen               |
+| 2026-05-20  | Schritt 5 fertig — Filterlisten, Stolperstein 4 (Facebook-API)    |

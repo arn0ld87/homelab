@@ -8,3 +8,6 @@
 # AGH-Runtime-Daten (lokale Tests)
 work/
 conf/AdGuardHome.yaml
+
+# Standalone-HTML (generiert, siehe tools/build-singlefile.py)
+*.standalone.html

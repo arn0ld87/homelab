@@ -35,12 +35,31 @@ Statischer Ordner — kein Build, kein Server-Pflicht. Reicht ein Browser:
 open index.html              # macOS
 ```
 
-Wer einen lokalen HTTP-Server möchte (z.B. damit Anker links sauber
+Wer einen lokalen HTTP-Server möchte (z. B. damit Anker links sauber
 funktionieren):
 
 ```bash
 python3 -m http.server 8000  # dann http://localhost:8000
 ```
+
+## Spec an Kollegen weitergeben (Single-File-HTML)
+
+Für E-Mail-Anhang, Slack-Upload oder USB. Eine Datei, alles inline:
+
+```bash
+python3 tools/build-singlefile.py specs/2026-05-20-tailnet-adblock-design.html
+# → specs/2026-05-20-tailnet-adblock-design.standalone.html  (~450 KB)
+```
+
+CSS und die Geist-Fonts sind base64-eingebettet. Fraunces (Display-Serif)
+bleibt über Google-Fonts-CDN bezogen — offline fällt es auf den
+Fallback-Stack (Iowan, Palatino, Georgia) zurück. Details in
+`tools/README.md`.
+
+Die generierten `*.standalone.html` sind in `.gitignore` und werden
+**nicht** ins Repo committed (regenerierbar). Wenn du einen
+Auslieferungs-Stand archivieren willst, in einen Ordner außerhalb des
+Repos kopieren und mit Datum benennen.
 
 ## Aktuelle Specs
 

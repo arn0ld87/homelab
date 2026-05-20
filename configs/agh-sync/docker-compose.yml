@@ -1,0 +1,32 @@
+# adguardhome-sync — pusht Filter, Clients, Upstreams und Rewrites
+# vom VPS-AGH (master) zur CachyOS-AGH-Replica.
+#
+# Container läuft auf dem VPS, redet ausschließlich übers Tailnet
+# mit beiden AGH-Instanzen. Kein Port-Mapping nötig — reines
+# Egress-Working.
+#
+# Erwartete Datei daneben: .env  (chmod 600)
+#   ORIGIN_URL=http://100.92.62.9:3000
+#   ORIGIN_USERNAME=...
+#   ORIGIN_PASSWORD=...
+#   REPLICA1_URL=http://100.95.132.54:3000
+#   REPLICA1_USERNAME=...
+#   REPLICA1_PASSWORD=...
+#   CRON=*/5 * * * *
+#   RUN_ON_START=true
+#   FEATURES_FILTERS=true
+#   FEATURES_CLIENTS=true
+#   FEATURES_DNS_SERVER_CONFIG=true
+#   FEATURES_DNS_REWRITES=true
+#   FEATURES_GENERAL_SETTINGS=false
+#   FEATURES_QUERY_LOG_CONFIG=false
+#   FEATURES_STATS_CONFIG=false
+#   FEATURES_SERVICES=false
+
+services:
+  agh-sync:
+    image: ghcr.io/bakito/adguardhome-sync:latest
+    container_name: agh-sync
+    restart: unless-stopped
+    env_file: ./.env
+    command: run

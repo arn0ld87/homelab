@@ -663,13 +663,119 @@ Sync-Aufbau.
 
 ---
 
+## 8. adguardhome-sync auf VPS
+
+### Soll
+
+`ghcr.io/bakito/adguardhome-sync` als Container auf VPS, Master = VPS-AGH,
+Replica1 = CachyOS-AGH, Cron alle 5 min.
+
+### Ist
+
+`/home/admin/agh-sync/` existierte mit `.env`, aber **ohne**
+`docker-compose.yml`. Deshalb fiel `docker compose up -d` ins Leere
+(kein Service-File gefunden).
+
+Lösung: Compose-File in der homelab-Spec versioniert (Pfad
+`homelab/configs/agh-sync/docker-compose.yml`, plus `.env.example`),
+via `scp` auf VPS übertragen:
+
+```bash
+scp configs/agh-sync/docker-compose.yml tail:/home/admin/agh-sync/
+```
+
+Dann auf VPS:
+
+```bash
+cd /home/admin/agh-sync
+docker compose up -d
+docker compose logs --tail 40 agh-sync
+```
+
+### Log-Auszug (Sync-Lauf)
+
+```
+Connected to origin       version=v0.107.75   from=100.92.62.9:3000
+Connected to replica      version=v0.107.73   to=100.95.132.54:3000
+Set dns config list       upstream-dns=[tls://dns.quad9.net, tls://1.1.1.1]
+Delete filter             url=https://big.oisd.nl
+Add filter                url=https://big.oisd.nl/
+Add filter                url=.../StevenBlack/hosts/master/hosts
+Add filter                url=https://adaway.org/hosts.txt
+Update filter             url=.../hagezi/dns-blocklists/main/adblock/pro.txt
+Refresh filter
+Set user rules            rules=0
+Sync done
+```
+
+### Verifikation gegen CachyOS-Replica
+
+```bash
+# Default-Block (AdGuard DNS filter)
+dig @100.95.132.54 doubleclick.net +short
+# → 0.0.0.0  ✅
+
+# AdAway-Treffer (Comscore)
+dig @100.95.132.54 b.scorecardresearch.com +short
+# → 0.0.0.0  ✅
+
+# Steven-Black-Treffer
+dig @100.95.132.54 telemetry.microsoft.com +short
+# → 0.0.0.0  ✅
+```
+
+Drei aus drei — Replica blockt identisch zum Master.
+
+### Beobachtungen / loose ends
+
+- **Versions-Drift** in den Sync-Logs:
+  `originVersion=v0.107.75, replicaVersion=v0.107.73`. Funktional
+  unkritisch, aber CachyOS-AGH sollte später per
+  `docker pull adguard/adguardhome:latest && docker compose up -d`
+  (nach Compose-Migration) aktualisiert werden.
+- **OISD-URL-Detail:** Im Sync-Log zwei Zeilen für OISD —
+  `Delete url=https://big.oisd.nl` gefolgt von
+  `Add url=https://big.oisd.nl/`. Trailing-Slash war der einzige
+  Unterschied; AGH-Sync sieht das als zwei verschiedene Einträge.
+- **Warnung** `disabling replica 'Use private reverse DNS resolvers' as
+  no 'Private reverse DNS servers' are configured on origin` — Setting
+  wurde abgeschaltet, weil im VPS nicht konfiguriert. Irrelevant für
+  unser Setup.
+
+### Lernpunkt
+
+- **`scp` für versionierte Configs:** Compose-File liegt im Repo
+  (`configs/agh-sync/`), `.env` mit Secrets nicht. Auf den VPS kopiert
+  via `scp`. Bei künftigen Updates des Compose: lokal editieren,
+  pushen, `docker compose up -d` auf VPS.
+- **Sync-Container braucht kein Port-Mapping:** Reiner Egress —
+  redet via HTTP über Tailnet. Daher im Compose kein `ports:`-Block.
+  `8080/tcp` in `docker ps` ist die interne Health-API,
+  nicht exponiert.
+- **FEATURES-Flags trennen Inhalt von Konfig:**
+  - `FILTERS=true`, `CLIENTS=true`, `DNS_SERVER_CONFIG=true`,
+    `DNS_REWRITES=true` → das sind die inhaltlichen Sachen, die
+    Master und Replica gemeinsam haben sollen
+  - `GENERAL_SETTINGS=false`, `QUERY_LOG_CONFIG=false`,
+    `STATS_CONFIG=false`, `SERVICES=false` → bleibt pro Knoten
+    lokal (UI-Theme, Retention, etc.)
+
+### Status
+
+Sync läuft alle 5 Minuten, beide Knoten haben identische Filter,
+Upstreams und Clients. **Phase 3 abgeschlossen.**
+
+---
+
 ## Offen
 
-- AdAway-Liste auf VPS-AGH ergänzen (Vorbereitung für Sync)
-- Schritt 7: `adguardhome-sync` auf dem VPS aufsetzen
-- Schritt 8: CachyOS-AGH-Migration auf Compose, Bind-Hosts spec-konform
-- Schritt 9: FritzBox-DHCP auf CachyOS-LAN-IP
-- Schritt 10: Tailscale MagicDNS global
+- Schritt 9: CachyOS-AGH-Migration auf Compose, Bind-Hosts spec-konform,
+  Version-Drift schließen, DHCP-Sektion aus yaml entfernen
+- Schritt 10: FritzBox-DHCP auf CachyOS-LAN-IP (192.168.178.74)
+- Schritt 11: Tailscale MagicDNS global (Global Nameserver = 100.92.62.9)
+
+---
+
 
 ## Changelog
 
@@ -679,3 +785,4 @@ Sync-Aufbau.
 | 2026-05-20  | Schritt 5 fertig — Filterlisten, Stolperstein 4 (Facebook-API)    |
 | 2026-05-20  | Schritt 6 — CachyOS-AGH inspiziert, Stolperstein 5+6, AdAway-Merge|
 | 2026-05-20  | Schritt 7 — Passwort-Reset, Stolperstein 8 (Port-Mismatch 80→3000)|
+| 2026-05-20  | Schritt 8 — Sync läuft, Replica spiegelt Master, Phase 3 durch    |

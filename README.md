@@ -1,8 +1,4 @@
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/logo-dark.svg">
-  <source media="(prefers-color-scheme: light)" srcset="assets/logo-light.svg">
-  <img alt="alexle135.de — homelab" src="assets/logo-dark.svg" width="360">
-</picture>
+<a href="https://alexle135.de"><img alt="alexle135.de — homelab" src="assets/logo.jpg" width="360"></a>
 
 ---
 
@@ -23,8 +19,7 @@ homelab/
 ├── assets/                 Design-Tokens, CSS, Fonts, Logo
 │   ├── colors_and_type.css
 │   ├── doc.css
-│   ├── logo-dark.svg
-│   ├── logo-light.svg
+│   ├── logo.jpg
 │   └── fonts/
 ├── specs/                  Markdown + HTML pro Plan
 │   └── YYYY-MM-DD-<slug>-design.{md,html}

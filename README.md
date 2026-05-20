@@ -44,9 +44,10 @@ python3 -m http.server 8000  # dann http://localhost:8000
 
 ## Aktuelle Specs
 
-| Datum       | Titel                  | Version | Status   |
-|-------------|------------------------|---------|----------|
-| 2026-05-20  | Tailnet-Werbeblocker   | 0.1.0   | Entwurf  |
+| Datum       | Titel                  | Version | Status                 |
+|-------------|------------------------|---------|------------------------|
+| 2026-05-20  | Tailnet-Werbeblocker   | 0.1.0   | Entwurf                |
+| 2026-05-20  | Heim-Monitoring-Stack  | 0.1.0   | Entwurf · Tutor-Modus  |
 
 ## Design-System
 

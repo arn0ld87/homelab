@@ -767,6 +767,86 @@ Upstreams und Clients. **Phase 3 abgeschlossen.**
 
 ---
 
+## 9. FritzBox-DHCP auf CachyOS-AGH
+
+### Soll
+
+Im FritzBox-Webinterface das Feld „Lokaler DNS-Server" auf
+`192.168.178.74` (CachyOS-LAN-IP). Lease-Zeit-Verkürzung auf 5 Minuten,
+Reboot der Clients (oder FritzBox-Neustart), zurücksetzen auf 24 h.
+
+### Ist
+
+Eingetragen über *Heimnetz → Netzwerk → Netzwerkeinstellungen →
+IP-Adressen → IPv4-Konfiguration → DHCP*:
+
+```
+DHCP-Server vergibt IPv4-Adressen
+  von   192.168.178.20
+  bis   192.168.178.200
+  Gültigkeit  10 Tage    (für IoT-Stabilität so gelassen)
+
+Lokaler DNS-Server  192.168.178.74
+```
+
+Statt Lease-Verkürzung: **FritzBox-Neustart**. Wirkt gleich (alle
+Clients holen sich beim Wieder-Anmelden eine neue Lease).
+
+### Stolperstein 9 — Tailscale übersteuert lokalen DHCP-DNS
+
+Verifikation am Mac:
+
+```bash
+scutil --dns | grep "nameserver\[0\]" | head -3
+# → nameserver[0] : 100.100.100.100   (Tailscale MagicDNS-Resolver)
+#   nameserver[0] : 100.92.62.9       (VPS-AGH via Tailscale)
+#   nameserver[0] : 100.100.100.100
+```
+
+**Kein `192.168.178.74` zu sehen.** Erste Reaktion: „FritzBox-DNS
+greift nicht." Tatsächlich:
+
+- Tailscale läuft auf dem Mac und schiebt seinen eigenen Resolver
+  (`100.100.100.100`) vor den DHCP-DNS
+- Sobald Tailscale aktiv ist, gewinnt es — das ist gewollt für den
+  „mobil unterwegs"-Use-Case
+- IoT-Geräte ohne Tailscale sehen den FritzBox-DHCP-DNS unverändert
+
+Echter LAN-Test mit `dig` direkt gegen die LAN-IP, das umgeht
+Tailscale:
+
+```bash
+dig @192.168.178.74 doubleclick.net +short
+# → 0.0.0.0  ✅
+
+dig @192.168.178.74 b.scorecardresearch.com +short
+# → 0.0.0.0  ✅
+```
+
+CachyOS-AGH antwortet auf `192.168.178.74:53`, Blocking greift.
+
+### Lernpunkt
+
+- **DNS-Priorität auf macOS:** Tailscale-Daemon kann den OS-Resolver
+  per VPN-Profil übersteuern. `scutil --dns` zeigt die Reihenfolge —
+  die `nameserver[0]`-Liste oben gewinnt.
+- **DHCP-DNS-Zielgruppe sind die LAN-only-Geräte:** Smart-TV, Drucker,
+  IoT, Konsolen — alles, was kein Tailscale spricht. Für die wirkt
+  der FritzBox-Eintrag wie geplant.
+- **`dig @IP host`** ist der schärfere Test: er geht direkt an die
+  angegebene IP, ignoriert OS-Resolver-Konfiguration. Bei
+  DNS-Debugging fast immer der erste Reflex.
+- **FritzBox-Neustart als Lease-Refresh-Hack:** Schneller als
+  Lease-Verkürzung und manuelle Lease-Renew-Trigger an jedem Client.
+  Funktioniert weil alle Clients beim Reconnect eine frische
+  DHCP-Anfrage stellen.
+
+### Status
+
+Heim-LAN-DNS-Pfad steht. **Phase 4 abgeschlossen.**
+
+---
+
 ## Offen
 
 - Schritt 9: CachyOS-AGH-Migration auf Compose, Bind-Hosts spec-konform,
@@ -786,3 +866,4 @@ Upstreams und Clients. **Phase 3 abgeschlossen.**
 | 2026-05-20  | Schritt 6 — CachyOS-AGH inspiziert, Stolperstein 5+6, AdAway-Merge|
 | 2026-05-20  | Schritt 7 — Passwort-Reset, Stolperstein 8 (Port-Mismatch 80→3000)|
 | 2026-05-20  | Schritt 8 — Sync läuft, Replica spiegelt Master, Phase 3 durch    |
+| 2026-05-20  | Schritt 9 — FritzBox-DHCP-DNS, Stolperstein 9 (Tailscale-Override)|

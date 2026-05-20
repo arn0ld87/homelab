@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 72" width="360" height="72" role="img" aria-label="alexle135.de — homelab">
+  <style>
+    .wordmark { font-family: 'Fraunces', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif; font-weight: 400; }
+    .tag      { font-family: 'Geist Mono', 'IBM Plex Mono', ui-monospace, Menlo, monospace; letter-spacing: 0.24em; }
+  </style>
+  <text x="0" y="44" class="wordmark" font-size="38" fill="#f6f2eb">alex<tspan fill="#ff6a00" font-style="italic">le</tspan>135.de</text>
+  <text x="2" y="64" class="tag" font-size="10" fill="#8b8177">HOMELAB · INFRASTRUKTUR-SPECS</text>
+</svg>

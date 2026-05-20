@@ -77,5 +77,9 @@ HTML-Header.
 
 ## Lizenz
 
-Persönliche Doku — alle Rechte vorbehalten. Code-Beispiele in den
-Snippets stehen unter MIT, sofern nicht anders gekennzeichnet.
+- **Doku, HTML, CSS, Diagramme**: [CC BY 4.0](LICENSE) — frei verwendbar
+  mit Quellenangabe (Alexander Schneider, https://alexle135.de).
+- **Code unter `tools/`**: [MIT](tools/LICENSE).
+
+Wer das Layout oder die Specs übernimmt: kurzer Hinweis auf alexle135.de
+reicht.

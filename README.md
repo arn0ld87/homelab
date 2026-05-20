@@ -1,8 +1,8 @@
 # homelab
 
-Specs und Runbooks für das eigene Setup — Tailnet, VPS, CachyOS-Desktop,
-FritzBox. Jeder Infrastruktur-Plan landet hier *bevor* er auf die
-Maschinen kommt. Audit-fähig statt undokumentiert gewachsen.
+Specs und Runbooks für das eigene Setup: Tailnet, VPS, CachyOS-Desktop,
+FritzBox. Markdown ist Source of Truth, HTML wird parallel gepflegt.
+Versionierung über git.
 
 ## Struktur
 
@@ -65,8 +65,8 @@ Repos kopieren und mit Datum benennen.
 
 | Datum       | Titel                  | Version | Status                 |
 |-------------|------------------------|---------|------------------------|
-| 2026-05-20  | Tailnet-Werbeblocker   | 0.1.0   | Entwurf                |
-| 2026-05-20  | Heim-Monitoring-Stack  | 0.1.0   | Entwurf · Tutor-Modus  |
+| 2026-05-20  | Tailnet-Werbeblocker   | 0.1.1   | Entwurf                |
+| 2026-05-20  | Heim-Monitoring-Stack  | 0.1.1   | Entwurf · Tutor-Modus  |
 
 ## Design-System
 

@@ -21,8 +21,8 @@
       <span class="cur">Monitoring-Stack</span>
     </div>
     <div class="topbar-right">
-      <span class="version">v 0.1.0</span>
-      <span class="status draft"><span class="dot"></span>Entwurf · Tutor-Modus</span>
+      <span class="version">v 0.1.1</span>
+      <span class="status draft"><span class="dot"></span>Entwurf · Tutor</span>
       <button class="icon-btn" id="theme-toggle" title="Theme wechseln" aria-label="Theme">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
       </button>
@@ -38,23 +38,24 @@
   <aside class="left-rail" aria-label="Inhaltsverzeichnis">
     <div class="toc-kicker">Inhalt</div>
     <ol class="toc" id="toc">
-      <li><span class="n">01</span><a href="#lernziele">Lernziele</a></li>
-      <li><span class="n">02</span><a href="#begriffe">Begriffe</a></li>
-      <li><span class="n">03</span><a href="#architektur">Architektur</a></li>
-      <li><span class="n">04</span><a href="#phase-1">Phase 1 — Prometheus</a></li>
-      <li><span class="n">05</span><a href="#phase-2">Phase 2 — Loki</a></li>
-      <li><span class="n">06</span><a href="#phase-3">Phase 3 — ntopng</a></li>
-      <li><span class="n">07</span><a href="#wireshark">Ad-hoc — Wireshark</a></li>
-      <li><span class="n">08</span><a href="#promql">PromQL-Übung</a></li>
-      <li><span class="n">09</span><a href="#lerncheck">Lerncheck</a></li>
-      <li><span class="n">10</span><a href="#tutor">Tutor-Vertrag</a></li>
-      <li><span class="n">11</span><a href="#changelog">Änderungen</a></li>
+      <li><span class="n">01</span><a href="#ziel">Ziel</a></li>
+      <li><span class="n">02</span><a href="#fisi">FISI-Bezug</a></li>
+      <li><span class="n">03</span><a href="#begriffe">Begriffe</a></li>
+      <li><span class="n">04</span><a href="#architektur">Architektur</a></li>
+      <li><span class="n">05</span><a href="#phase-1">Phase 1 — Prometheus</a></li>
+      <li><span class="n">06</span><a href="#phase-2">Phase 2 — Loki</a></li>
+      <li><span class="n">07</span><a href="#phase-3">Phase 3 — ntopng</a></li>
+      <li><span class="n">08</span><a href="#wireshark">Ad-hoc — Wireshark</a></li>
+      <li><span class="n">09</span><a href="#promql">PromQL-Übung</a></li>
+      <li><span class="n">10</span><a href="#lerncheck">Lerncheck</a></li>
+      <li><span class="n">11</span><a href="#tutor">Tutor-Rollen</a></li>
+      <li><span class="n">12</span><a href="#changelog">Änderungen</a></li>
     </ol>
 
     <div class="rail-meta">
       <div class="row">
         <span class="l">Modus</span>
-        <span class="v">Tutor — du implementierst</span>
+        <span class="v">Tutor</span>
       </div>
       <div class="row">
         <span class="l">Status</span>
@@ -69,7 +70,6 @@
 
   <main class="doc">
 
-    <!-- ===== HERO ===== -->
     <header class="hero">
       <div class="kicker">
         <span><span class="a">№ 02</span> &nbsp;—&nbsp; LERN-PLAN</span>
@@ -78,12 +78,12 @@
 
       <h1>Heim-<br><span class="it">Monitoring</span>.</h1>
 
-      <p class="lead">Lokales Monitoring auf dem CachyOS-Desktop. Drei Phasen, drei Sichten — Host-Metriken, Logs, Netzwerk-Flows. Aufgebaut nach Tutor-Prinzip: der Plan erklärt das <em>Warum</em>, du implementierst selbst. Lern-Wert vor Convenience.</p>
+      <p class="lead">Drei Phasen, drei Sichten: Host-Metriken, Logs, Netzwerk-Flows. Alles in Docker auf dem CachyOS-Desktop. Wireshark und tcpdump bleiben als Ad-hoc-Werkzeuge daneben. Plan ist Tutor-Modus — Aufbau und Erklärung von mir, Installation und Debugging von dir.</p>
 
       <div class="meta-strip">
         <div class="cell">
           <span class="l">Version</span>
-          <span class="v mono">0.1.0</span>
+          <span class="v mono">0.1.1</span>
         </div>
         <div class="cell">
           <span class="l">Stand</span>
@@ -99,37 +99,45 @@
         </div>
         <div class="cell">
           <span class="l">Lesedauer</span>
-          <span class="v">≈ 25 Min.</span>
+          <span class="v">≈ 18 Min.</span>
         </div>
       </div>
     </header>
 
-    <!-- ===== 01 LERNZIELE ===== -->
-    <section class="section" id="lernziele" data-screen-label="01 Lernziele">
+    <!-- ===== 01 ZIEL ===== -->
+    <section class="section" id="ziel" data-screen-label="01 Ziel">
       <div class="sec-head">
         <div class="sec-num">01</div>
         <div>
-          <div class="meta">№ 01 &nbsp;—&nbsp; LERNZIELE</div>
-          <h2>Was du <span class="it">wirklich</span> mitnimmst.</h2>
-          <p class="sublead">Nicht „ein Dashboard läuft", sondern verstanden zu haben, warum es genau diese Datenflüsse und keine anderen sind. Lern-Wert ist das Ziel — ein zweites Dashboard zu klicken kostet später nur Minuten.</p>
+          <div class="meta">№ 01 &nbsp;—&nbsp; ZIEL</div>
+          <h2>Was gebaut wird.</h2>
         </div>
       </div>
 
       <div class="prose">
-        <h3 data-num="1.1 — Skills">Was du danach kannst</h3>
         <ul>
-          <li>Einen funktionierenden Prometheus-Grafana-Loki-Stack auf CachyOS betreiben</li>
-          <li>Pull-basiertes Monitoring von Push-basiertem unterscheiden und begründen, wann welches</li>
-          <li>Ein Gefühl dafür, wann <strong>Metriken</strong> und wann <strong>Logs</strong> das richtige Werkzeug sind</li>
-          <li>Drei eigene <strong>PromQL</strong>-Abfragen schreiben und in einem Dashboard verbauen</li>
-          <li>NetFlow/IPFIX einmal mit echten Daten gesehen statt nur im Lehrbuch</li>
-          <li>Den Reflex, vor jedem neuen Tool zu fragen: „Was kostet das an RAM/Disk?"</li>
+          <li>Phase 1: Host-Metriken — Prometheus + node_exporter + Grafana</li>
+          <li>Phase 2: Logs — Loki + Promtail</li>
+          <li>Phase 3: Netzwerk-Flows — ntopng</li>
         </ul>
+        <p>Alles in Docker auf dem CachyOS-Desktop. Wireshark und tcpdump bleiben als Ad-hoc-Werkzeuge, laufen nicht als Daemon.</p>
+      </div>
+    </section>
 
-        <h3 data-num="1.2 — FISI-Bezug">FISI-Lehrplan-Bezüge</h3>
+    <!-- ===== 02 FISI ===== -->
+    <section class="section" id="fisi" data-screen-label="02 FISI-Bezug">
+      <div class="sec-head">
+        <div class="sec-num">02</div>
+        <div>
+          <div class="meta">№ 02 &nbsp;—&nbsp; FISI-BEZUG</div>
+          <h2>Lehrplan-Andocken.</h2>
+        </div>
+      </div>
+
+      <div class="prose">
         <table class="data-table">
           <thead>
-            <tr><th>Lernfeld</th><th>Inhalt</th><th>Was diese Spec abdeckt</th></tr>
+            <tr><th>Lernfeld</th><th>Inhalt</th><th>Abgedeckt durch</th></tr>
           </thead>
           <tbody>
             <tr>
@@ -140,33 +148,27 @@
             <tr>
               <td>LF 9</td>
               <td>Netzwerkbasierte IT-Lösungen umsetzen</td>
-              <td>NetFlow, Traffic-Analyse, Layer-Modell in der Praxis</td>
+              <td>NetFlow, Traffic-Analyse</td>
             </tr>
             <tr>
               <td>LF 11</td>
               <td>Daten systemübergreifend bereitstellen</td>
-              <td>Time-Series-DB, Label-Konzept, Datenmodelle</td>
+              <td>Time-Series-DB, Label-Konzept</td>
             </tr>
           </tbody>
         </table>
 
-        <div class="callout tip">
-          <div class="ctype">Berichtsheft-Tipp</div>
-          <div class="ctext">
-            <p>Diese Spec eignet sich als Eigenprojekt. Halte jede Phase mit Screenshots, Befehlen und Konfigs fest. Das wird im Praktikum und in der AP2 relevant — Prüfer fragen explizit nach Monitoring-Konzepten.</p>
-          </div>
-        </div>
+        <p>Eignet sich als Eigenprojekt fürs Berichtsheft. Screenshots und Konfig-Diffs pro Schritt mitschneiden — Material für AP2.</p>
       </div>
     </section>
 
-    <!-- ===== 02 BEGRIFFE ===== -->
-    <section class="section" id="begriffe" data-screen-label="02 Begriffe">
+    <!-- ===== 03 BEGRIFFE ===== -->
+    <section class="section" id="begriffe" data-screen-label="03 Begriffe">
       <div class="sec-head">
-        <div class="sec-num">02</div>
+        <div class="sec-num">03</div>
         <div>
-          <div class="meta">№ 02 &nbsp;—&nbsp; BEGRIFFE</div>
-          <h2>Bevor du anfängst.</h2>
-          <p class="sublead">Wenn du diese Begriffe nicht klar trennen kannst, lies sie kurz nach. Sie tauchen in jedem Job-Interview im Ops/SRE/DevOps-Umfeld auf — Lerne sie hier in Ruhe, nicht unter Druck.</p>
+          <div class="meta">№ 03 &nbsp;—&nbsp; BEGRIFFE</div>
+          <h2>Vorab nachlesen, wenn etwas nicht sitzt.</h2>
         </div>
       </div>
 
@@ -174,67 +176,59 @@
         <dl class="deflist">
           <div class="row">
             <div class="key">Metrik<span class="type">Datentyp</span></div>
-            <div class="val">Eine Zahl über die Zeit. Beispiel: CPU-Last alle 15 s. Wenig Speicher pro Datenpunkt. <em>Time-Series</em></div>
+            <div class="val">Zahl über die Zeit. CPU-Last alle 15 s. Klein pro Datenpunkt.</div>
           </div>
           <div class="row">
             <div class="key">Log<span class="type">Datentyp</span></div>
-            <div class="val">Eine textuelle Zeile zu einem konkreten Ereignis („User X hat sich eingeloggt"). Größer pro Eintrag, schwerer zu aggregieren. <em>Event-Stream</em></div>
+            <div class="val">Textuelle Zeile zu einem Ereignis. Größer, schwerer zu aggregieren.</div>
           </div>
           <div class="row">
             <div class="key">Trace<span class="type">Datentyp</span></div>
-            <div class="val">Pfad einer Anfrage durch mehrere Systeme. Nicht in dieser Spec — kommt später, wenn relevant. <em>Out of Scope</em></div>
+            <div class="val">Pfad einer Anfrage durch mehrere Systeme. Nicht in dieser Spec.</div>
           </div>
           <div class="row">
             <div class="key">Pull<span class="type">Architektur</span></div>
-            <div class="val">Der Server fragt aktiv ab. Prometheus zieht alle 15 s von node_exporter. Vorteil: zentrale Kontrolle, einfache Auth.</div>
+            <div class="val">Server fragt aktiv ab. Prometheus zieht von node_exporter.</div>
           </div>
           <div class="row">
             <div class="key">Push<span class="type">Architektur</span></div>
-            <div class="val">Der Client schickt Daten von sich aus. Loki/Promtail funktioniert so. Vorteil: kurzlebige Jobs, Geräte hinter NAT.</div>
+            <div class="val">Client schickt von sich aus. Loki/Promtail.</div>
           </div>
           <div class="row">
             <div class="key">Time-Series-DB<span class="type">Speicher</span></div>
-            <div class="val">Spezial-Datenbank für Zahlen-über-Zeit. Prometheus ist eine. Optimiert für Append-only und Aggregation.</div>
+            <div class="val">Datenbank für Zahlen-über-Zeit. Prometheus ist eine.</div>
           </div>
           <div class="row">
             <div class="key">Exporter<span class="type">Komponente</span></div>
-            <div class="val">Kleines Programm, das Metriken eines Systems im Prometheus-Format ausgibt. <code class="inline">node_exporter</code> für den Host.</div>
+            <div class="val">Programm, das Metriken im Prometheus-Format ausgibt. <code class="inline">node_exporter</code> für den Host.</div>
           </div>
           <div class="row">
             <div class="key">PromQL<span class="type">Sprache</span></div>
-            <div class="val">Abfragesprache von Prometheus. SQL-artig, aber für Zeitreihen. Lohnt sich zu lernen — Industriestandard.</div>
+            <div class="val">Abfragesprache von Prometheus. SQL-artig für Zeitreihen.</div>
           </div>
           <div class="row">
             <div class="key">Label<span class="type">Konzept</span></div>
-            <div class="val">Schlüssel-Wert-Tag an einer Metrik. <code class="inline">cpu_seconds_total{mode="user", instance="cachyos"}</code>. Filter-Achse.</div>
+            <div class="val">Schlüssel-Wert-Tag an einer Metrik. Filter-Achse.</div>
           </div>
           <div class="row">
             <div class="key">NetFlow / IPFIX<span class="type">Protokoll</span></div>
-            <div class="val">Protokoll, mit dem Router/Switches Verbindungs-Metadaten exportieren. Wer redet mit wem, wie viel.</div>
+            <div class="val">Protokoll, mit dem Router/Switches Verbindungs-Metadaten exportieren.</div>
           </div>
           <div class="row">
             <div class="key">Cardinality<span class="type">Falle</span></div>
-            <div class="val">Anzahl unique Label-Kombinationen. Hohe Cardinality = explodierender Speicherbedarf. Klassische Anfänger-Falle.</div>
+            <div class="val">Anzahl unique Label-Kombinationen. Hohe Cardinality frisst Speicher.</div>
           </div>
         </dl>
-
-        <div class="callout note">
-          <div class="ctype">Lern-Tipp</div>
-          <div class="ctext">
-            <p>Erkläre die Tabelle einmal laut, ohne auf den Text zu schauen. Wenn du bei einem Begriff stockst, schlag nach. Das ist die Vor-Pflicht für Phase 1.</p>
-          </div>
-        </div>
       </div>
     </section>
 
-    <!-- ===== 03 ARCHITEKTUR ===== -->
-    <section class="section" id="architektur" data-screen-label="03 Architektur">
+    <!-- ===== 04 ARCHITEKTUR ===== -->
+    <section class="section" id="architektur" data-screen-label="04 Architektur">
       <div class="sec-head">
-        <div class="sec-num">03</div>
+        <div class="sec-num">04</div>
         <div>
-          <div class="meta">№ 03 &nbsp;—&nbsp; ARCHITEKTUR</div>
+          <div class="meta">№ 04 &nbsp;—&nbsp; ARCHITEKTUR</div>
           <h2>Wer redet mit wem.</h2>
-          <p class="sublead">Alle Komponenten laufen in einem Compose-Projekt auf CachyOS. Drei Datenflüsse, die du erklären können solltest, bevor du anfängst.</p>
         </div>
       </div>
 
@@ -257,29 +251,28 @@
 <span class="b">│</span>   <span class="b">└───────────────┘    └───────────────┘</span>                         <span class="b">│</span>
 <span class="b">│</span>                                                                  <span class="b">│</span>
 <span class="b">│</span>   <span class="b">┌───────────────┐</span>                                              <span class="b">│</span>
-<span class="b">│</span>   <span class="b">│</span>  <span class="a">ntopng</span>       <span class="b">│</span>  eigene UI :3001 — eigenständig, nicht in    <span class="b">│</span>
-<span class="b">│</span>   <span class="b">│</span>  :3001        <span class="b">│</span>  Grafana eingebettet (Phase 3)               <span class="b">│</span>
+<span class="b">│</span>   <span class="b">│</span>  <span class="a">ntopng</span>       <span class="b">│</span>  eigene UI :3001, nicht in Grafana           <span class="b">│</span>
+<span class="b">│</span>   <span class="b">│</span>  :3001        <span class="b">│</span>  eingebettet                                 <span class="b">│</span>
 <span class="b">│</span>   <span class="b">└───────────────┘</span>                                              <span class="b">│</span>
-<span class="b">│</span>                                                                  <span class="b">│</span>
 <span class="b">└──────────────────────────────────────────────────────────────────┘</span></div>
           </div>
           <figcaption>
             <span class="num">Abb. 01</span>
-            <span>Monitoring-Stack — drei Datenflüsse, eine Anzeige</span>
+            <span>Komponenten und Datenflüsse</span>
           </figcaption>
         </figure>
 
-        <h3 data-num="3.1 — Drei Pfeile">Drei Pfeile, die du erklären können solltest</h3>
+        <h3 data-num="4.1 — Pfeile">Drei Pfeile, die du erklären können solltest</h3>
         <ol>
-          <li><strong>node_exporter ← Prometheus</strong>. Prometheus <em>zieht</em>. Wer ist Master? Prometheus.</li>
-          <li><strong>Promtail → Loki</strong>. Promtail <em>pusht</em>. Wer entscheidet wann? Promtail, an Logzeilen-Eingang gekoppelt.</li>
-          <li><strong>Grafana ← Prometheus &amp; Loki</strong>. Grafana ist nur Anzeige, kein Datenspeicher. Wenn Grafana ausfällt, sind die Daten nicht weg.</li>
+          <li>node_exporter ← Prometheus. Prometheus zieht. Master ist Prometheus.</li>
+          <li>Promtail → Loki. Promtail pusht.</li>
+          <li>Grafana ← Prometheus + Loki. Grafana ist nur Anzeige, kein Speicher.</li>
         </ol>
 
-        <h3 data-num="3.2 — RAM-Budget">Was das insgesamt an Ressourcen kostet</h3>
+        <h3 data-num="4.2 — Budget">RAM-Budget</h3>
         <table class="data-table">
           <thead>
-            <tr><th>Komponente</th><th>RAM (Schätzung)</th><th>Phase</th></tr>
+            <tr><th>Komponente</th><th>RAM</th><th>Phase</th></tr>
           </thead>
           <tbody>
             <tr><td>Prometheus</td><td>~250 MB</td><td>1</td></tr>
@@ -290,29 +283,29 @@
             <tr><td><strong>Summe</strong></td><td><strong>~770 MB</strong></td><td>—</td></tr>
           </tbody>
         </table>
-        <p>Disk: ca. 5–10 GB für 30 Tage Retention auf default-Werten. Auf einem Desktop unkritisch.</p>
+        <p>Disk: 5–10 GB für 30 Tage Retention mit Defaults.</p>
       </div>
     </section>
 
-    <!-- ===== 04 PHASE 1 ===== -->
-    <section class="section" id="phase-1" data-screen-label="04 Phase 1">
+    <!-- ===== 05 PHASE 1 ===== -->
+    <section class="section" id="phase-1" data-screen-label="05 Phase 1">
       <div class="sec-head">
-        <div class="sec-num">04</div>
+        <div class="sec-num">05</div>
         <div>
-          <div class="meta">№ 04 &nbsp;—&nbsp; PHASE 1 — METRIKEN</div>
+          <div class="meta">№ 05 &nbsp;—&nbsp; PHASE 1 — METRIKEN</div>
           <h2>Prometheus, node_exporter, Grafana.</h2>
-          <p class="sublead">Lernziel: Du verstehst, wie eine Metrik vom Linux-Kernel über <code class="inline">node_exporter</code> zu Prometheus kommt, dort gespeichert wird, und in Grafana ein Diagramm wird. Du schreibst deine erste PromQL-Abfrage.</p>
+          <p class="sublead">Ziel: Verstehen, wie eine Metrik vom Linux-Kernel über <code class="inline">node_exporter</code> zu Prometheus kommt und in Grafana als Diagramm landet. Eine erste PromQL-Abfrage selbst schreiben.</p>
         </div>
       </div>
 
       <div class="prose">
-        <h3 data-num="4.1 — Reihenfolge">Schritte in dieser Reihenfolge</h3>
+        <h3 data-num="5.1 — Reihenfolge">Reihenfolge</h3>
         <ol>
-          <li><strong>node_exporter zuerst.</strong> Standalone testen. Browser auf <code class="inline">http://localhost:9100/metrics</code> — du sollst Tausende Zeilen Text sehen. Das ist das Roh-Format, das Prometheus später parsen wird. <em>Aha-Moment:</em> Es ist Klartext, keine Zauberei.</li>
-          <li><strong>Prometheus daneben.</strong> Compose-File mit beiden Services. In <code class="inline">prometheus.yml</code> einen <code class="inline">scrape_config</code> für node_exporter eintragen. Service starten, Browser auf <code class="inline">http://localhost:9090/targets</code> — node_exporter muss als „UP" erscheinen. Wenn nicht: Docker-Netzwerk prüfen — sehen sich die Container?</li>
-          <li><strong>Erste PromQL-Abfrage</strong> in der Prometheus-UI selbst, nicht in Grafana. Verstehe <em>jeden</em> Teil der Zeile, bevor du weitergehst.</li>
-          <li><strong>Grafana dazu.</strong> Container starten, Browser auf <code class="inline">http://localhost:3000</code> (admin/admin beim ersten Login). Prometheus als Data Source eintragen — beachte den Docker-DNS-Namen.</li>
-          <li><strong>Dein erstes Dashboard.</strong> Drei Panels (CPU, RAM, Disk-I/O). Bau es <strong>selbst</strong> auf, nicht via Dashboard-Import. Der Lernwert ist im Bauen.</li>
+          <li><code class="inline">node_exporter</code> einzeln starten. Browser auf <code class="inline">http://localhost:9100/metrics</code>. Erwartet: tausende Zeilen Klartext.</li>
+          <li>Prometheus daneben. In <code class="inline">prometheus.yml</code> einen <code class="inline">scrape_config</code> für <code class="inline">node_exporter</code> eintragen. Browser auf <code class="inline">http://localhost:9090/targets</code>. Erwartet: <code class="inline">UP</code>. Wenn nicht: Docker-Netzwerk prüfen.</li>
+          <li>Erste PromQL-Abfrage in der Prometheus-UI.</li>
+          <li>Grafana dazu. Browser auf <code class="inline">http://localhost:3000</code> (admin/admin). Prometheus als Data Source mit URL <code class="inline">http://prometheus:9090</code> (Docker-DNS-Name, nicht <code class="inline">localhost</code>).</li>
+          <li>Eigenes Dashboard, drei Panels: CPU pro Kern, RAM-Belegung, Disk-I/O. Selbst bauen, nicht importieren.</li>
         </ol>
 
         <div class="codeblock">
@@ -324,168 +317,140 @@
         </div>
 
         <ul>
-          <li><code class="inline">node_cpu_seconds_total</code> ist ein <strong>Counter</strong> (steigt nur).</li>
-          <li><code class="inline">{mode="user"}</code> filtert auf User-Space-CPU (nicht Kernel/IO).</li>
-          <li><code class="inline">rate(...)[5m]</code> rechnet die Steigung pro Sekunde über 5 Minuten.</li>
-          <li>Ergebnis: CPU-Last im Bereich 0.0–1.0 pro Kern.</li>
+          <li><code class="inline">node_cpu_seconds_total</code> ist ein Counter (steigt nur).</li>
+          <li><code class="inline">{mode="user"}</code> filtert auf User-Space-CPU.</li>
+          <li><code class="inline">rate(...)[5m]</code> rechnet Steigung pro Sekunde über 5 min.</li>
+          <li>Ergebnis: 0.0–1.0 pro Kern.</li>
         </ul>
 
-        <h3 data-num="4.2 — Stolperfallen">Häufige Stolperfallen</h3>
-        <div class="callout warn">
-          <div class="ctype">localhost-Falle</div>
-          <div class="ctext">
-            <p>Grafana muss <code class="inline">prometheus:9090</code> heißen, nicht <code class="inline">localhost:9090</code>. Container leben in getrennten Namespaces — <em>localhost</em> ist immer der Container selbst, nie der Nachbar-Container.</p>
-          </div>
-        </div>
-        <div class="callout warn">
-          <div class="ctype">Zeit-Bereich</div>
-          <div class="ctext">
-            <p>Beim ersten Klick steht oft „Last 5 minutes" — der Counter braucht Datenpunkte. Auf „Last 1 hour" stellen und etwas warten.</p>
-          </div>
-        </div>
+        <h3 data-num="5.2 — Typische Fehler">Typische Fehler</h3>
+        <ul>
+          <li><code class="inline">localhost:9090</code> in Grafana statt <code class="inline">prometheus:9090</code>. Container haben getrennte Namespaces.</li>
+          <li>Zeitbereich „Last 5 minutes" beim ersten Klick. Counter braucht Datenpunkte. Auf „Last 1 hour" stellen, kurz warten.</li>
+          <li>Retention auf 90 Tage drehen ohne Disk-Rechnung. Default 15 Tage reicht.</li>
+        </ul>
 
-        <h3 data-num="4.3 — Verständnis-Check">Verständnis-Check Phase 1</h3>
-        <p>Wenn du diese Fragen <em>selbst</em> beantworten kannst, ist Phase 1 sauber verstanden — nicht nur abgehakt:</p>
+        <h3 data-num="5.3 — Check">Verständnis-Check Phase 1</h3>
         <ol>
-          <li>Warum kann <code class="inline">node_exporter</code> keine Disk-Schreibvorgänge im Mount <code class="inline">/host/proc</code> sehen, wenn du es ohne Bind-Mounts startest?</li>
-          <li>Was ist der Unterschied zwischen <code class="inline">rate()</code> und <code class="inline">increase()</code>?</li>
-          <li>Wieso ist ein Label wie <code class="inline">user_email="…"</code> eine <strong>schlechte</strong> Idee?</li>
+          <li>Warum sieht <code class="inline">node_exporter</code> keine Host-Disk-Schreibvorgänge, wenn er ohne Bind-Mount auf <code class="inline">/host/proc</code> startet?</li>
+          <li>Unterschied zwischen <code class="inline">rate()</code> und <code class="inline">increase()</code>?</li>
+          <li>Warum ist <code class="inline">user_email="…"</code> als Label eine schlechte Idee?</li>
         </ol>
       </div>
     </section>
 
-    <!-- ===== 05 PHASE 2 ===== -->
-    <section class="section" id="phase-2" data-screen-label="05 Phase 2">
+    <!-- ===== 06 PHASE 2 ===== -->
+    <section class="section" id="phase-2" data-screen-label="06 Phase 2">
       <div class="sec-head">
-        <div class="sec-num">05</div>
+        <div class="sec-num">06</div>
         <div>
-          <div class="meta">№ 05 &nbsp;—&nbsp; PHASE 2 — LOGS</div>
+          <div class="meta">№ 06 &nbsp;—&nbsp; PHASE 2 — LOGS</div>
           <h2>Loki und Promtail.</h2>
-          <p class="sublead">Lernziel: Du verstehst, warum man Logs <em>nicht</em> in Prometheus packt, und wie ein Label-basiertes Log-System funktioniert. Du suchst einen konkreten Eintrag in den Docker-Logs deiner AGH-Instanz aus dem Adblock-Plan.</p>
+          <p class="sublead">Ziel: Verstehen, warum Logs nicht in Prometheus gehören, und wie ein Label-basiertes Log-System funktioniert. Einen konkreten Eintrag in den AGH-Container-Logs aus dem Adblock-Plan suchen.</p>
         </div>
       </div>
 
       <div class="prose">
+        <h3 data-num="6.1 — Reihenfolge">Reihenfolge</h3>
         <ol>
-          <li><strong>Konzept zuerst, Befehle danach.</strong> Lies das Loki-Konzept-Kapitel „Labels, Streams, Chunks". 10 Minuten — erspart dir später Cardinality-Probleme.</li>
-          <li><strong>Loki + Promtail im Compose</strong> ergänzen. Promtail braucht Lese-Zugriff auf <code class="inline">/var/log/journal/</code> und den Docker-Socket — beides als Bind-Mount.</li>
-          <li><strong>In Grafana Loki als Data Source eintragen.</strong> Explore-Tab öffnen, Loki-Quelle wählen, Abfrage probieren.</li>
+          <li>Loki-Konzept-Kapitel „Labels, Streams, Chunks" lesen. 10 Minuten, erspart Cardinality-Probleme später.</li>
+          <li>Loki + Promtail im Compose ergänzen. Promtail braucht Bind-Mounts auf <code class="inline">/var/log/journal/</code> und den Docker-Socket.</li>
+          <li>In Grafana Loki als Data Source eintragen, Explore-Tab nutzen.</li>
         </ol>
 
         <div class="codeblock">
           <div class="cb-head">
-            <div class="cb-file"><span class="lang">LogQL</span>Logs deines AGH-Containers</div>
+            <div class="cb-file"><span class="lang">LogQL</span>Logs des AGH-Containers</div>
             <button class="cb-copy" data-copy>Kopieren</button>
           </div>
 <pre><span class="tok-p">{</span>container<span class="tok-p">=</span><span class="tok-s">"agh-replica"</span><span class="tok-p">}</span> |= <span class="tok-s">"blocked"</span></pre>
         </div>
 
-        <p>Du siehst Live-Logs des AGH-Containers, gefiltert auf Zeilen mit „blocked". <em>Aha-Moment:</em> Logs und Metriken sind jetzt in derselben UI — der Wert von Grafana wird sichtbar.</p>
+        <p>Live-Logs des AGH-Containers, gefiltert auf Zeilen mit „blocked".</p>
 
-        <div class="callout tip">
-          <div class="ctype">Korrelations-Übung</div>
-          <div class="ctext">
-            <p>Geh in dein CPU-Dashboard. Wähle einen Zeitpunkt mit hohem CPU-Wert, klicke auf den Datenpunkt, springe via „View in Explore" → Loki-Quelle. Was hat das System in genau diesem Moment geloggt? Wenn nichts: war das ein normaler Lastpeak oder ein Hintergrund-Job?</p>
-          </div>
-        </div>
+        <p>Korrelations-Übung: Im CPU-Dashboard einen Lastpeak suchen, per „View in Explore" auf Loki springen, gleichen Zeitraum prüfen.</p>
 
-        <h3 data-num="5.1 — Verständnis-Check">Verständnis-Check Phase 2</h3>
+        <h3 data-num="6.2 — Check">Verständnis-Check Phase 2</h3>
         <ol>
-          <li>Warum sollte man die Container-ID <em>nicht</em> als Loki-Label nehmen?</li>
-          <li>Wie lange hält Loki Logs per Default? Wie würdest du das ändern?</li>
-          <li>Was passiert, wenn Promtail die Datei nicht hinterherliest (Backpressure)?</li>
+          <li>Warum sollte die Container-ID kein Loki-Label sein?</li>
+          <li>Default-Retention von Loki, und wie änderst du sie?</li>
+          <li>Was passiert, wenn Promtail dem Log-Strom nicht hinterherkommt?</li>
         </ol>
       </div>
     </section>
 
-    <!-- ===== 06 PHASE 3 ===== -->
-    <section class="section" id="phase-3" data-screen-label="06 Phase 3">
-      <div class="sec-head">
-        <div class="sec-num">06</div>
-        <div>
-          <div class="meta">№ 06 &nbsp;—&nbsp; PHASE 3 — NETZWERK</div>
-          <h2>ntopng und die <span class="it">echte</span> Heim-Realität.</h2>
-          <p class="sublead">Lernziel: NetFlow/IPFIX als Konzept verstanden haben, Top-Talker im Heim-Netz sehen, und ehrlich einordnen können, was deine FritzBox 7520 zulässt und was nicht.</p>
-        </div>
-      </div>
-
-      <div class="prose">
-        <h3 data-num="6.1 — Hardware-Realität">Hardware-Realität</h3>
-        <p>ntopng braucht <strong>Promiscuous Mode</strong> auf einem Netz-Interface. Das geht auf dem CachyOS-Desktop nur, wenn er den Traffic auch <em>sieht</em>:</p>
-        <ul>
-          <li>Entweder ein <strong>SPAN-Port</strong> an einem Switch — die FritzBox 7520 kann das nicht. Kommt für später ins Auge, wenn du einen kleinen Managed-Switch dazwischenstellst (z. B. Mikrotik CRS112).</li>
-          <li>Oder du beschränkst dich auf den <strong>Traffic des Desktops selbst</strong> — was er sendet und empfängt, nicht das ganze LAN.</li>
-          <li>Oder du nutzt <strong>ntopng auf der FritzBox-Seite</strong> über deren Export-Funktion — die FritzBox 7520 unterstützt aber <em>kein</em> NetFlow/IPFIX nativ. Workaround unsicher, lieber lassen.</li>
-        </ul>
-
-        <div class="callout note">
-          <div class="ctype">Empfehlung für Phase 3</div>
-          <div class="ctext">
-            <p>Realistisch reicht ntopng auf dem Desktop, der seinen eigenen Traffic sieht. Immer noch lehrreich — du siehst, was deine Programme im Hintergrund ins Netz pumpen. Für „LAN-weite Sicht" brauchst du ergänzend einen Managed-Switch. Das ist ein eigenes Hardware-Projekt, kein Container.</p>
-          </div>
-        </div>
-
-        <h3 data-num="6.2 — Verständnis-Check">Verständnis-Check Phase 3</h3>
-        <ol>
-          <li>Was ist der Unterschied zwischen NetFlow v5, NetFlow v9 und IPFIX?</li>
-          <li>Warum siehst du auf einem normalen Switch nicht den Traffic der anderen Ports? Wie heißt das Feature, das es ermöglicht?</li>
-          <li>Welchen OSI-Layer bewegt sich ntopng? Welchen Wireshark?</li>
-        </ol>
-      </div>
-    </section>
-
-    <!-- ===== PULL QUOTE ===== -->
-    <div class="pullquote">
-      <div class="k">№ 06.5 — HALTUNG</div>
-      <div>
-        <q>Ein Monitoring, das du nicht selbst erklären kannst, ist Wartungsschuld in schön.</q>
-        <span class="attrib">— Tutor-Prinzip</span>
-      </div>
-    </div>
-
-    <!-- ===== 07 WIRESHARK ===== -->
-    <section class="section" id="wireshark" data-screen-label="07 Wireshark">
+    <!-- ===== 07 PHASE 3 ===== -->
+    <section class="section" id="phase-3" data-screen-label="07 Phase 3">
       <div class="sec-head">
         <div class="sec-num">07</div>
         <div>
-          <div class="meta">№ 07 &nbsp;—&nbsp; AD-HOC</div>
+          <div class="meta">№ 07 &nbsp;—&nbsp; PHASE 3 — NETZWERK</div>
+          <h2>ntopng.</h2>
+          <p class="sublead">Ziel: NetFlow/IPFIX einmal mit echten Daten gesehen haben. Top-Talker im sichtbaren Traffic identifizieren.</p>
+        </div>
+      </div>
+
+      <div class="prose">
+        <h3 data-num="7.1 — Hardware-Realität">Hardware-Realität</h3>
+        <p>ntopng braucht Promiscuous Mode auf einem Netz-Interface. Es sieht nur, was es bekommt:</p>
+        <ul>
+          <li>FritzBox 7520 kann keinen SPAN-Port und exportiert kein NetFlow/IPFIX nativ. Andere LAN-Geräte sind für ntopng zunächst unsichtbar.</li>
+          <li>Realistisch: ntopng läuft auf dem Desktop und sieht den Traffic des Desktops. Reicht, um das Konzept zu lernen.</li>
+          <li>LAN-weite Sicht braucht einen kleinen Managed-Switch mit Port-Mirror (z. B. Mikrotik CRS112). Eigene Hardware-Anschaffung, kein Container-Thema.</li>
+        </ul>
+
+        <h3 data-num="7.2 — Check">Verständnis-Check Phase 3</h3>
+        <ol>
+          <li>Unterschied NetFlow v5, NetFlow v9, IPFIX?</li>
+          <li>Wie heißt das Switch-Feature, das den Traffic eines Ports auf einen anderen kopiert? Warum brauchst du das für ntopng?</li>
+          <li>Auf welchem OSI-Layer arbeitet ntopng, auf welchem Wireshark?</li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ===== 08 WIRESHARK ===== -->
+    <section class="section" id="wireshark" data-screen-label="08 Wireshark">
+      <div class="sec-head">
+        <div class="sec-num">08</div>
+        <div>
+          <div class="meta">№ 08 &nbsp;—&nbsp; AD-HOC</div>
           <h2>Wireshark und tcpdump.</h2>
-          <p class="sublead">Diese beiden gehören in jeden FISI-Werkzeugkasten, sind aber <em>kein</em> Monitoring — sie laufen nicht 24/7. Du startest, capturest, analysierst, schließt.</p>
+          <p class="sublead">Beide gehören in den Werkzeugkasten, laufen aber nicht als Daemon.</p>
         </div>
       </div>
 
       <div class="prose">
         <ul>
-          <li><strong>tcpdump</strong> auf CachyOS installiert lassen. Für schnelle Live-Sicht am Terminal — ohne X11, ohne UI.</li>
-          <li><strong>Wireshark GUI</strong> installieren. Capture-File-Format (<code class="inline">.pcap</code>/<code class="inline">.pcapng</code>) verstehen — du kannst tcpdump-Captures in Wireshark öffnen. Workflow, den du im Praktikum brauchst.</li>
+          <li><code class="inline">tcpdump</code> übers Paketmanagement installiert. Schnelle Live-Sicht am Terminal.</li>
+          <li>Wireshark GUI installiert. <code class="inline">.pcap</code>/<code class="inline">.pcapng</code> aus <code class="inline">tcpdump</code> lassen sich damit öffnen.</li>
         </ul>
 
-        <div class="callout tip">
-          <div class="ctype">10-Minuten-Übung</div>
-          <div class="ctext">
-            <p>1. <code class="inline">sudo tcpdump -i &lt;interface&gt; -w /tmp/capture.pcap port 53</code> für 30 Sekunden laufen lassen, während du im Browser ein paar Seiten öffnest.</p>
-            <p>2. Capture in Wireshark öffnen.</p>
-            <p>3. Filter: <code class="inline">dns.qry.name contains "doubleclick"</code> — siehst du die DNS-Anfragen, die dein AGH (aus dem Adblock-Plan) blockt?</p>
+        <h3 data-num="8.1 — Übung">Übung, 10 Minuten</h3>
+        <div class="codeblock">
+          <div class="cb-head">
+            <div class="cb-file"><span class="lang">Bash</span>Terminal</div>
+            <button class="cb-copy" data-copy>Kopieren</button>
           </div>
+<pre>sudo tcpdump -i &lt;interface&gt; -w /tmp/capture.pcap port 53
+<span class="tok-c"># 30 Sekunden laufen lassen, Browser benutzen, dann Strg-C</span></pre>
         </div>
-
-        <p>Das ist Forensik-Praxis. Genau diese Art von Live-Capture-Auswertung wirst du in einer SOC- oder Helpdesk-Rolle wieder sehen.</p>
+        <p>In Wireshark öffnen, Filter <code class="inline">dns.qry.name contains "doubleclick"</code>. Die DNS-Anfragen, die der AGH blockt, sind sichtbar.</p>
       </div>
     </section>
 
-    <!-- ===== 08 PROMQL ===== -->
-    <section class="section" id="promql" data-screen-label="08 PromQL">
+    <!-- ===== 09 PROMQL ===== -->
+    <section class="section" id="promql" data-screen-label="09 PromQL">
       <div class="sec-head">
-        <div class="sec-num">08</div>
+        <div class="sec-num">09</div>
         <div>
-          <div class="meta">№ 08 &nbsp;—&nbsp; PROMQL-ÜBUNG</div>
+          <div class="meta">№ 09 &nbsp;—&nbsp; PROMQL-ÜBUNG</div>
           <h2>Drei Abfragen zum Selber-Tippen.</h2>
-          <p class="sublead">Tippe sie selbst, kein Copy-Paste. Das Tipp-Gedächtnis hilft beim Lernen — und du fängst Tippfehler ab, bei denen du jeden Charakter einmal anfassen musstest.</p>
+          <p class="sublead">Selbst tippen, kein Copy-Paste. Das Tippen prägt sich ein.</p>
         </div>
       </div>
 
       <div class="prose">
-        <h3 data-num="8.1 — CPU">CPU-Auslastung in Prozent</h3>
+        <h3 data-num="9.1 — CPU">CPU-Auslastung in Prozent</h3>
         <div class="codeblock">
           <div class="cb-head">
             <div class="cb-file"><span class="lang">PromQL</span></div>
@@ -493,9 +458,9 @@
           </div>
 <pre><span class="tok-n">100</span> - <span class="tok-p">(</span>avg by <span class="tok-p">(</span>instance<span class="tok-p">) (</span>rate<span class="tok-p">(</span>node_cpu_seconds_total<span class="tok-p">{</span>mode<span class="tok-p">=</span><span class="tok-s">"idle"</span><span class="tok-p">}[</span>5m<span class="tok-p">])) </span>* <span class="tok-n">100</span><span class="tok-p">)</span></pre>
         </div>
-        <p><strong>Verstehe:</strong> Warum <code class="inline">1 - idle</code> und nicht <code class="inline">user + system</code>? Wegen <code class="inline">iowait</code>/<code class="inline">steal</code>/<code class="inline">softirq</code> — die zählen sonst nicht mit.</p>
+        <p>Warum <code class="inline">1 - idle</code> und nicht <code class="inline">user + system</code>? Wegen <code class="inline">iowait</code>, <code class="inline">steal</code> und <code class="inline">softirq</code> — die zählen sonst nicht mit.</p>
 
-        <h3 data-num="8.2 — RAM">Verfügbarer RAM in MB</h3>
+        <h3 data-num="9.2 — RAM">Verfügbarer RAM in MB</h3>
         <div class="codeblock">
           <div class="cb-head">
             <div class="cb-file"><span class="lang">PromQL</span></div>
@@ -503,9 +468,9 @@
           </div>
 <pre>node_memory_MemAvailable_bytes / <span class="tok-n">1024</span> / <span class="tok-n">1024</span></pre>
         </div>
-        <p><strong>Verstehe:</strong> Warum <code class="inline">MemAvailable</code> und nicht <code class="inline">MemFree</code>? Linux-Page-Cache wäre als „free" missverstanden — `Available` ist die ehrliche Zahl.</p>
+        <p>Warum <code class="inline">MemAvailable</code> und nicht <code class="inline">MemFree</code>? Linux nutzt Page-Cache, der als „frei" verfügbar wäre, in <code class="inline">MemFree</code> aber als belegt steht.</p>
 
-        <h3 data-num="8.3 — Disk">Festplatten-Schreibrate, MB/s</h3>
+        <h3 data-num="9.3 — Disk">Disk-Schreibrate, MB/s</h3>
         <div class="codeblock">
           <div class="cb-head">
             <div class="cb-file"><span class="lang">PromQL</span></div>
@@ -513,91 +478,82 @@
           </div>
 <pre>rate<span class="tok-p">(</span>node_disk_written_bytes_total<span class="tok-p">[</span>1m<span class="tok-p">])</span> / <span class="tok-n">1024</span> / <span class="tok-n">1024</span></pre>
         </div>
-        <p><strong>Verstehe:</strong> Warum <code class="inline">rate(...)[1m]</code> und nicht <code class="inline">[1h]</code>? Window-Größe ≠ Anzeige-Bereich. Größeres Window = glatterer Graph, aber träger auf Spitzen.</p>
+        <p>Warum <code class="inline">[1m]</code> und nicht <code class="inline">[1h]</code>? Größeres Window glättet, reagiert träger auf Spitzen.</p>
       </div>
     </section>
 
-    <!-- ===== 09 LERNCHECK ===== -->
-    <section class="section" id="lerncheck" data-screen-label="09 Lerncheck">
+    <!-- ===== 10 LERNCHECK ===== -->
+    <section class="section" id="lerncheck" data-screen-label="10 Lerncheck">
       <div class="sec-head">
-        <div class="sec-num">09</div>
+        <div class="sec-num">10</div>
         <div>
-          <div class="meta">№ 09 &nbsp;—&nbsp; LERNCHECK</div>
+          <div class="meta">№ 10 &nbsp;—&nbsp; LERNCHECK</div>
           <h2>Schriftlich beantworten.</h2>
-          <p class="sublead">Berichtsheft-tauglich. Wenn du an einer dieser Fragen hängenbleibst, ist eine Phase nicht durch — kein Schande, einfach zurück und nachholen.</p>
+          <p class="sublead">Fürs Berichtsheft.</p>
         </div>
       </div>
 
       <div class="prose">
         <ol>
-          <li><strong>30-Sekunden-Diagnose:</strong> Du musst in einem Incident-Call binnen 30 s sagen, ob ein Server ein CPU- oder ein I/O-Problem hat. Welche zwei PromQL-Abfragen ziehst du auf?</li>
-          <li><strong>Vergleich:</strong> Loki vs. Elasticsearch — nenne je einen Punkt, in dem das jeweilige System dem anderen überlegen ist.</li>
-          <li><strong>Architektur-Begründung:</strong> Wieso bauen wir das Monitoring lokal auf CachyOS und nicht auf dem VPS? Begründe mit zwei technischen Argumenten.</li>
-          <li><strong>Falle erkennen:</strong> Was würde passieren, wenn du <code class="inline">cardinality</code> für ein Label hast, das pro User unique ist (z. B. Session-ID als Label)?</li>
-          <li><strong>End-to-End-Spur:</strong> Beschreibe den Datenfluss „Browser ruft Webseite auf" durch dein Setup — an welchen Stellen siehst du das in deinen Monitoring-Tools?</li>
+          <li>Incident-Call, 30 Sekunden Zeit: CPU- oder I/O-Problem? Welche zwei PromQL-Abfragen ziehst du auf?</li>
+          <li>Loki vs. Elasticsearch — je ein Punkt, in dem das eine dem anderen überlegen ist.</li>
+          <li>Warum läuft das Monitoring auf CachyOS und nicht auf dem VPS? Zwei technische Argumente.</li>
+          <li>Was passiert mit einem Label, das pro User unique ist (z. B. Session-ID)?</li>
+          <li>Datenfluss „Browser ruft Webseite auf" durch das Setup — an welchen Stellen siehst du das in den Monitoring-Tools?</li>
         </ol>
-
-        <div class="callout note">
-          <div class="ctype">Hinweis</div>
-          <div class="ctext">
-            <p>Wenn du willst, schick mir deine Antworten — ich gebe Feedback, aber liefere keine Musterlösung. Selbst formuliert lernst du mehr.</p>
-          </div>
-        </div>
       </div>
     </section>
 
-    <!-- ===== 10 TUTOR ===== -->
-    <section class="section" id="tutor" data-screen-label="10 Tutor-Vertrag">
+    <!-- ===== 11 TUTOR ===== -->
+    <section class="section" id="tutor" data-screen-label="11 Tutor-Rollen">
       <div class="sec-head">
-        <div class="sec-num">10</div>
+        <div class="sec-num">11</div>
         <div>
-          <div class="meta">№ 10 &nbsp;—&nbsp; TUTOR-VERTRAG</div>
-          <h2>Was ich tue — und was nicht.</h2>
-          <p class="sublead">Klare Rollenverteilung. Damit du nicht auf Antworten wartest, die ich gar nicht geben sollte, und ich nicht in Versuchung gerate, dir die Arbeit abzunehmen.</p>
+          <div class="meta">№ 11 &nbsp;—&nbsp; TUTOR-ROLLEN</div>
+          <h2>Was ich tue, was nicht.</h2>
         </div>
       </div>
 
       <div class="prose">
-        <h3 data-num="10.1 — Mein Job">Mein Job (Tutor)</h3>
+        <h3 data-num="11.1 — Was ich tue">Was ich tue</h3>
         <ul>
-          <li>Diesen Plan aktuell halten, wenn du Zwischenstände meldest</li>
-          <li>Auf Nachfrage einzelne Befehle/Configs als <strong>Vorlage</strong> liefern, die du abtippen oder anpassen kannst</li>
-          <li>Verständnis-Fragen beantworten und mit dir Lerncheck-Antworten durchgehen</li>
-          <li>Fehlersuchen-Hilfe geben, wenn du sagst: „Phase X, Schritt Y, ich sehe Z, erwartet hatte ich W"</li>
+          <li>Plan aktuell halten, wenn du Zwischenstände meldest</li>
+          <li>Auf Nachfrage einzelne Befehle/Configs als Vorlage liefern</li>
+          <li>Verständnis-Fragen beantworten, Lerncheck-Antworten gegenlesen</li>
+          <li>Beim Debuggen helfen, wenn du beschreibst: „Phase X, Schritt Y, ich sehe Z, erwartet hatte ich W"</li>
         </ul>
 
-        <h3 data-num="10.2 — Nicht-mein-Job">Was ich nicht tue</h3>
+        <h3 data-num="11.2 — Was ich nicht tue">Was ich nicht tue</h3>
         <ul>
-          <li><strong>Nicht</strong> für dich installieren oder Container starten</li>
-          <li><strong>Nicht</strong> komplette fertige Configs auf einmal abkippen</li>
-          <li><strong>Nicht</strong> Befehle in deiner Shell ausführen</li>
-          <li><strong>Nicht</strong> Lerncheck-Antworten vorbeten</li>
+          <li>Für dich installieren oder Container starten</li>
+          <li>Komplette fertige Configs auf einen Schlag liefern</li>
+          <li>Befehle in deiner Shell ausführen</li>
+          <li>Lerncheck-Antworten vorbeten</li>
         </ul>
 
-        <h3 data-num="10.3 — Out of Scope">Out of Scope für diese Spec</h3>
+        <h3 data-num="11.3 — Out of Scope">Out of Scope</h3>
         <table class="data-table">
           <thead>
             <tr><th>Thema</th><th>Wann sinnvoll</th></tr>
           </thead>
           <tbody>
-            <tr><td>Suricata / Zeek (IDS)</td><td>Eigene Spec, sobald Grundlagen sitzen</td></tr>
-            <tr><td>Wazuh / OSSEC (SIEM/EDR)</td><td>Projektarbeit-Material AP2</td></tr>
-            <tr><td>OpenTelemetry / Traces</td><td>Für Web-Services interessant, hier nicht</td></tr>
-            <tr><td>Alertmanager (Slack/Telegram)</td><td>Phase 4</td></tr>
-            <tr><td>Monitoring vom VPS aus (Blackbox)</td><td>Eigene Spec, wenn Heim-Setup steht</td></tr>
+            <tr><td>Suricata / Zeek (IDS)</td><td>Eigene Spec, sobald die Basis steht</td></tr>
+            <tr><td>Wazuh / OSSEC (SIEM/EDR)</td><td>AP2-Projektarbeit</td></tr>
+            <tr><td>OpenTelemetry / Traces</td><td>Für Web-Services, hier nicht</td></tr>
+            <tr><td>Alertmanager</td><td>Phase 4</td></tr>
+            <tr><td>Blackbox-Probes vom VPS aus</td><td>Eigene Spec, wenn Heim-Setup läuft</td></tr>
           </tbody>
         </table>
       </div>
     </section>
 
-    <!-- ===== 11 CHANGELOG ===== -->
-    <section class="section" id="changelog" data-screen-label="11 Änderungen">
+    <!-- ===== 12 CHANGELOG ===== -->
+    <section class="section" id="changelog" data-screen-label="12 Änderungen">
       <div class="sec-head">
-        <div class="sec-num">11</div>
+        <div class="sec-num">12</div>
         <div>
-          <div class="meta">№ 11 &nbsp;—&nbsp; ÄNDERUNGEN</div>
+          <div class="meta">№ 12 &nbsp;—&nbsp; ÄNDERUNGEN</div>
           <h2>Versionshistorie.</h2>
-          <p class="sublead">Nur Änderungen am Plan selbst. Der Lernfortschritt steht im Berichtsheft.</p>
         </div>
       </div>
 
@@ -605,8 +561,13 @@
         <ul class="changelog">
           <li>
             <span class="date">20. Mai 2026</span>
+            <span class="ver">v0.1.1</span>
+            <span class="summary">Sprache entkitscht, Pullquote und Aha-Momente raus.</span>
+          </li>
+          <li>
+            <span class="date">20. Mai 2026</span>
             <span class="ver">v0.1.0</span>
-            <span class="summary"><strong>Erstentwurf.</strong> Drei Phasen, Ad-hoc-Werkzeuge, PromQL-Übung, Lerncheck, Tutor-Vertrag.</span>
+            <span class="summary">Erstentwurf.</span>
           </li>
         </ul>
       </div>
@@ -641,12 +602,11 @@
   <div class="col">
     <span class="l">Letzte Änderung</span>
     <span class="v">20. Mai 2026</span>
-    <span>Plan-Version 0.1.0</span>
+    <span>Plan-Version 0.1.1</span>
   </div>
   <div class="col">
     <span class="l">Modus</span>
-    <span class="v">Tutor — du implementierst</span>
-    <span>Lern-Wert vor Convenience</span>
+    <span class="v">Tutor</span>
   </div>
   <div class="col">
     <span class="l">Autor</span>

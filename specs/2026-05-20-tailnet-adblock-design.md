@@ -1,7 +1,7 @@
 ---
 title: Tailnet-Werbeblocker
 slug: tailnet-adblock
-version: 0.1.1
+version: 0.1.2
 status: draft
 date: 2026-05-20
 author: Alexander Schneider
@@ -272,7 +272,7 @@ nslookup doubleclick.net
 # erwartet: 0.0.0.0
 ```
 
-Browser-Test: <https://d3ward.github.io/toolz/adblock.html> im
+Browser-Test: <https://adblock-tester.com/> im
 Inkognito-Mode. Erwartet: ≥ 85 % Blockrate.
 
 ## Changelog
@@ -281,3 +281,4 @@ Inkognito-Mode. Erwartet: ≥ 85 % Blockrate.
 |-------------|---------|----------------------------------------------------------|
 | 2026-05-20  | 0.1.0   | Erstentwurf                                              |
 | 2026-05-20  | 0.1.1   | Sprache entkitscht, Floskeln und Marketing-Ton entfernt  |
+| 2026-05-20  | 0.1.2   | Toten d3ward-Link durch adblock-tester.com ersetzt        |

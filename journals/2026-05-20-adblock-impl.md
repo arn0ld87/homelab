@@ -847,6 +847,102 @@ Heim-LAN-DNS-Pfad steht. **Phase 4 abgeschlossen.**
 
 ---
 
+## 10. Tailscale MagicDNS — globaler Resolver
+
+### Soll
+
+`100.92.62.9` als globaler Nameserver in Tailscale Admin Console,
+„Override local DNS" aktiv, MagicDNS bleibt an. Damit blockt jedes
+Tailscale-Gerät überall.
+
+### Ist
+
+Tailscale Admin Console → DNS → *Add nameserver → Custom*:
+
+- *Nameserver*: `100.92.62.9`
+- *Restrict to domain (Split DNS)*: aus
+- *Use with exit node*: aus
+
+Save. Anschließend im Haupt-Dialog **„Override local DNS"** auf AN.
+
+### Stolperstein 10 — Tot-Link für Verifikation
+
+Geplanter Test-URL war `d3ward.github.io/toolz/adblock.html`. Die Seite
+ist seit kurzem **archiviert** und nicht mehr verfügbar. Ersatz:
+
+```
+https://adblock-tester.com/
+```
+
+Repo-Specs nachträglich auf den neuen Link umgestellt.
+
+### Verifikation am Handy
+
+iPhone, Tailscale-App an, **Mobilfunk** (WLAN explizit aus), Browser
+auf `https://adblock-tester.com/`:
+
+```
+Score: 78 / 100
+```
+
+Bedeutung:
+
+- 78 ist im erwarteten Bereich für DNS-Adblock mit konservativen Listen
+- Fehlende ~22 Punkte sind YouTube-First-Party-Werbung,
+  CName-Cloaking und Acceptable-Ads-Tricks — DNS allein kann das nicht
+- Aggressivere Listen (Hagezi Pro++) würden auf ~85 bringen, dafür
+  steigt das False-Positive-Risiko
+
+### Lernpunkt
+
+- **Tailscale-Override:** Mit „Override local DNS = AN" gewinnt der
+  Tailscale-DNS gegen jeden lokalen DHCP-DNS. Heißt: im Café, Hotel,
+  fremdem WLAN — überall greift dein AGH. Genau der Grund, warum wir
+  Tailscale für die Mobil-Coverage genommen haben statt am Router
+  fremder Netze zu schrauben.
+- **Adblock-Tester-Score als Diagnose, nicht als Ziel:** 78/100 mit
+  DNS-only ist ein normaler Wert. Sichtbare Real-World-Wirkung
+  (`bild.de`, `t-online.de`, Wetter-Apps) ist drastisch — DNS-Blocking
+  greift dort, wo Werbung weh tut, auch wenn ein Test nur 78 anzeigt.
+- **CName-Cloaking** ist die nächste Eskalationsstufe: Tracker setzen
+  CNAMEs vom Hauptdomain auf ihre Server. AGH unterstützt
+  CName-Uncloaking als Filter-Option, müsste aber gezielt aktiviert
+  werden. Für später.
+
+### Status
+
+**Phase 5 abgeschlossen.** Alle fünf Phasen durch.
+
+---
+
+## Schluss-Status
+
+| Phase | Inhalt | Status |
+|-------|--------|--------|
+| 1 | VPS-AGH (Master) | ✅ |
+| 2 | CachyOS-AGH (Replica, bestehender Container) | ✅ |
+| 3 | adguardhome-sync auf VPS | ✅ |
+| 4 | FritzBox-DHCP-DNS auf CachyOS-LAN-IP | ✅ |
+| 5 | Tailscale MagicDNS global | ✅ |
+
+Funktional steht der Stack:
+
+- **Heim-LAN-Clients** (IoT, Apple TV, Drucker): FritzBox-DHCP → CachyOS-AGH (192.168.178.74) → Quad9 DoT
+- **Tailscale-Clients** (Mac, Handy, überall): Tailscale-MagicDNS → VPS-AGH (100.92.62.9) → Quad9 DoT
+- **Sync**: VPS pusht Filter, Clients, Upstreams alle 5 min an CachyOS-Replica
+
+## Loose ends für später (separat anpacken)
+
+- CachyOS-AGH-Container auf `docker compose` migrieren, Bind-Hosts
+  spec-konform setzen, AGH-Version auf VPS-Stand bringen, DHCP-Sektion
+  aus yaml entfernen
+- Adblock-Tester-Score über 85 bringen: Hagezi PRO → Pro++ wechseln,
+  evtl. CName-Uncloaking aktivieren
+- Monitoring-Stack (Phase 6+ aus der zweiten Spec) — Prometheus,
+  Grafana, Loki — beobachtet ab dann das ganze Setup
+
+---
+
 ## Offen
 
 - Schritt 9: CachyOS-AGH-Migration auf Compose, Bind-Hosts spec-konform,
@@ -867,3 +963,4 @@ Heim-LAN-DNS-Pfad steht. **Phase 4 abgeschlossen.**
 | 2026-05-20  | Schritt 7 — Passwort-Reset, Stolperstein 8 (Port-Mismatch 80→3000)|
 | 2026-05-20  | Schritt 8 — Sync läuft, Replica spiegelt Master, Phase 3 durch    |
 | 2026-05-20  | Schritt 9 — FritzBox-DHCP-DNS, Stolperstein 9 (Tailscale-Override)|
+| 2026-05-20  | Schritt 10 — Tailscale MagicDNS, Stolperstein 10 (d3ward archiviert), alle Phasen durch |

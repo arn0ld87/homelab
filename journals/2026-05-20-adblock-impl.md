@@ -541,6 +541,126 @@ Vor Sync:
 CachyOS-AGH läuft, ist als Replica geeignet. Vor Sync-Aufbau: AdAway
 auf VPS ergänzen.
 
+### Nachtrag — AdAway auf VPS-AGH ergänzt
+
+`https://adaway.org/hosts.txt` als fünfte Liste auf VPS-AGH
+hinzugefügt. Verifikations-Dig:
+
+```bash
+dig @100.92.62.9 b.scorecardresearch.com +short
+# → 0.0.0.0  ✅
+```
+
+`scorecardresearch.com` ist Comscore-Tracking — typischer AdAway-Treffer.
+
+---
+
+## 7. Passwort-Reset + Port-Fix auf CachyOS-AGH
+
+### Auslöser
+
+Passwort für das CachyOS-AGH-Login war nicht mehr bekannt. Damit der
+Sync später daran kommt, musste es zurückgesetzt werden.
+
+### Vorgehen (yaml-basierter Reset)
+
+AGH speichert das Passwort als bcrypt-Hash in
+`AdGuardHome.yaml` — nicht rückrechenbar, aber überschreibbar.
+
+```bash
+# Username herausfinden
+sudo grep -A3 '^users:' /home/alex/adguard/conf/AdGuardHome.yaml
+
+# Container stoppen
+docker stop adguardhome
+
+# Neuen bcrypt-Hash erzeugen (ohne lokale htpasswd-Installation)
+docker run --rm -ti httpd:alpine htpasswd -B -n -C 10 <USERNAME>
+# liefert  <USERNAME>:$2y$10$...
+
+# yaml editieren, password:-Wert im users:-Block ersetzen
+sudo nano /home/alex/adguard/conf/AdGuardHome.yaml
+
+# Container starten
+docker start adguardhome
+```
+
+### Stolperstein 8 — Port-Mismatch nach Restart
+
+Nach dem Restart: Web-UI auf `http://100.95.132.54:3000` → `Connection
+refused`. Port 53 (DNS) ging weiter, Port 3000 nicht.
+
+Diagnose vom Mac aus:
+
+```bash
+nc -zv 100.95.132.54 53     # open
+nc -zv 100.95.132.54 3000   # refused
+```
+
+`refused` (nicht `timeout`) heißt: TCP-Handshake kommt durch, niemand
+lauscht. Auf CachyOS in den AGH-Logs:
+
+```
+starting plain server server=plain addr=0.0.0.0:80
+```
+
+**AGH lauschte intern auf Port 80, nicht 3000.** Das Docker-Port-Mapping
+ist aber `0.0.0.0:3000 -> 3000/tcp`. Mismatch:
+
+- Host 3000 → Container 3000
+- AGH bindet 80
+
+Wer auf `host:3000` zugreift, landet bei Container-Port 3000 — niemand
+hört dort zu.
+
+### Fix
+
+```bash
+docker stop adguardhome
+sudo nano /home/alex/adguard/conf/AdGuardHome.yaml
+# Im http:-Block:  address: 0.0.0.0:80  →  address: 0.0.0.0:3000
+docker start adguardhome
+docker logs adguardhome --tail 5
+# erwartet: starting plain server server=plain addr=0.0.0.0:3000
+```
+
+Verifikation vom Mac:
+
+```bash
+nc -zv 100.95.132.54 3000
+# → open  ✅
+```
+
+Login mit neuem Passwort funktioniert.
+
+### Lernpunkt
+
+- **bcrypt** ist Einweg-Hash mit Salt + Cost-Parameter. `-C 10` = 2^10
+  Iterationen. Hash überschreiben geht, zurückrechnen nicht. Genau
+  dafür designt.
+- **Docker-Port-Mapping ist Übersetzung, nicht Magie.** `host:3000 →
+  container:3000`. Wenn das Programm im Container auf einer anderen
+  Portnummer lauscht, kommt nichts an. Always-check: was sagt das
+  **Programm** in den Logs (hier: `starting plain server addr=...`)
+  und was sagt das **Docker-Mapping** (`docker ps | grep adguard`)?
+- **`refused` vs. `timeout` als Diagnostik-Signal:**
+  - `refused` = Host antwortet, aber Port hat keinen Listener
+  - `timeout` = Paket geht verloren / Firewall / Host down
+  Erste Hinweise auf die Schicht, in der das Problem liegt.
+- **AGH-Wizard-Default ist Port 80** für die Web-UI. VPS hatten wir
+  bewusst auf 3000 gestellt (Stolperstein 2). Beim CachyOS-Alt-Container
+  war das nie nachgezogen — daher der späte Bumper.
+- **Nebenbei in den Logs gefunden:**
+  `dhcpd: warning: creating dhcpv4 server err="dhcpv4: invalid IP …"`
+  AGH startet das DHCP-Subsystem trotz `enabled: false` partiell und
+  meckert über eine fehlende IP. Niedrige Priorität, später beim
+  yaml-Cleanup die DHCP-Sektion sauber entfernen.
+
+### Status
+
+CachyOS-AGH erreichbar auf `http://100.95.132.54:3000`. Bereit für
+Sync-Aufbau.
+
 ---
 
 ## Offen
@@ -558,3 +678,4 @@ auf VPS ergänzen.
 | 2026-05-20  | Initial — Schritte 1 bis 4 dokumentiert, 5 begonnen               |
 | 2026-05-20  | Schritt 5 fertig — Filterlisten, Stolperstein 4 (Facebook-API)    |
 | 2026-05-20  | Schritt 6 — CachyOS-AGH inspiziert, Stolperstein 5+6, AdAway-Merge|
+| 2026-05-20  | Schritt 7 — Passwort-Reset, Stolperstein 8 (Port-Mismatch 80→3000)|

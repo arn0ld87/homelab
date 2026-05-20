@@ -399,10 +399,37 @@ funktional. Wer aggressiver will, hat drei Optionen:
   (`Light/Normal/Pro/Pro++/Ultimate`). Lieber die richtige Stufe
   wählen, als nachträglich Whitelists pflegen.
 
+### Nachtrag — Facebook-Tracker-Tiefe
+
+Zweite Stichprobe nach Stolperstein 4:
+
+```bash
+dig @100.92.62.9 connect.facebook.net +short
+# → scontent.xx.fbcdn.net.
+#   57.144.254.128         ❌  NICHT geblockt
+
+dig @100.92.62.9 pixel.facebook.com +short
+# → 0.0.0.0  ✅
+```
+
+`connect.facebook.net` ist eigentlich der bekannteste Facebook-Tracker
+(Pixel SDK auf Drittseiten). Dass Hagezi PRO ihn durchlässt, ist
+designt — er bricht zu viele Share-Buttons und Logins.
+
+Würde-Korrekturen blockieren:
+
+- Hagezi **Pro++** statt PRO
+- AGH Custom Rule: `||connect.facebook.net^`
+
+Entscheidung: **lassen.** Im AGH-Query-Log sichtbar, gezielt
+nachschärfbar wenn nötig. Lieber wenig False-Positives als aggressives
+Blocking, das Drittseiten kaputt macht.
+
 ### Status
 
 VPS-AGH ist **komplett**. DNS-Auflösung läuft, Block-Listen aktiv,
-Default-Tracker werden blockiert, Facebook-API absichtlich nicht.
+Konservative Listen-Wahl bewusst — Tracker im Query-Log sichtbar,
+Korrekturen pro Domain möglich.
 
 ---
 

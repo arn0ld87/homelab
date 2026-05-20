@@ -433,12 +433,123 @@ Korrekturen pro Domain möglich.
 
 ---
 
+---
+
+## 6. CachyOS-AGH — bestehender Container
+
+### Soll
+
+Zweiten AGH als passive Replica auf CachyOS, gebunden an LAN-IP +
+Tailscale-IP + Loopback. `network_mode: host`, weil mehrere
+Bind-Adressen.
+
+### Ist
+
+Vorbereitungs-Check auf dem Desktop:
+
+```
+Docker            29.5.0
+LAN-IP            192.168.178.74  (wlan0, FritzBox-Range)
+Tailscale-IP      100.95.132.54
+Port 53 belegt    docker-proxy auf 0.0.0.0:53 (tcp+udp)
+```
+
+### Stolperstein 5 — Port 53 schon belegt
+
+Erwartet hätte ich `systemd-resolved` auf `127.0.0.53`. Tatsächlich:
+ein bestehender `adguardhome`-Container hält Port 53 schon, gebunden
+auf `0.0.0.0`.
+
+`docker ps | grep 53` zeigt:
+
+```
+adguardhome   80/tcp, 67-68/udp, 443/tcp, 443/udp,
+              0.0.0.0:53->53/tcp, [::]:53->53/tcp,
+              853/udp, 853/tcp, 3000/udp, 5443/tcp,
+              0.0.0.0:3000->3000/tcp, 0.0.0.0:53->53/udp,
+              [::]:3000->3000/tcp, [::]:53->53/udp,
+              5443/udp, 6060/tcp
+```
+
+Vor Phase 2 nicht erwartet, also offene Frage: alten Container nutzen
+oder löschen?
+
+### Inspektion des bestehenden Containers
+
+```
+Image             adguard/adguardhome (latest implied)
+Mounts            /home/alex/adguard/conf -> /opt/adguardhome/conf
+                  /home/alex/adguard/work -> /opt/adguardhome/work
+Compose-Projekt   leer  →  Container via `docker run`, kein Compose
+DHCP              enabled: false   (kein FritzBox-Konflikt)
+Bind-Hosts        0.0.0.0          (funktional ok, nicht spec-konform)
+Filterlisten      4  (AdGuard DNS filter, AdAway, OISD Big, HaGeZi Pro)
+Upstream          Quad9 DoH:  https://dns10.quad9.net/dns-query
+Bootstrap         9.9.9.10  (Quad9 Secured)
+```
+
+### Stolperstein 6 — Listen-/Upstream-Diff zum VPS
+
+Vergleich mit der VPS-Config aus Schritt 5:
+
+| Punkt              | VPS                                | CachyOS                              |
+|--------------------|------------------------------------|--------------------------------------|
+| Listen             | AdGuard, OISD, Hagezi PRO, **Steven Black** | AdGuard, **AdAway**, OISD, Hagezi PRO |
+| Upstream-Protokoll | DoT (`tls://dns.quad9.net`)        | DoH (`dns10.quad9.net/dns-query`)    |
+| Fallback-Upstream  | Cloudflare DoT                     | keiner                               |
+| Bootstrap          | 9.9.9.9, 1.1.1.1                   | 9.9.9.10                             |
+
+Ohne Eingriff würde der spätere Sync vom VPS die CachyOS-Listen
+überschreiben. AdAway wäre weg.
+
+### Entscheidung
+
+**Variante: AdAway vorher auf VPS ergänzen.** Dann hat der Sync nichts
+zu überschreiben, alle Listen bleiben.
+
+Vor Sync:
+
+1. Auf VPS-AGH-UI: AdAway-Liste hinzufügen
+   (`https://adaway.org/hosts.txt`).
+2. VPS hat dann 5 Listen, CachyOS auch 4. Beim Sync wird CachyOS auf
+   5 hochgezogen.
+
+### Lernpunkt
+
+- **`docker-proxy` als Indicator:** Wenn `lsof -i :53` einen Prozess
+  namens `docker-proxy` zeigt, ist es nicht systemd, sondern ein
+  Docker-Container, der den Port hält. Deshalb immer mit
+  `docker ps | grep ':53->'` gegenchecken.
+- **`docker inspect --format '{{...}}'`** ist die strukturierte
+  Inspect-Variante. Spart Parsen vom JSON-Output. Beispiel:
+  `--format '{{range .Mounts}}{{.Source}} -> {{.Destination}}{{"\n"}}{{end}}'`
+  rendert eine zweispaltige Liste der Volume-Mounts.
+- **AGH-Config-Pfad:** Liegt auf dem Host am Bind-Mount-Pfad
+  (`/home/alex/adguard/conf/AdGuardHome.yaml`). Direktes Editieren
+  möglich, aber: nach Edit muss `docker restart adguardhome` her,
+  sonst greift es nicht.
+- **DoT (Port 853) vs. DoH (Port 443):** Beides verschlüsselt.
+  DoT ist transparenter (eigener Port, erkennbar), DoH versteckt sich
+  im normalen HTTPS-Traffic. Funktional gleichwertig.
+- **Migration auf Compose offen:** Aktueller Container ist nicht
+  versioniert. Nach Sync-Aufbau kommt eine Compose-Migration —
+  Bind-Hosts spec-konform machen, Restart-Policy setzen,
+  Volume-Pfade in `docker-compose.yml` versionieren.
+
+### Status
+
+CachyOS-AGH läuft, ist als Replica geeignet. Vor Sync-Aufbau: AdAway
+auf VPS ergänzen.
+
+---
+
 ## Offen
 
-- Schritt 6: CachyOS-AGH als Replica
-- Schritt 7: `adguardhome-sync` auf dem VPS
-- Schritt 8: FritzBox-DHCP auf CachyOS-LAN-IP
-- Schritt 9: Tailscale MagicDNS global
+- AdAway-Liste auf VPS-AGH ergänzen (Vorbereitung für Sync)
+- Schritt 7: `adguardhome-sync` auf dem VPS aufsetzen
+- Schritt 8: CachyOS-AGH-Migration auf Compose, Bind-Hosts spec-konform
+- Schritt 9: FritzBox-DHCP auf CachyOS-LAN-IP
+- Schritt 10: Tailscale MagicDNS global
 
 ## Changelog
 
@@ -446,3 +557,4 @@ Korrekturen pro Domain möglich.
 |-------------|-------------------------------------------------------------------|
 | 2026-05-20  | Initial — Schritte 1 bis 4 dokumentiert, 5 begonnen               |
 | 2026-05-20  | Schritt 5 fertig — Filterlisten, Stolperstein 4 (Facebook-API)    |
+| 2026-05-20  | Schritt 6 — CachyOS-AGH inspiziert, Stolperstein 5+6, AdAway-Merge|

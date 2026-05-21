@@ -1,0 +1,30 @@
+# Grafana — Anzeige-Layer für Prometheus (und später Loki).
+# Keine eigene Datenhaltung im Sinn von Metriken — nur Dashboards
+# und Datasource-Konfig.
+#
+# network_mode: host — damit Grafana den Prometheus auf localhost:9090
+# erreicht. Sonst wäre wieder dasselbe Bridge-Host-Networking-Problem
+# wie bei Prometheus' erstem Versuch (Stolperstein 11).
+#
+# GF_SERVER_HTTP_PORT=3001 — Grafana-Default ist 3000, das hält
+# AGH schon. Mit dieser ENV ändern wir den internen Bind. Webinterface
+# damit auf http://localhost:3001.
+#
+# Login beim ersten Aufruf: admin / admin → muss sofort geändert werden.
+
+services:
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - grafana-data:/var/lib/grafana
+    environment:
+      - GF_SERVER_HTTP_PORT=3001
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+
+volumes:
+  grafana-data:

@@ -1,0 +1,29 @@
+# node_exporter — Host-Metriken im Prometheus-Format auf :9100.
+#
+# network_mode: host  →  node_exporter sieht Host-Interfaces direkt
+#                        (sonst wären Bridge-Container-Metriken statt Host
+#                         sichtbar — exakt das Gegenteil von dem, was man will)
+# pid: host           →  Prozess-IDs des Hosts sichtbar, nicht
+#                        Container-PIDs
+# Bind-Mounts /proc, /sys, /   →  Container darf in die Host-Dateisysteme
+#                                 lesen, ohne sie zu verändern (ro)
+#
+# Speicherort der Compose-Datei auf CachyOS:
+#   /home/alex/monitoring/node_exporter/docker-compose.yml
+
+services:
+  node_exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    restart: unless-stopped
+    network_mode: host
+    pid: host
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/host/root'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/host/root:ro,rslave

@@ -1,0 +1,35 @@
+# Prometheus — Time-Series-DB + Scraper. Zieht alle 15s von
+# node_exporter (Pull-Modell). Web-UI auf Port 9090.
+#
+# Bridge-Mode (nicht host) — Prometheus muss nichts vom Host messen,
+# nur HTTP-Requests an node_exporter machen. extra_hosts: dadurch ist
+# der Host vom Container aus als `host.docker.internal` erreichbar
+# (Docker-Linux-Konvention).
+#
+# Speicherort auf CachyOS:
+#   /home/alex/monitoring/prometheus/docker-compose.yml
+#   /home/alex/monitoring/prometheus/prometheus.yml  ←  scrape-Config
+#
+# Für TSDB-Daten ein Docker Named Volume statt Bind-Mount: Prometheus
+# läuft als UID 65534 (nobody), ein Bind-Mount auf ein User-eigenes
+# Verzeichnis bräuchte sudo chown. Named Volumes erledigt das Docker
+# automatisch. Daten landen unter
+# /var/lib/docker/volumes/prometheus_tsdb/_data/
+
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - tsdb:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=15d'
+      - '--web.enable-lifecycle'
+
+volumes:
+  tsdb:

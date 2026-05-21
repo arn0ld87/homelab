@@ -1,0 +1,26 @@
+# Prometheus-Scrape-Konfiguration.
+#
+# scrape_interval: alle 15s holt sich Prometheus die Metriken
+# evaluation_interval: alle 15s prüft Prometheus die Recording/Alert-Rules
+#                      (haben wir aktuell keine, harmlos)
+#
+# Jeder job_name ist eine logische Gruppe von Targets. Hier nur ein Job
+# für node_exporter auf dem CachyOS-Host. Spätere Jobs (Loki, ntopng,
+# AGH-Exporter) kommen als weitere Einträge dazu.
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'node_exporter'
+    static_configs:
+      - targets: ['localhost:9100']
+        labels:
+          host: 'cachyos'
+
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          host: 'cachyos'

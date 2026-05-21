@@ -1,0 +1,47 @@
+# AdGuard Home — Replica auf CachyOS.
+#
+# Wird via agh-sync (auf VPS) vom Primary `agh-primary` (100.92.62.9)
+# gesynct: Filterlisten, Clients, Custom-Rules. DNS-Resolver für lokales
+# LAN + Tailscale-Geräte, die per MagicDNS auf 100.95.132.54 zeigen.
+#
+# Vorher per `docker run` betrieben; diese Compose-Datei ist 1:1
+# Spiegel der inspect-Daten (gleiches Image, gleiche Args, gleiche
+# Mounts, gleiche Port-Mappings).
+#
+# Volumes liegen außerhalb des Compose-Scopes auf dem Host
+# (`/home/alex/adguard/{conf,work}`), damit sie unabhängig von
+# `docker compose down --volumes` überleben und Promtail das
+# Querylog mounten kann.
+
+services:
+  adguardhome:
+    image: adguard/adguardhome:latest
+    container_name: adguardhome
+    restart: unless-stopped
+
+    # Bridge-Network, weil ports explizit gemappt werden und sonst
+    # nichts vom Host-Stack mit AGH konkurriert.
+    networks:
+      - default
+
+    ports:
+      - "53:53/tcp"            # DNS
+      - "53:53/udp"            # DNS
+      - "3000:3000/tcp"        # Web-UI (von agh-sync und Tailnet erreichbar)
+      # Optional aktivieren, wenn AGH DoT/DoH/DoQ serviert:
+      # - "853:853/tcp"        # DoT
+      # - "853:853/udp"        # DoQ
+      # - "443:443/tcp"        # DoH
+      # - "443:443/udp"        # DoH/3
+
+    volumes:
+      - /home/alex/adguard/conf:/opt/adguardhome/conf
+      - /home/alex/adguard/work:/opt/adguardhome/work
+
+    # Argumente identisch zum bisherigen `docker run`.
+    command:
+      - --no-check-update
+      - -c
+      - /opt/adguardhome/conf/AdGuardHome.yaml
+      - -w
+      - /opt/adguardhome/work

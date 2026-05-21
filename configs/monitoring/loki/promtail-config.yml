@@ -1,0 +1,45 @@
+# Promtail — zwei Quellen:
+#   1) systemd-journald  →  Host-Logs (alle Units)
+#   2) Docker-Socket     →  Container-Logs (AGH, Prometheus, Grafana, Loki selbst)
+#
+# Push an lokales Loki (host-mode, also localhost:3100).
+
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+  log_level: info
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://localhost:3100/loki/api/v1/push
+
+scrape_configs:
+
+  # ───── 1) systemd-journald ─────────────────────────────────────────
+  - job_name: journal
+    journal:
+      json: false
+      max_age: 12h
+      path: /var/log/journal
+      labels:
+        job: systemd-journal
+        host: cachyos
+    relabel_configs:
+      - source_labels: ['__journal__systemd_unit']
+        target_label: 'unit'
+      - source_labels: ['__journal_priority_keyword']
+        target_label: 'level'
+
+  # ───── 2) Docker-Container ─────────────────────────────────────────
+  - job_name: docker
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 10s
+    relabel_configs:
+      - source_labels: ['__meta_docker_container_name']
+        regex: '/(.*)'
+        target_label: 'container'
+      - source_labels: ['__meta_docker_container_log_stream']
+        target_label: 'stream'

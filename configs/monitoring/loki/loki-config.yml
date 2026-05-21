@@ -1,0 +1,44 @@
+# Loki minimal-config — single-binary, filesystem storage.
+# Für Heim-Lab ausreichend. Für Cluster später microservices-mode.
+
+auth_enabled: false
+
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 9096
+  log_level: info
+
+common:
+  instance_addr: 127.0.0.1
+  path_prefix: /loki
+  storage:
+    filesystem:
+      chunks_directory: /loki/chunks
+      rules_directory: /loki/rules
+  replication_factor: 1
+  ring:
+    kvstore:
+      store: inmemory
+
+schema_config:
+  configs:
+    - from: 2024-01-01
+      store: tsdb
+      object_store: filesystem
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+
+limits_config:
+  retention_period: 168h        # 7 Tage Aufbewahrung
+  reject_old_samples: false     # historische Container-Logs nicht ablehnen
+  allow_structured_metadata: true
+
+compactor:
+  working_directory: /loki/compactor
+  retention_enabled: true
+  delete_request_store: filesystem
+
+ruler:
+  alertmanager_url: http://localhost:9093

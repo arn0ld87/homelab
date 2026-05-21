@@ -1,0 +1,1251 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>DevOps & Monitoring · alexle135.de</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:          #060606;
+    --bg-card:     #0a0a0a;
+    --bg-cell:     rgba(255,255,255,0.02);
+    --bg-cell-2:   rgba(255,255,255,0.035);
+    --border:      rgba(255,255,255,0.08);
+    --border-mid:  rgba(255,255,255,0.14);
+    --border-hi:   rgba(255,255,255,0.28);
+    --fg:          #fafafa;
+    --fg-mute:     rgba(255,255,255,0.55);
+    --fg-dim:      rgba(255,255,255,0.38);
+    --orange:      #f97316;
+    --orange-soft: rgba(249,115,22,0.12);
+    --emerald:     #34d399;
+    --emerald-soft:rgba(52,211,153,0.10);
+    --emerald-bd:  rgba(52,211,153,0.22);
+    --rose:        #fb7185;
+    --rose-soft:   rgba(251,113,133,0.08);
+    --diff-add:    rgba(52,211,153,0.10);
+    --diff-rem:    rgba(251,113,133,0.10);
+
+    --ff-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --ff-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--fg); }
+  body {
+    font-family: var(--ff-sans);
+    font-size: 16px; line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    background:
+      radial-gradient(800px 400px at 88% -10%, rgba(249,115,22,0.07), transparent 60%),
+      radial-gradient(700px 500px at 10% 0%, rgba(255,255,255,0.04), transparent 60%),
+      var(--bg);
+    min-height: 100vh;
+  }
+  ::selection { background: var(--orange); color: #000; }
+  a { color: inherit; text-decoration: none; }
+
+  .shell { max-width: 1440px; margin: 0 auto; padding: 0 60px; }
+
+  /* ============ NAV ============ */
+  .nav {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 24px 0; gap: 32px;
+    border-bottom: 1px solid var(--border);
+  }
+  .brand {
+    display: flex; align-items: center; gap: 12px;
+    font-family: var(--ff-mono); font-size: 13px; font-weight: 600;
+    letter-spacing: 0.02em; color: var(--fg);
+  }
+  .brand .glyph { width: 22px; height: 22px; flex: none; }
+  .brand .tag {
+    color: var(--fg-mute); font-weight: 400; padding-left: 10px;
+    border-left: 1px solid var(--border-mid); margin-left: 4px;
+  }
+  .nav-links { display: flex; gap: 38px; align-items: center; }
+  .nav-link {
+    display: flex; flex-direction: column; gap: 2px;
+    font-family: var(--ff-mono);
+    font-size: 10px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--fg-mute);
+    transition: color 160ms ease;
+  }
+  .nav-link .sub {
+    font-family: var(--ff-sans); font-size: 12px;
+    letter-spacing: 0; text-transform: none; color: var(--fg-dim);
+    font-weight: 400;
+  }
+  .nav-link:hover { color: var(--fg); }
+  .nav-link:hover .sub { color: var(--fg-mute); }
+  .nav-link.active { color: var(--orange); }
+  .nav-actions { display: flex; gap: 10px; align-items: center; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    height: 38px; padding: 0 18px;
+    font-family: var(--ff-mono); font-size: 11px;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    font-weight: 500;
+    border-radius: 8px;
+    border: 1px solid var(--border-mid);
+    color: var(--fg);
+    background: transparent;
+    cursor: pointer;
+    transition: background 140ms ease, color 140ms ease, border-color 140ms ease, transform 140ms ease;
+  }
+  .btn:hover { border-color: var(--border-hi); }
+  .btn-primary {
+    background: var(--fg); color: #000; border-color: var(--fg);
+  }
+  .btn-primary:hover { background: rgba(255,255,255,0.9); }
+  .btn .arr {
+    width: 12px; height: 12px; display: inline-block;
+  }
+  .status-pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    height: 28px; padding: 0 10px;
+    border: 1px solid var(--emerald-bd);
+    background: var(--emerald-soft);
+    color: var(--emerald);
+    font-family: var(--ff-mono);
+    font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+    border-radius: 6px;
+  }
+  .status-pill .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--emerald);
+    box-shadow: 0 0 10px rgba(52,211,153,0.7);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+  /* ============ HERO ============ */
+  .hero { padding: 96px 0 56px; }
+  .kicker {
+    display: inline-flex; align-items: center; gap: 12px;
+    margin-bottom: 22px;
+  }
+  .kicker .sq {
+    width: 9px; height: 9px; background: var(--orange);
+    display: inline-block;
+  }
+  .kicker .lbl {
+    font-family: var(--ff-mono);
+    font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--fg-mute); font-weight: 500;
+  }
+  .hero h1 {
+    font-family: var(--ff-sans);
+    font-weight: 800;
+    font-size: clamp(48px, 7.4vw, 108px);
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+    margin: 0;
+    color: var(--fg);
+    text-wrap: balance;
+  }
+  .hero h1 .dim { color: var(--fg-dim); }
+  .hero h1 .accent {
+    color: var(--orange);
+    font-style: italic;
+    font-weight: 700;
+  }
+  .hero .lead {
+    margin: 28px 0 0;
+    max-width: 640px;
+    font-size: 17px; line-height: 1.6;
+    color: var(--fg-mute);
+  }
+  .hero .actions {
+    display: flex; gap: 12px; align-items: center;
+    margin-top: 36px;
+  }
+
+  /* meta grid under hero — like blackbox stat strip */
+  .hero-meta {
+    margin-top: 72px;
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .hero-meta .cell {
+    background: var(--bg-card);
+    padding: 22px 22px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .hero-meta .cell .k {
+    font-family: var(--ff-mono); font-size: 10px;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--fg-dim);
+  }
+  .hero-meta .cell .v {
+    font-family: var(--ff-sans); font-size: 28px;
+    font-weight: 700; letter-spacing: -0.02em;
+    color: var(--fg);
+  }
+  .hero-meta .cell .v .unit {
+    font-family: var(--ff-mono); font-size: 12px;
+    color: var(--fg-mute); font-weight: 500;
+    margin-left: 6px; letter-spacing: 0.06em;
+  }
+  .hero-meta .cell .sub {
+    font-family: var(--ff-mono); font-size: 11px;
+    color: var(--fg-mute);
+  }
+
+  /* ============ SECTION ============ */
+  .section { padding: 72px 0 0; }
+  .section-head {
+    display: flex; flex-direction: column; gap: 14px;
+    margin-bottom: 36px;
+  }
+  .section-head h2 {
+    font-family: var(--ff-sans); font-weight: 800;
+    font-size: clamp(32px, 4.6vw, 64px);
+    line-height: 0.98; letter-spacing: -0.035em;
+    margin: 0;
+  }
+  .section-head h2 .accent { color: var(--orange); font-style: italic; font-weight: 700; }
+  .section-head .desc {
+    max-width: 640px;
+    font-size: 15px; color: var(--fg-mute); line-height: 1.6;
+    margin: 0;
+  }
+  .section-head .desc code {
+    font-family: var(--ff-mono); font-size: 13px;
+    background: var(--bg-cell-2); border: 1px solid var(--border);
+    padding: 2px 6px; border-radius: 4px; color: var(--fg);
+  }
+
+  /* Card grid (gap-px on bg-border) */
+  .grid {
+    display: grid;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    gap: 1px;
+  }
+  .grid.cols-2 { grid-template-columns: 1fr 1fr; }
+  .grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+
+  /* generic card cell */
+  .card {
+    background: var(--bg-card);
+    padding: 28px 28px;
+    display: flex; flex-direction: column;
+    position: relative;
+    transition: background 160ms ease;
+  }
+  .card:hover { background: #0d0d0d; }
+  .card-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 18px;
+    gap: 12px;
+  }
+  .card-head .left {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .card-head .left .logo {
+    width: 36px; height: 36px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--fg);
+    flex: none;
+  }
+  .card-head .left .logo svg { width: 18px; height: 18px; }
+  .card-head .title-block { display: flex; flex-direction: column; gap: 2px; }
+  .card-head .title-block .name {
+    font-family: var(--ff-sans); font-size: 16px; font-weight: 600;
+    color: var(--fg); letter-spacing: -0.01em;
+  }
+  .card-head .title-block .host {
+    font-family: var(--ff-mono); font-size: 11px;
+    color: var(--fg-dim); letter-spacing: 0.04em;
+  }
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    height: 22px; padding: 0 8px;
+    font-family: var(--ff-mono); font-size: 9px;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    font-weight: 500;
+    border-radius: 4px;
+    border: 1px solid;
+    line-height: 1;
+  }
+  .badge.live {
+    background: var(--emerald-soft);
+    border-color: var(--emerald-bd);
+    color: var(--emerald);
+  }
+  .badge.standby {
+    background: var(--orange-soft);
+    border-color: rgba(249,115,22,0.25);
+    color: var(--orange);
+  }
+  .badge.local {
+    background: rgba(255,255,255,0.03);
+    border-color: var(--border-mid);
+    color: var(--fg-mute);
+  }
+  .badge .d { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+
+  /* link list inside card */
+  .link-list {
+    display: flex; flex-direction: column;
+    border-top: 1px solid var(--border);
+    margin: 8px -28px -28px;
+  }
+  .link {
+    display: grid;
+    grid-template-columns: 24px 1fr auto;
+    gap: 14px;
+    align-items: center;
+    padding: 14px 28px;
+    border-bottom: 1px solid var(--border);
+    transition: background 140ms ease;
+    cursor: pointer;
+  }
+  .link:last-child { border-bottom: none; }
+  .link:hover { background: rgba(255,255,255,0.025); }
+  .link:hover .arrow { color: var(--orange); transform: translate(2px, -2px); }
+  .link .num {
+    font-family: var(--ff-mono); font-size: 10px;
+    color: var(--fg-dim); letter-spacing: 0.1em;
+  }
+  .link .info { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+  .link .info .lbl {
+    font-family: var(--ff-sans); font-size: 14px;
+    font-weight: 500; color: var(--fg); letter-spacing: -0.005em;
+  }
+  .link .info .url {
+    font-family: var(--ff-mono); font-size: 11px;
+    color: var(--fg-mute); letter-spacing: 0;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .link .arrow {
+    color: var(--fg-mute);
+    transition: transform 200ms ease, color 200ms ease;
+    flex: none;
+  }
+  .link .arrow svg { width: 12px; height: 12px; display: block; }
+
+  /* terminal-style preview card (for hero spotlight or sections) */
+  .terminal {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    font-family: var(--ff-mono); font-size: 12px;
+  }
+  .terminal .tbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255,255,255,0.015);
+  }
+  .terminal .tbar .file {
+    display: flex; align-items: center; gap: 8px;
+    color: var(--fg-mute); font-size: 11px; letter-spacing: 0.04em;
+  }
+  .terminal .tbar .file .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--emerald); box-shadow: 0 0 8px var(--emerald); }
+  .terminal .tbar .meta {
+    display: flex; gap: 12px;
+    color: var(--fg-dim); font-size: 10px;
+    letter-spacing: 0.14em; text-transform: uppercase;
+  }
+  .terminal .body {
+    padding: 14px 16px;
+    color: var(--fg-mute);
+    line-height: 1.65;
+  }
+  .terminal .body .ln {
+    display: grid; grid-template-columns: 28px 18px 1fr; gap: 10px;
+    padding: 1px 0;
+  }
+  .terminal .body .ln .n { color: var(--fg-dim); text-align: right; }
+  .terminal .body .ln.add { background: var(--diff-add); margin: 0 -16px; padding-left: 16px; padding-right: 16px; }
+  .terminal .body .ln.rem { background: var(--diff-rem); margin: 0 -16px; padding-left: 16px; padding-right: 16px; }
+  .terminal .body .ln.add .s { color: var(--emerald); }
+  .terminal .body .ln.rem .s { color: var(--rose); }
+  .terminal .body .ln .s { color: var(--fg-dim); }
+  .terminal .body .k { color: #c084fc; }
+  .terminal .body .str { color: #fcd34d; }
+  .terminal .body .com { color: var(--fg-dim); font-style: italic; }
+  .terminal .body .typ { color: #7dd3fc; }
+
+  /* Filter bar */
+  .controls {
+    margin-top: 16px;
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+  .controls .label {
+    font-family: var(--ff-mono); font-size: 10px;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--orange);
+  }
+  .controls input {
+    flex: 1; background: transparent; border: 0; outline: none;
+    color: var(--fg); font-family: var(--ff-mono); font-size: 13px;
+    padding: 6px 8px;
+  }
+  .controls input::placeholder { color: var(--fg-dim); }
+  .controls .count {
+    font-family: var(--ff-mono); font-size: 11px;
+    color: var(--fg-mute); letter-spacing: 0.06em;
+  }
+  .controls .kbd {
+    font-family: var(--ff-mono); font-size: 10px;
+    color: var(--fg-mute);
+    padding: 3px 6px;
+    border: 1px solid var(--border-mid);
+    border-radius: 4px;
+  }
+
+  /* hosts cluster (winner card / agent rows) */
+  .hosts-grid {
+    display: grid; grid-template-columns: 1.4fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .hosts-grid .pane {
+    background: var(--bg-card);
+    padding: 28px;
+  }
+  .host-row {
+    display: grid;
+    grid-template-columns: 28px 1fr auto;
+    gap: 14px; align-items: center;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .host-row:last-child { border-bottom: none; }
+  .host-row .av {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: #181818;
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--fg);
+    font-family: var(--ff-mono); font-size: 11px; font-weight: 600;
+  }
+  .host-row .meta {
+    display: flex; flex-direction: column; gap: 4px;
+    min-width: 0;
+  }
+  .host-row .meta .row-1 {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .host-row .meta .name {
+    font-family: var(--ff-mono); font-size: 12px; font-weight: 600;
+    color: var(--fg); letter-spacing: 0.02em;
+  }
+  .host-row .meta .desc {
+    font-family: var(--ff-mono); font-size: 11px;
+    color: var(--fg-mute);
+  }
+  .host-row .stat {
+    font-family: var(--ff-mono); font-size: 10px;
+    color: var(--fg-dim); letter-spacing: 0.14em; text-transform: uppercase;
+  }
+
+  /* runtime mini cards */
+  .runtime {
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  .runtime .row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding-bottom: 12px;
+    border-bottom: 1px dashed var(--border);
+  }
+  .runtime .row:last-child { border-bottom: none; padding-bottom: 0; }
+  .runtime .row .lbl {
+    font-family: var(--ff-mono); font-size: 10px;
+    color: var(--fg-dim); letter-spacing: 0.18em; text-transform: uppercase;
+  }
+  .runtime .row .val {
+    font-family: var(--ff-mono); font-size: 13px;
+    color: var(--fg);
+    display: flex; align-items: baseline; gap: 6px;
+  }
+  .runtime .row .val .unit {
+    font-size: 10px; color: var(--fg-mute);
+  }
+  .runtime .row .val.big {
+    font-family: var(--ff-sans); font-size: 22px;
+    font-weight: 700; letter-spacing: -0.02em;
+  }
+  .runtime .bar {
+    height: 4px; background: rgba(255,255,255,0.05);
+    border-radius: 2px; overflow: hidden;
+  }
+  .runtime .bar .fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--orange) 0%, rgba(249,115,22,0.4) 100%);
+  }
+
+  /* footer */
+  .foot {
+    margin-top: 96px;
+    padding: 36px 0 48px;
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 32px;
+    font-family: var(--ff-mono); font-size: 11px;
+    color: var(--fg-mute);
+    letter-spacing: 0.04em;
+  }
+  .foot .left { display: flex; align-items: center; gap: 14px; color: var(--fg); }
+  .foot .right { display: flex; gap: 28px; }
+  .foot .right .stamp { color: var(--fg-dim); }
+
+  /* toast */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%;
+    transform: translateX(-50%) translateY(8px);
+    background: var(--fg); color: #000;
+    padding: 9px 16px; border-radius: 6px;
+    font-family: var(--ff-mono); font-size: 11px;
+    letter-spacing: 0.1em; text-transform: uppercase; font-weight: 500;
+    opacity: 0; pointer-events: none;
+    transition: opacity 200ms ease, transform 200ms ease;
+    z-index: 50;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* responsive */
+  @media (max-width: 1100px) {
+    .shell { padding: 0 32px; }
+    .nav-links { display: none; }
+    .hero-meta { grid-template-columns: repeat(2, 1fr); }
+    .grid.cols-2, .grid.cols-3 { grid-template-columns: 1fr; }
+    .hosts-grid { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 56px; }
+  }
+  @media (max-width: 640px) {
+    .shell { padding: 0 20px; }
+    .hero { padding: 56px 0 40px; }
+    .hero h1 { font-size: 44px; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- ============== NAV ============== -->
+  <header class="nav">
+    <a href="index.html" class="brand" aria-label="alexle135.de">
+      <svg class="glyph" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+        <path d="M20 4 L36 14 L20 24 L4 14 Z" stroke="#fafafa" stroke-width="1.8"/>
+        <path d="M20 16 L36 26 L20 36 L4 26 Z" stroke="#fafafa" stroke-width="1.8"/>
+        <line x1="20" y1="11" x2="20" y2="29" stroke="#f97316" stroke-width="1.8"/>
+        <circle cx="20" cy="20" r="2.6" fill="#f97316"/>
+      </svg>
+      <span>alexle135.de</span>
+      <span class="tag">// devops console</span>
+    </a>
+
+    <nav class="nav-links">
+      <a class="nav-link" href="#grafana">Grafana<span class="sub">7 dashboards</span></a>
+      <a class="nav-link" href="#backrest">Backrest<span class="sub">restic repos</span></a>
+      <a class="nav-link" href="#netz">Netz &amp; DNS<span class="sub">ntopng · adguard</span></a>
+      <a class="nav-link" href="#hosts">Hosts<span class="sub">2 nodes online</span></a>
+    </nav>
+
+    <div class="nav-actions">
+      <span class="status-pill"><span class="dot"></span>Tailnet · Online</span>
+    </div>
+  </header>
+
+  <!-- ============== HERO ============== -->
+  <section class="hero" data-screen-label="01 Hero">
+    <div class="kicker">
+      <span class="sq"></span>
+      <span class="lbl">Infrastructure Index · Edition 2026</span>
+    </div>
+
+    <h1>
+      Mein <span class="accent">Stack.</span><br>
+      Im Tailnet. <span class="dim">Nicht im offenen Netz.</span>
+    </h1>
+
+    <p class="lead">
+      Sieben Werkzeuge, zwei Hosts, ein Tailnet. Eine ruhige Konsole für die Endpunkte,
+      die ich täglich brauche — alle Adressen zeigen auf <code style="font-family:var(--ff-mono);background:rgba(255,255,255,0.04);padding:1px 5px;border-radius:3px;border:1px solid var(--border)">100.64.0.0/10</code>
+      und nur erreichbar, wenn du im selben Tailnet wie ich bist.
+    </p>
+
+    <div class="actions">
+      <a class="btn btn-primary" href="http://100.95.132.54:3001">
+        <span>Open Grafana</span>
+        <svg class="arr" viewBox="0 0 27 27" fill="none" aria-hidden="true">
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M3.85715 3.85715H19.2857L23.0553 7.64066L17.5163 13.1595L22.8462 17.5055V23.1429H17.5055V13.1703L7.65696 22.9832L3.8874 19.2L13.9259 9.19781H3.85715V3.85715Z" fill="currentColor"/>
+        </svg>
+      </a>
+      <button class="btn" id="copy-all">
+        <span>Copy all URLs</span>
+      </button>
+    </div>
+
+    <!-- Stat strip -->
+    <div class="hero-meta">
+      <div class="cell">
+        <span class="k">Endpoints</span>
+        <span class="v">12</span>
+        <span class="sub">across 4 services</span>
+      </div>
+      <div class="cell">
+        <span class="k">Hosts</span>
+        <span class="v">2 <span class="unit">online</span></span>
+        <span class="sub">cachyos · server-ops</span>
+      </div>
+      <div class="cell">
+        <span class="k">Tailnet</span>
+        <span class="v">100.64<span class="unit">/10</span></span>
+        <span class="sub">private CGNAT range</span>
+      </div>
+      <div class="cell">
+        <span class="k">Edition</span>
+        <span class="v" id="edition-stat">—</span>
+        <span class="sub" id="edition-sub">curator · Alexander Schneider</span>
+      </div>
+    </div>
+
+    <!-- Filter bar -->
+    <div class="controls">
+      <span class="label">FILTER</span>
+      <input id="filter-input" type="text" placeholder="search service, host, ip, path — e.g. &quot;grafana&quot;, &quot;100.95&quot;, &quot;dns&quot;" autocomplete="off">
+      <span class="count"><span id="visible-count">12</span>/12</span>
+      <span class="kbd">⌘K</span>
+    </div>
+  </section>
+
+  <!-- ============== SECTION 02 — GRAFANA ============== -->
+  <section class="section" id="grafana" data-screen-label="02 Grafana">
+    <div class="section-head">
+      <div class="kicker">
+        <span class="sq"></span>
+        <span class="lbl">№ 02 · Observability</span>
+      </div>
+      <h2>Grafana &amp; <span class="accent">Dashboards.</span></h2>
+      <p class="desc">
+        Sieben gepflegte Boards auf <code>cachyos:3001</code>. Multi-Host-Übersicht oben,
+        Disk und Logs unten — alles, was ich am Morgen im Vorbeigehen anschaue.
+      </p>
+    </div>
+
+    <div class="grid cols-2">
+      <!-- Card: Grafana Home + dashboards list -->
+      <div class="card" style="grid-row: span 2;">
+        <div class="card-head">
+          <div class="left">
+            <div class="logo">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 2 L20 6 V12 C20 16 16 20 12 22 C8 20 4 16 4 12 V6 L12 2 Z" stroke="#f97316" stroke-width="1.6" fill="rgba(249,115,22,0.08)"/>
+                <circle cx="12" cy="11" r="2.2" fill="#f97316"/>
+              </svg>
+            </div>
+            <div class="title-block">
+              <span class="name">Grafana</span>
+              <span class="host">cachyos · 100.95.132.54:3001</span>
+            </div>
+          </div>
+          <span class="badge live" data-probe="grafana"><span class="d"></span>Live</span>
+        </div>
+
+        <div class="link-list">
+          <a class="link" href="http://100.95.132.54:3001" data-service="grafana home overview">
+            <span class="num">01</span>
+            <span class="info">
+              <span class="lbl">Grafana Home</span>
+              <span class="url">http://100.95.132.54:3001</span>
+            </span>
+            <span class="arrow"><svg viewBox="0 0 27 27" fill="none"><path d="M3.85715 3.85715H19.2857L23.0553 7.64066L17.5163 13.1595L22.8462 17.5055V23.1429H17.5055V13.1703L7.65696 22.9832L3.8874 19.2L13.9259 9.19781H3.85715V3.85715Z" fill="currentColor"/></svg></span>
+          </a>
+          <a class="link" href="http://100.95.132.54:3001/d/multi-host-overview" data-service="multi host overview grafana">
+            <span class="num">02</span>
+            <span class="info">
+              <span class="lbl">Multi-Host Overview</span>
+              <span class="url">/d/multi-host-overview</span>
+            </span>
+            <span class="arrow"><svg viewBox="0 0 27 27" fill="none"><path d="M3.85715 3.85715H19.2857L23.0553 7.64066L17.5163 13.1595L22.8462 17.5055V23.1429H17.5055V13.1703L7.65696 22.9832L3.8874 19.2L13.9259 9.19781H3.85715V3.85715Z" fill="currentColor"/></svg></span>
+          </a>
+          <a class="link" href="http://100.95.132.54:3001/d/network-traffic" data-service="network traffic grafana">
+            <span class="num">03</span>
+            <span class="info">
+              <span class="lbl">Network Traffic</span>
+              <span class="url">/d/network-traffic</span>
+            </span>
+            <span class="arrow"><svg viewBox="0 0 27 27" fill="none"><path d="M3.85715 3.85715H19.2857L23.0553 7.64066L17.5163 13.1595L22.8462 17.5055V23.1429H17.5055V13.1703L7.65696 22.9832L3.8874 19.2L13.9259 9.19781H3.85715V3.85715Z" fill="currentColor"/></svg></span>
+          </a>
+          <a class="link" href="http://100.95.132.54:3001/d/disk-storage" data-service="disk storage grafana">
+            <span class="num">04</span>
+            <span class="info">
+              <span class="lbl">Disk &amp; Storage</span>
+              <span class="url">/d/disk-storage</span>
+            </span>
+            <span class="arrow"><svg viewBox="0 0 27 27" fill="none"><path d="M3.85715 3.85715H19.2857L23.0553 7.64066L17.5163 13.1595L22.8462 17.5055V23.1429H17.5055V13.1703L7.65696 22.9832L3.8874 19.2L13.9259 9.19781H3.85715V3.85715Z" fill="currentColor"/></svg></span>
+          </a>
+          <a class="link" href="http://100.95.132.54:3001/d/logs-overview" data-service="logs overview loki grafana">
+            <span class="num">05</span>
+            <span class="info">
+              <span class="lbl">Logs Overview</span>
+              <span class="url">/d/logs-overview</span>
+            </span>
+            <span class="arrow"><svg viewBox="0 0 27 27" fill="none"><path d="M3.85715 3.85715H19.2857L23.0553 7.64066L17.5163 13.1595L22.8462 17.5055V23.1429H17.5055V13.1703L7.65696 22.9832L3.8874 19.2L13.9259 9.19781H3.85715V3.85715Z" fill="currentColor"/></svg></span>
+          </a>
+          <a class="link" href="http://100.95.132.54:3001/d/alerts-health" data-service="alerts health grafana">
+            <span class="num">06</span>
+            <span class="info">
+              <span class="lbl">Alerts &amp; Health</span>
+              <span class="url">/d/alerts-health</span>
+            </span>
+            <span class="arrow"><svg viewBox="0 0 27 27" fill="none"><path d="M3.85715 3.85715H19.2857L23.0553 7.64066L17.5163 13.1595L22.8462 17.5055V23.1429H17.5055V13.1703L7.65696 22.9832L3.8874 19.2L13.9259 9.19781H3.85715V3.85715Z" fill="currentColor"/></svg></span>
+          </a>
+          <a class="link" href="http://100.95.132.54:3001/d/cachyos-host" data-service="cachyos host grafana">
+            <span class="num">07</span>
+            <span class="info">
+              <span class="lbl">CachyOS Host</span>
+              <span class="url">/d/cachyos-host</span>
+            </span>
+            <span class="arrow"><svg viewBox="0 0 27 27" fill="none"><path d="M3.85715 3.85715H19.2857L23.0553 7.64066L17.5163 13.1595L22.8462 17.5055V23.1429H17.5055V13.1703L7.65696 22.9832L3.8874 19.2L13.9259 9.19781H3.85715V3.85715Z" fill="currentColor"/></svg></span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Card: Terminal-style preview -->
+      <div class="card">
+        <div class="card-head">
+          <div class="left">
+            <div class="title-block">
+              <span class="name" style="font-family:var(--ff-mono); font-size:13px;">grafana@cachyos:~$</span>
+              <span class="host">prometheus + loki + alertmanager</span>
+            </div>
+          </div>
+          <span class="badge local"><span class="d" style="background:var(--fg-mute)"></span>STACK</span>
+        </div>
+        <div class="terminal">
+          <div class="tbar">
+            <div class="file"><span class="dot"></span>datasources.yml</div>
+            <div class="meta"><span>+4</span><span>−1</span></div>
+          </div>
+          <div class="body">
+            <div class="ln"><span class="n">1</span><span class="s"> </span><span><span class="k">apiVersion</span>: 1</span></div>
+            <div class="ln"><span class="n">2</span><span class="s"> </span><span><span class="k">datasources</span>:</span></div>
+            <div class="ln rem"><span class="n">3</span><span class="s">−</span><span>  - name: <span class="str">"prom-old"</span></span></div>
+            <div class="ln add"><span class="n">3</span><span class="s">+</span><span>  - name: <span class="str">"prometheus"</span></span></div>
+            <div class="ln add"><span class="n">4</span><span class="s">+</span><span>    <span class="k">type</span>: <span class="typ">prometheus</span></span></div>
+            <div class="ln add"><span class="n">5</span><span class="s">+</span><span>    <span class="k">url</span>: <span class="str">"http://100.95.132.54:9090"</span></span></div>
+            <div class="ln add"><span class="n">6</span><span class="s">+</span><span>    <span class="k">isDefault</span>: <span class="typ">true</span></span></div>
+            <div class="ln"><span class="n">7</span><span class="s"> </span><span>  - name: <span class="str">"loki"</span></span></div>
+            <div class="ln"><span class="n">8</span><span class="s"> </span><span>    <span class="k">type</span>: <span class="typ">loki</span></span></div>
+            <div class="ln"><span class="n">9</span><span class="s"> </span><span>    <span class="k">url</span>: <span class="str">"http://100.95.132.54:3100"</span></span></div>
+            <div class="ln"><span class="n">10</span><span class="s"> </span><span class="com"># scrape interval 15s, alerts.yml line-fed to AM</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card: Runtime stats -->
+      <div class="card">
+        <div class="card-head">
+          <div class="left">
+            <div class="title-block">
+              <span class="name">Runtime</span>
+              <span class="host">last sync · simulated</span>
+            </div>
+          </div>
+          <span class="badge live"><span class="d"></span>OK</span>
+        </div>
+        <div class="runtime">
+          <div class="row">
+            <span class="lbl">Uptime</span>
+            <span class="val big">47<span class="unit">d</span></span>
+          </div>
+          <div class="row" style="flex-direction:column; gap:8px; align-items:stretch;">
+            <div style="display:flex;justify-content:space-between;">
+              <span class="lbl">Disk · cachyos</span>
+              <span class="val">412<span class="unit">/931 GiB</span></span>
+            </div>
+            <div class="bar"><div class="fill" style="width:44%"></div></div>
+          </div>
+          <div class="row" style="flex-direction:column; gap:8px; align-items:stretch;">
+            <div style="display:flex;justify-content:space-between;">
+              <span class="lbl">Disk · server-ops</span>
+              <span class="val">1.84<span class="unit">/3.6 TiB</span></span>
+            </div>
+            <div class="bar"><div class="fill" style="width:51%"></div></div>
+          </div>
+          <div class="row">
+            <span class="lbl">Active Alerts</span>
+            <span class="val">0 <span class="unit">firing · 3 silenced</span></span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============== SECTION 03 — BACKREST ============== -->
+  <section class="section" id="backrest" data-screen-label="03 Backrest">
+    <div class="section-head">
+      <div class="kicker">
+        <span class="sq"></span>
+        <span class="lbl">№ 03 · Backups</span>
+      </div>
+      <h2>Backrest. <span class="accent">Restic</span> drüber.</h2>
+      <p class="desc">
+        Zwei Repos, ein Snapshot-Plan auf <code>server-ops:9898</code>. Server-Repo ist der lokale Anker,
+        Cachy-Repo spiegelt mit Remote-Ziel — verschlüsselt, dedupliziert, leise.
+      </p>
+    </div>
+
+    <div class="grid cols-2">
+      <div class="card">
+        <div class="card-head">
+          <div class="left">
+            <div class="logo">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <rect x="3" y="6" width="18" height="4" stroke="#fafafa" stroke-width="1.5" rx="1"/>
+                <rect x="3" y="14" width="18" height="4" stroke="#fafafa" stroke-width="1.5" rx="1"/>
+                <circle cx="7" cy="8" r="0.7" fill="#34d399"/>
+                <circle cx="7" cy="16" r="0.7" fill="#34d399"/>
+              </svg>
+            </div>
+            <div class="title-block">
+              <span class="name">Backrest · Server</span>
+              <span class="host">100.92.62.9:9898/#/repo/alex</span>
+            </div>
+          </div>
+          <span class="badge live" data-probe="backrest"><span class="d"></span>SYNCED</span>
+        </div>
+        <div class="link-list">
+          <a class="link" href="http://100.92.62.9:9898/#/repo/alex" data-service="backrest server repo alex">
+            <span class="num">→</span>
+            <span class="info">
+              <span class="lbl">Primäres Repo „alex" · lokaler Snapshot</span>
+              <span class="url">http://100.92.62.9:9898/#/repo/alex</span>
+            </span>
+            <span class="arrow"><svg viewBox="0 0 27 27" fill="none"><path d="M3.85715 3.85715H19.2857L23.0553 7.64066L17.5163 13.1595L22.8462 17.5055V23.1429H17.5055V13.1703L7.65696 22.9832L3.8874 19.2L13.9259 9.19781H3.85715V3.85715Z" fill="currentColor"/></svg></span>
+          </a>
+        </div>
+        <div style="margin-top:18px; padding:14px; background:var(--bg-cell); border:1px solid var(--border); border-radius:8px; font-family:var(--ff-mono); font-size:11px; color:var(--fg-mute); line-height:1.6;">
+          <div><span style="color:var(--fg-dim)">last_snapshot</span> <span style="color:var(--fg)">2026-05-21 04:00:14</span></div>
+          <div><span style="color:var(--fg-dim)">snapshots</span> <span style="color:var(--fg)">182</span> · <span style="color:var(--fg-dim)">size</span> <span style="color:var(--fg)">412 GiB</span></div>
+          <div><span style="color:var(--fg-dim)">schedule</span> <span style="color:var(--fg)">0 4 * * *</span> · <span style="color:var(--fg-dim)">retention</span> <span style="color:var(--fg)">7d/4w/12m</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="left">
+            <div class="logo">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M4 8 L12 4 L20 8 V16 L12 20 L4 16 Z" stroke="#f97316" stroke-width="1.5" fill="rgba(249,115,22,0.08)"/>
+                <path d="M12 4 V20" stroke="#f97316" stroke-width="1" opacity="0.5"/>
+                <path d="M4 8 L20 16" stroke="#f97316" stroke-width="1" opacity="0.5"/>
+              </svg>
+            </div>
+            <div class="title-block">
+              <span class="name">Backrest · Cachy (Remote)</span>
+              <span class="host">100.92.62.9:9898/#/repo/alex</span>
+            </div>
+          </div>
+          <span class="badge standby"><span class="d"></span>MIRROR</span>
+        </div>
+        <div class="link-list">
+          <a class="link" href="http://100.92.62.9:9898/#/repo/alex" data-service="backrest cachy mirror remote repo">
+            <span class="num">→</span>
+            <span class="info">
+              <span class="lbl">Spiegel-Repo „alex" · Remote-Ziel</span>
+              <span class="url">http://100.92.62.9:9898/#/repo/alex</span>
+            </span>
+            <span class="arrow"><svg viewBox="0 0 27 27" fill="none"><path d="M3.85715 3.85715H19.2857L23.0553 7.64066L17.5163 13.1595L22.8462 17.5055V23.1429H17.5055V13.1703L7.65696 22.9832L3.8874 19.2L13.9259 9.19781H3.85715V3.85715Z" fill="currentColor"/></svg></span>
+          </a>
+        </div>
+        <div style="margin-top:18px; padding:14px; background:var(--bg-cell); border:1px solid var(--border); border-radius:8px; font-family:var(--ff-mono); font-size:11px; color:var(--fg-mute); line-height:1.6;">
+          <div><span style="color:var(--fg-dim)">last_push</span> <span style="color:var(--fg)">2026-05-21 04:42:08</span></div>
+          <div><span style="color:var(--fg-dim)">target</span> <span style="color:var(--fg)">s3://offsite/alex</span></div>
+          <div style="color:var(--orange)">// Hinweis: identische URL wie Server-Repo. Prüfen, ob beide tatsächlich getrennt sind.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== SECTION 04 — NETZ ============== -->
+  <section class="section" id="netz" data-screen-label="04 Netz">
+    <div class="section-head">
+      <div class="kicker">
+        <span class="sq"></span>
+        <span class="lbl">№ 04 · Netz &amp; DNS</span>
+      </div>
+      <h2>NTOPNG &amp; <span class="accent">AdGuard</span> Home.</h2>
+      <p class="desc">
+        Flow-Analyse mit ntopng, DNS-Filterung mit AdGuard. Zwei AdGuard-Instanzen halten DNS
+        auch dann am Laufen, wenn ein Host für ein Update unterwegs ist.
+      </p>
+    </div>
+
+    <div class="grid cols-3">
+      <div class="card">
+        <div class="card-head">
+          <div class="left">
+            <div class="logo">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle cx="12" cy="12" r="8" stroke="#7dd3fc" stroke-width="1.5"/>
+                <path d="M4 12 H20 M12 4 Q16 12 12 20 M12 4 Q8 12 12 20" stroke="#7dd3fc" stroke-width="1.2"/>
+              </svg>
+            </div>
+            <div class="title-block">
+              <span class="name">ntopng</span>
+              <span class="host">cachyos · :3002</span>
+            </div>
+          </div>
+          <span class="badge live" data-probe="ntop"><span class="d"></span>LIVE</span>
+        </div>
+        <p style="font-family:var(--ff-mono); font-size:11px; color:var(--fg-mute); margin:0 0 16px;">Netzwerk-Flows, Top-Talker, Geo-Map. Sniffer auf eth0.</p>
+        <a class="link" href="http://100.95.132.54:3002/" data-service="ntopng network flow" style="margin: 0 -28px -28px; border-top: 1px solid var(--border);">
+          <span class="num">→</span>
+          <span class="info">
+            <span class="lbl">Open ntopng</span>
+            <span class="url">http://100.95.132.54:3002</span>
+          </span>
+          <span class="arrow"><svg viewBox="0 0 27 27" fill="none"><path d="M3.85715 3.85715H19.2857L23.0553 7.64066L17.5163 13.1595L22.8462 17.5055V23.1429H17.5055V13.1703L7.65696 22.9832L3.8874 19.2L13.9259 9.19781H3.85715V3.85715Z" fill="currentColor"/></svg></span>
+        </a>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="left">
+            <div class="logo">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 3 L20 7 V13 C20 17 16 20 12 21 C8 20 4 17 4 13 V7 Z" stroke="#34d399" stroke-width="1.5" fill="rgba(52,211,153,0.08)"/>
+                <path d="M9 12 L11.5 14.5 L15.5 10" stroke="#34d399" stroke-width="1.5"/>
+              </svg>
+            </div>
+            <div class="title-block">
+              <span class="name">AdGuard · Primary</span>
+              <span class="host">cachyos · :3000</span>
+            </div>
+          </div>
+          <span class="badge live" data-probe="adguard-primary"><span class="d"></span>PRIMARY</span>
+        </div>
+        <p style="font-family:var(--ff-mono); font-size:11px; color:var(--fg-mute); margin:0 0 16px;">Aktiver DNS-Auflöser im Tailnet. Blocklists, Custom-Rules, Encrypted DNS.</p>
+        <a class="link" href="http://100.95.132.54:3000/" data-service="adguard main primary cachyos dns" style="margin: 0 -28px -28px; border-top: 1px solid var(--border);">
+          <span class="num">→</span>
+          <span class="info">
+            <span class="lbl">Open AdGuard Primary</span>
+            <span class="url">http://100.95.132.54:3000</span>
+          </span>
+          <span class="arrow"><svg viewBox="0 0 27 27" fill="none"><path d="M3.85715 3.85715H19.2857L23.0553 7.64066L17.5163 13.1595L22.8462 17.5055V23.1429H17.5055V13.1703L7.65696 22.9832L3.8874 19.2L13.9259 9.19781H3.85715V3.85715Z" fill="currentColor"/></svg></span>
+        </a>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="left">
+            <div class="logo">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 3 L20 7 V13 C20 17 16 20 12 21 C8 20 4 17 4 13 V7 Z" stroke="#f97316" stroke-width="1.5" fill="rgba(249,115,22,0.08)"/>
+                <path d="M12 8 V14 M12 16.5 V17" stroke="#f97316" stroke-width="1.5"/>
+              </svg>
+            </div>
+            <div class="title-block">
+              <span class="name">AdGuard · Fallback</span>
+              <span class="host">server-ops · :3000</span>
+            </div>
+          </div>
+          <span class="badge standby" data-probe="adguard-fallback"><span class="d"></span>STANDBY</span>
+        </div>
+        <p style="font-family:var(--ff-mono); font-size:11px; color:var(--fg-mute); margin:0 0 16px;">Springt ein, wenn Primary fehlt. Gleiche Listen, eigener Cache, eigener Host.</p>
+        <a class="link" href="http://100.92.62.9:3000/" data-service="adguard fallback server ops dns standby" style="margin: 0 -28px -28px; border-top: 1px solid var(--border);">
+          <span class="num">→</span>
+          <span class="info">
+            <span class="lbl">Open AdGuard Fallback</span>
+            <span class="url">http://100.92.62.9:3000</span>
+          </span>
+          <span class="arrow"><svg viewBox="0 0 27 27" fill="none"><path d="M3.85715 3.85715H19.2857L23.0553 7.64066L17.5163 13.1595L22.8462 17.5055V23.1429H17.5055V13.1703L7.65696 22.9832L3.8874 19.2L13.9259 9.19781H3.85715V3.85715Z" fill="currentColor"/></svg></span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== SECTION 05 — HOSTS ============== -->
+  <section class="section" id="hosts" data-screen-label="05 Hosts">
+    <div class="section-head">
+      <div class="kicker">
+        <span class="sq"></span>
+        <span class="lbl">№ 05 · Hosts im Tailnet</span>
+      </div>
+      <h2>Zwei Maschinen <span class="accent">tragen</span> das Ganze.</h2>
+    </div>
+
+    <div class="hosts-grid">
+      <div class="pane">
+        <div class="card-head" style="margin: 0 0 18px;">
+          <div class="left">
+            <div class="title-block">
+              <span class="name" style="font-family:var(--ff-mono);">cluster · alexle135.tailnet</span>
+              <span class="host">2 nodes online · 0 pending</span>
+            </div>
+          </div>
+          <span class="badge live"><span class="d"></span>HEALTHY</span>
+        </div>
+
+        <div class="host-row">
+          <div class="av">C</div>
+          <div class="meta">
+            <div class="row-1">
+              <span class="name">cachyos.tailnet</span>
+              <span class="badge live" style="height:18px; font-size:8px;"><span class="d"></span>winner</span>
+            </div>
+            <span class="desc">100.95.132.54 · arch / cachyos · Grafana :3001 · ntopng :3002 · AdGuard :3000</span>
+          </div>
+          <span class="stat">workstation</span>
+        </div>
+
+        <div class="host-row">
+          <div class="av">S</div>
+          <div class="meta">
+            <div class="row-1">
+              <span class="name">server-ops.tailnet</span>
+              <span class="badge live" style="height:18px; font-size:8px;"><span class="d"></span>ok</span>
+            </div>
+            <span class="desc">100.92.62.9 · debian / lts · Backrest :9898 · AdGuard :3000 · Restic-Endpoint</span>
+          </div>
+          <span class="stat">storage</span>
+        </div>
+
+        <div class="host-row">
+          <div class="av" style="opacity:0.4">·</div>
+          <div class="meta">
+            <div class="row-1">
+              <span class="name" style="color:var(--fg-dim)">+ neuer Host?</span>
+            </div>
+            <span class="desc">Tailscale up &amp; in den Subnet-Router eintragen, dann hier ergänzen.</span>
+          </div>
+          <span class="stat">slot · open</span>
+        </div>
+      </div>
+
+      <div class="pane">
+        <div class="card-head" style="margin: 0 0 18px;">
+          <div class="left">
+            <div class="title-block">
+              <span class="name" style="font-family:var(--ff-mono);">tailnet · 100.64.0.0/10</span>
+              <span class="host">private CGNAT range</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="runtime">
+          <div class="row">
+            <span class="lbl">MagicDNS</span>
+            <span class="val">enabled</span>
+          </div>
+          <div class="row">
+            <span class="lbl">Exit Node</span>
+            <span class="val">cachyos</span>
+          </div>
+          <div class="row">
+            <span class="lbl">Subnet Routes</span>
+            <span class="val">192.168.178.0/24</span>
+          </div>
+          <div class="row">
+            <span class="lbl">SSH</span>
+            <span class="val">tailscale ssh · key only</span>
+          </div>
+          <div class="row">
+            <span class="lbl">Last Keepalive</span>
+            <span class="val" id="last-keepalive">—</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== FOOTER ============== -->
+  <footer class="foot">
+    <div class="left">
+      <svg width="20" height="20" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+        <path d="M20 4 L36 14 L20 24 L4 14 Z" stroke="#fafafa" stroke-width="1.8"/>
+        <path d="M20 16 L36 26 L20 36 L4 26 Z" stroke="#fafafa" stroke-width="1.8"/>
+        <circle cx="20" cy="20" r="2.6" fill="#f97316"/>
+      </svg>
+      <span>alexle135.de · DevOps Console</span>
+    </div>
+    <div class="right">
+      <span>© 2026 Alexander Schneider</span>
+      <span class="stamp" id="foot-stamp">build · —</span>
+    </div>
+  </footer>
+
+</div>
+
+<div class="toast" id="toast">copied</div>
+
+<script>
+  // ----- live clock / edition stamps -----
+  function tick() {
+    const now = new Date();
+    const t = new Intl.DateTimeFormat('en-GB', {
+      hour: '2-digit', minute: '2-digit', second: '2-digit',
+      timeZone: 'Europe/Berlin', hour12: false
+    }).format(now);
+    const d = new Intl.DateTimeFormat('en-CA', {
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      timeZone: 'Europe/Berlin'
+    }).format(now);
+    const el1 = document.getElementById('edition-stat');
+    if (el1) el1.innerHTML = d.slice(5) + '<span class="unit">/' + d.slice(0,4) + '</span>';
+    const el2 = document.getElementById('foot-stamp');
+    if (el2) el2.textContent = 'tailnet · ' + d + ' ' + t + ' CET';
+    const el3 = document.getElementById('last-keepalive');
+    if (el3) el3.textContent = d + ' · ' + t;
+  }
+  tick(); setInterval(tick, 1000);
+
+  // ----- filter -----
+  const input = document.getElementById('filter-input');
+  const count = document.getElementById('visible-count');
+  const links = Array.from(document.querySelectorAll('.link[data-service]'));
+  const cards = Array.from(document.querySelectorAll('.card'));
+  const sections = Array.from(document.querySelectorAll('.section[id]'));
+
+  function applyFilter() {
+    const q = (input.value || '').trim().toLowerCase();
+    let visible = 0;
+    links.forEach(l => {
+      const hay = (l.dataset.service + ' ' + l.getAttribute('href') + ' ' + l.textContent).toLowerCase();
+      const hit = !q || hay.includes(q);
+      l.style.display = hit ? '' : 'none';
+      if (hit) visible++;
+    });
+    // hide cards with no visible links
+    cards.forEach(c => {
+      const linkChildren = c.querySelectorAll('.link[data-service]');
+      if (linkChildren.length === 0) return; // utility card — leave alone
+      const any = Array.from(linkChildren).some(l => l.style.display !== 'none');
+      c.style.opacity = any ? '1' : '0.25';
+    });
+    count.textContent = visible;
+  }
+  input.addEventListener('input', applyFilter);
+
+  // ----- ⌘K focus -----
+  document.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      input.focus(); input.select();
+    }
+  });
+
+  // ----- copy on shift+click / right-click -----
+  links.forEach(row => {
+    row.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      copy(row.getAttribute('href'));
+    });
+    row.addEventListener('click', (e) => {
+      if (e.shiftKey || e.metaKey || e.ctrlKey && !e.altKey) {
+        if (e.shiftKey) { e.preventDefault(); copy(row.getAttribute('href')); }
+      }
+    });
+  });
+
+  // copy-all
+  document.getElementById('copy-all').addEventListener('click', () => {
+    const all = links.map(l => l.getAttribute('href')).join('\n');
+    copy(all, 'all urls copied · ' + links.length);
+  });
+
+  function copy(text, label) {
+    navigator.clipboard?.writeText(text);
+    const t = document.getElementById('toast');
+    t.textContent = label || ('copied · ' + text.slice(0, 48));
+    t.classList.add('show');
+    clearTimeout(copy._t);
+    copy._t = setTimeout(() => t.classList.remove('show'), 1500);
+  }
+
+  // hint
+  setTimeout(() => {
+    if (!sessionStorage.getItem('alex-hint')) {
+      const t = document.getElementById('toast');
+      t.textContent = 'shift+click or right-click to copy a URL · ⌘K to filter · tailnet only';
+      t.classList.add('show');
+      sessionStorage.setItem('alex-hint', '1');
+      setTimeout(() => t.classList.remove('show'), 3200);
+    }
+  }, 1200);
+
+  // ----- live service heartbeat (progressive enhancement) -----
+  // Tailnet-only probes. Reachable only when client is in the tailnet —
+  // outside the tailnet every probe will fail and badges go rose. That's expected.
+  const probes = [
+    { key: 'grafana',          url: 'http://100.95.132.54:3001/favicon.ico' },
+    { key: 'backrest',         url: 'http://100.92.62.9:9898/favicon.ico' },
+    { key: 'ntop',             url: 'http://100.95.132.54:3002/lua/rest/v2/get/system/info.lua' },
+    { key: 'adguard-primary',  url: 'http://100.95.132.54:3000/favicon.ico' },
+    { key: 'adguard-fallback', url: 'http://100.92.62.9:3000/favicon.ico' }
+  ];
+
+  function setBadgeState(badge, alive) {
+    const dot = badge.querySelector('.d');
+    if (!dot) return;
+    if (alive) {
+      // restore default (emerald) look
+      badge.style.removeProperty('background');
+      badge.style.removeProperty('border-color');
+      badge.style.removeProperty('color');
+      dot.style.opacity = '1';
+      dot.style.removeProperty('background');
+      dot.style.removeProperty('box-shadow');
+      dot.style.animation = 'pulse 2s ease-in-out infinite';
+    } else {
+      // mark down: rose dot + rose tint
+      badge.style.background = 'var(--rose-soft)';
+      badge.style.borderColor = 'rgba(251,113,133,0.32)';
+      badge.style.color = 'var(--rose)';
+      dot.style.background = 'var(--rose)';
+      dot.style.boxShadow = '0 0 8px rgba(251,113,133,0.7)';
+      dot.style.animation = 'pulse 2s ease-in-out infinite';
+    }
+  }
+
+  function probe(p) {
+    const badge = document.querySelector('.badge[data-probe="' + p.key + '"]');
+    if (!badge) return;
+    let settled = false;
+    const img = new Image();
+    const done = (ok) => {
+      if (settled) return;
+      settled = true;
+      setBadgeState(badge, ok);
+    };
+    img.onload  = () => done(true);
+    img.onerror = () => done(false);
+    img.src = p.url + (p.url.includes('?') ? '&' : '?') + '_=' + Date.now();
+    setTimeout(() => done(false), 3000);
+  }
+
+  function pulseAll() { probes.forEach(probe); }
+  pulseAll();
+  setInterval(pulseAll, 60000);
+</script>
+</body>
+</html>

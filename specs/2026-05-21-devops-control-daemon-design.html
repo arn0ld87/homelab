@@ -1,0 +1,630 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DevOps Control Daemon · homelab/specs</title>
+
+<link rel="stylesheet" href="../assets/colors_and_type.css">
+<link rel="stylesheet" href="../assets/doc.css">
+</head>
+<body class="doc-layout">
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <a href="../index.html" class="brand">alex<span class="n">le</span>135.de <span style="color:var(--fg-meta); font-family:var(--ff-mono); font-size:11px; letter-spacing:var(--ls-mono); text-transform:uppercase; margin-left:12px;">/ homelab</span></a>
+    <div class="crumbs">
+      <a href="../index.html">homelab</a>
+      <span class="sep">/</span>
+      <a href="../index.html#specs">specs</a>
+      <span class="sep">/</span>
+      <span class="cur">DevOps Control Daemon</span>
+    </div>
+    <div class="topbar-right">
+      <span class="version">v 0.1.1</span>
+      <span class="status draft"><span class="dot"></span>Entwurf</span>
+      <button class="icon-btn" id="theme-toggle" title="Theme wechseln" aria-label="Theme">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      </button>
+      <button class="icon-btn" onclick="window.print()" title="Drucken / PDF" aria-label="Drucken">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="shell">
+
+  <aside class="left-rail" aria-label="Inhaltsverzeichnis">
+    <div class="toc-kicker">Inhalt</div>
+    <ol class="toc" id="toc">
+      <li><span class="n">01</span><a href="#motivation">Motivation</a></li>
+      <li><span class="n">02</span><a href="#ziele">Ziele und Nicht-Ziele</a></li>
+      <li><span class="n">03</span><a href="#architektur">Architektur</a></li>
+      <li><span class="n">04</span><a href="#auth">Authentifizierung</a></li>
+      <li><span class="n">05</span><a href="#allowlist">Command-Allowlist</a></li>
+      <li><span class="n">06</span><a href="#api">REST-API</a></li>
+      <li><span class="n">07</span><a href="#audit">Audit-Log</a></li>
+      <li><span class="n">08</span><a href="#deploy">Deploy-Plan</a></li>
+      <li><span class="n">09</span><a href="#threat">Threat-Model</a></li>
+      <li><span class="n">10</span><a href="#offen">Offene Fragen</a></li>
+      <li><span class="n">11</span><a href="#slices">Implementation-Slices</a></li>
+      <li><span class="n">12</span><a href="#frontend">Frontend-Anbindung</a></li>
+      <li><span class="n">13</span><a href="#changelog">Änderungen</a></li>
+    </ol>
+
+    <div class="rail-meta">
+      <div class="row">
+        <span class="l">Status</span>
+        <span class="v">Entwurf</span>
+      </div>
+      <div class="row">
+        <span class="l">Scope</span>
+        <span class="v">Tailnet-only</span>
+      </div>
+      <div class="row">
+        <span class="l">Sprache</span>
+        <span class="v">Go (static)</span>
+      </div>
+    </div>
+  </aside>
+
+  <main class="doc">
+
+    <header class="hero">
+      <div class="kicker">
+        <span><span class="a">№ 03</span> &nbsp;—&nbsp; INFRASTRUKTUR-SPEC</span>
+        <span>STAND 21. MAI 2026</span>
+      </div>
+
+      <h1>DevOps<br><span class="it">Control Daemon</span>.</h1>
+
+      <p class="lead">Ein kleiner Daemon pro Host, der nur eine geschlossene Liste von Befehlen ausführt. Vertrauensbasis ist das Tailnet — Tailscale liefert Identity über <code class="inline">whois</code>, der Daemon hört nur auf <code class="inline">100.x.x.x</code>, kein Shared-Secret, kein OAuth-Provider, kein Token in localStorage.</p>
+
+      <div class="meta-strip">
+        <div class="cell">
+          <span class="l">Version</span>
+          <span class="v mono">0.1.1</span>
+        </div>
+        <div class="cell">
+          <span class="l">Stand</span>
+          <span class="v">21. Mai 2026</span>
+        </div>
+        <div class="cell">
+          <span class="l">Scope</span>
+          <span class="v">Tailnet-only</span>
+        </div>
+        <div class="cell">
+          <span class="l">Hosts</span>
+          <span class="v">cachyos, server-ops</span>
+        </div>
+        <div class="cell">
+          <span class="l">Lesedauer</span>
+          <span class="v">≈ 14 Min.</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ===== 01 MOTIVATION ===== -->
+    <section class="section" id="motivation" data-screen-label="01 Motivation">
+      <div class="sec-head">
+        <div class="sec-num">01</div>
+        <div>
+          <div class="meta">№ 01 &nbsp;—&nbsp; MOTIVATION</div>
+          <h2>Warum nicht einfach SSH.</h2>
+        </div>
+      </div>
+
+      <div class="prose">
+        <p>Routine-Operations wie <code class="inline">nala update</code>, <code class="inline">restic snapshots</code> oder <code class="inline">systemctl status loki.service</code> laufen heute über zwei SSH-Sessions in zwei Terminals. Zuverlässig, aber langsam und schlecht aus dem Browser bedienbar.</p>
+        <p>Eine SaaS-Lösung (Portainer Business, Cockpit auf extern, Ansible Tower) lohnt nicht — der Betrieb von Auth-Backend, OIDC, TLS-Reverse-Proxy und Audit-Pipeline frisst mehr Zeit als die Operations selbst.</p>
+        <p>Stattdessen: ein kleiner Daemon pro Host, der nur eine geschlossene Liste von Befehlen ausführt. Die Vertrauensbasis ist das Tailnet. Wer im Tailnet ist, ist authentifiziert — Tailscale liefert Identity über <code class="inline">tailscaled localapi/v0/whois</code>, der Daemon hört nur auf <code class="inline">100.x.x.x</code> und schaltet <code class="inline">0.0.0.0</code> aus. Wenn das Tailnet kompromittiert ist, sind ohnehin größere Probleme vorne.</p>
+      </div>
+    </section>
+
+    <!-- ===== 02 ZIELE ===== -->
+    <section class="section" id="ziele" data-screen-label="02 Ziele">
+      <div class="sec-head">
+        <div class="sec-num">02</div>
+        <div>
+          <div class="meta">№ 02 &nbsp;—&nbsp; ZIELE UND NICHT-ZIELE</div>
+          <h2>Wofür, und wofür nicht.</h2>
+        </div>
+      </div>
+
+      <div class="prose">
+        <h3 data-num="2.1 — Ziele">Ziele</h3>
+        <ul>
+          <li>Idempotente Allowlist-Commands: jedes Kommando hat eine feste <code class="inline">argv</code>-Liste, keine Shell.</li>
+          <li>Tailscale-Identity als Auth-Anchor — User wird per <code class="inline">whois</code> aufgelöst, Allowlist matcht gegen <code class="inline">alex@github</code> und Co.</li>
+          <li>Audit-Log als append-only JSONL, lesbar und maschinenparsbar.</li>
+          <li>Ein Binary pro Host, statisch gelinkt (Go), keine libc-Abhängigkeit, kein Runtime.</li>
+          <li>systemd-Hardening (<code class="inline">NoNewPrivileges</code>, <code class="inline">ProtectSystem=strict</code>, dedicated User).</li>
+        </ul>
+
+        <h3 data-num="2.2 — Nicht-Ziele">Nicht-Ziele</h3>
+        <ul>
+          <li>Kein freies Shell-Eval, keine User-Argumente außer aus geschlossener Enum.</li>
+          <li>Keine Container-Orchestration — kein Ersatz für Compose, Portainer, Komodo.</li>
+          <li>Kein Multi-User-RBAC mit Rollen/Policies — Allowlist ist flach, eine User-Liste pro Host.</li>
+          <li>Kein Push-Modell — der Daemon ruft nichts selbst auf, hat keine Outbound-Verbindungen.</li>
+          <li>Kein Web-UI im Daemon — die <code class="inline">devops.html</code>-Console im homelab-Frontend ist der einzige Client.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ===== 03 ARCHITEKTUR ===== -->
+    <section class="section" id="architektur" data-screen-label="03 Architektur">
+      <div class="sec-head">
+        <div class="sec-num">03</div>
+        <div>
+          <div class="meta">№ 03 &nbsp;—&nbsp; ARCHITEKTUR</div>
+          <h2>Pro Host ein Binary.</h2>
+        </div>
+      </div>
+
+      <div class="prose">
+        <figure class="fig">
+          <div class="figbody">
+            <div class="ascii"><span class="b">[</span><span class="a">Browser im Tailnet</span><span class="b">]</span>
+     ↓ HTTP (Tailscale TLS via tailscale cert)
+<span class="b">[</span><span class="a">Daemon :7777 auf jedem Host</span><span class="b">]</span>
+     ↓ identity-Lookup
+<span class="b">[</span><span class="a">Local tailscaled /localapi/v0/whois</span><span class="b">]</span>
+     ↓ Allowlist-Filter
+<span class="b">[</span><span class="a">Subprocess mit fester argv-Liste, no shell</span><span class="b">]</span></div>
+          </div>
+          <figcaption>
+            <span class="num">Abb. 01</span>
+            <span>Request-Pfad vom Browser bis zum Subprocess</span>
+          </figcaption>
+        </figure>
+
+        <p>Der Daemon läuft pro Host, lauscht ausschließlich auf der Tailscale-IPv4 (<code class="inline">tailscale ip -4</code>) und niemals auf <code class="inline">0.0.0.0</code>. Beim Start liest er sein Listen-Interface aus dem <code class="inline">tailscaled localapi/v0/status</code> heraus — wenn Tailscale nicht läuft, fährt der Daemon nicht hoch.</p>
+        <p>Sprache: Go, statisch kompiliert, einzelnes Binary unter <code class="inline">/usr/local/bin/devopsd</code>. Keine Plugins, keine dynamischen Libs.</p>
+
+        <figure class="fig">
+          <div class="figbody">
+            <div class="ascii"><span class="b">┌────────────────────────────────────────────────────────────────┐</span>
+<span class="b">│</span>  TAILNET                                                       <span class="b">│</span>
+<span class="b">│</span>                                                                <span class="b">│</span>
+<span class="b">│</span>   <span class="b">┌───────────────────────┐         ┌────────────────────────┐</span> <span class="b">│</span>
+<span class="b">│</span>   <span class="b">│</span>  <span class="a">cachyos</span> (Desktop DE) <span class="b">│</span>         <span class="b">│</span>  <span class="a">server-ops</span> (VPS DE)   <span class="b">│</span> <span class="b">│</span>
+<span class="b">│</span>   <span class="b">│</span>  devopsd :7777        <span class="b">│</span>         <span class="b">│</span>  devopsd :7777         <span class="b">│</span> <span class="b">│</span>
+<span class="b">│</span>   <span class="b">│</span>  bind: 100.95.132.54  <span class="b">│</span>         <span class="b">│</span>  bind: 100.92.62.9     <span class="b">│</span> <span class="b">│</span>
+<span class="b">│</span>   <span class="b">└───────────┬───────────┘         └───────────┬────────────┘</span> <span class="b">│</span>
+<span class="b">│</span>               <span class="b">│</span>                                  <span class="b">│</span>             <span class="b">│</span>
+<span class="b">│</span>               <span class="b">└─────────────┬────────────────────┘</span>             <span class="b">│</span>
+<span class="b">│</span>                             ▼                                  <span class="b">│</span>
+<span class="b">│</span>              <span class="b">┌──────────────────────────────┐</span>                  <span class="b">│</span>
+<span class="b">│</span>              <span class="b">│</span>  <span class="a">Browser-Client</span>              <span class="b">│</span>                  <span class="b">│</span>
+<span class="b">│</span>              <span class="b">│</span>  devops.html im Tailnet      <span class="b">│</span>                  <span class="b">│</span>
+<span class="b">│</span>              <span class="b">│</span>  identity: alex@github       <span class="b">│</span>                  <span class="b">│</span>
+<span class="b">│</span>              <span class="b">└──────────────────────────────┘</span>                  <span class="b">│</span>
+<span class="b">└────────────────────────────────────────────────────────────────┘</span></div>
+          </div>
+          <figcaption>
+            <span class="num">Abb. 02</span>
+            <span>Host-Topologie im Tailnet</span>
+          </figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- ===== 04 AUTH ===== -->
+    <section class="section" id="auth" data-screen-label="04 Auth">
+      <div class="sec-head">
+        <div class="sec-num">04</div>
+        <div>
+          <div class="meta">№ 04 &nbsp;—&nbsp; AUTHENTIFIZIERUNG</div>
+          <h2>Tailscale Identity statt Shared-Secret.</h2>
+          <p class="sublead">Wer im Tailnet ist, ist authentifiziert. Welcher User es ist, sagt <code class="inline">tailscaled</code>.</p>
+        </div>
+      </div>
+
+      <div class="prose">
+        <p>Bei jedem Request schaut der Daemon die Quelle-IP an (typisch <code class="inline">100.x.x.x</code>) und ruft lokal gegen den <code class="inline">tailscaled</code>-Socket:</p>
+
+        <div class="codeblock">
+          <div class="cb-head">
+            <div class="cb-file"><span class="lang">HTTP</span>localapi-Request gegen tailscaled</div>
+            <button class="cb-copy" data-copy>Kopieren</button>
+          </div>
+<pre>GET /localapi/v0/whois?addr=&lt;peer-ip&gt;:&lt;peer-port&gt;</pre>
+        </div>
+
+        <p>Das Response liefert <code class="inline">UserProfile.LoginName</code> — z. B. <code class="inline">alex@github</code>. Diese Login-ID wird gegen die User-Allowlist in <code class="inline">/etc/devopsd/config.toml</code> (<code class="inline">allowed_users</code>) gematcht. Trifft sie nicht, antwortet der Daemon <code class="inline">403 Forbidden</code> mit JSON-Body <code class="inline">{"error":"not_allowed"}</code>, ohne den User-Namen zu echoen.</p>
+
+        <h3 data-num="4.1 — Vertrauenskette">Vertrauenskette</h3>
+        <ol>
+          <li>Tailscale-Node ist im Tailnet → Quelle-IP ist garantiert <code class="inline">100.x.x.x</code> aus diesem Tailnet.</li>
+          <li><code class="inline">tailscaled</code> weiß, welcher User welchen Node besitzt → <code class="inline">whois</code> ist autoritativ lokal.</li>
+          <li>Allowlist in der Config entscheidet, ob der User Commands ausführen darf.</li>
+        </ol>
+
+        <h3 data-num="4.2 — Sicherheits-Hinweis">Sicherheits-Hinweis</h3>
+        <p>Der Daemon vertraut der Quelle-IP, weil sie vom Tailscale-Userspace-Routing kommt, nicht vom Kernel-Netzwerkstack auf einem öffentlichen Interface. Spoofing der <code class="inline">100.x.x.x</code>-IP ist nur über einen kompromittierten Tailscale-Node möglich — und in dem Fall liefert <code class="inline">whois</code> ohnehin die Identity des kompromittierten Users. Die Allowlist begrenzt dann den Blast-Radius.</p>
+      </div>
+    </section>
+
+    <!-- ===== 05 ALLOWLIST ===== -->
+    <section class="section" id="allowlist" data-screen-label="05 Allowlist">
+      <div class="sec-head">
+        <div class="sec-num">05</div>
+        <div>
+          <div class="meta">№ 05 &nbsp;—&nbsp; COMMAND-ALLOWLIST</div>
+          <h2>Geschlossene Liste, keine Shell.</h2>
+        </div>
+      </div>
+
+      <div class="prose">
+        <table class="data-table">
+          <thead>
+            <tr><th>id</th><th>host-scope</th><th>argv (no shell)</th><th>side-effect</th><th>dauer</th><th>docs</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code class="inline">pkg.update</code></td><td>cachyos</td><td><code class="inline">nala update</code></td><td>aktualisiert apt-Cache</td><td>~30 s</td><td>nala(8)</td></tr>
+            <tr><td><code class="inline">pkg.upgrade-dry</code></td><td>cachyos</td><td><code class="inline">nala upgrade --simulate</code></td><td>listet Upgrades</td><td>&lt;10 s</td><td>nala(8)</td></tr>
+            <tr><td><code class="inline">restic.snapshots</code></td><td>server-ops</td><td><code class="inline">backrest snapshots --json</code></td><td>read-only</td><td>&lt;5 s</td><td>backrest(1)</td></tr>
+            <tr><td><code class="inline">docker.ps</code></td><td>beide</td><td><code class="inline">docker ps --format json</code></td><td>read-only</td><td>&lt;2 s</td><td>docker(1)</td></tr>
+            <tr><td><code class="inline">systemd.status</code></td><td>beide</td><td><code class="inline">systemctl status --no-pager -- $UNIT</code></td><td>read-only</td><td>&lt;2 s</td><td>systemd(1)</td></tr>
+            <tr><td><code class="inline">tailscale.status</code></td><td>beide</td><td><code class="inline">tailscale status --json</code></td><td>read-only</td><td>&lt;1 s</td><td>tailscale(1)</td></tr>
+          </tbody>
+        </table>
+
+        <p><strong>Wichtig:</strong> <code class="inline">$UNIT</code> wird gegen <code class="inline">^[a-zA-Z0-9@._-]+\.(service|timer|socket)$</code> validiert. Keine Pipes, keine Shell-Substitution, keine freien Args von der Wire. Kein <code class="inline">pkg.upgrade</code> ohne <code class="inline">--simulate</code> im MVP — das Apply-Kommando kommt erst nach erfolgreicher Audit-Phase (Slice V0.5).</p>
+
+        <p>Das explizite <code class="inline">--</code> vor <code class="inline">$UNIT</code> ist Pflicht — ohne wird ein Name wie <code class="inline">-H remote.service</code> als systemctl-Option gelesen und kann auf entfernte Hosts hosten.</p>
+
+        <p>Zusätzlich zur Argv-Regex MUSS jede Host-Config in <code class="inline">/etc/devopsd/config.toml</code> eine flache Unit-Allowlist deklarieren (<code class="inline">allowed_units = ["loki.service", "promtail.service", "backrest.service", …]</code>). Das ist im MVP nicht optional — eine sensitive Unit wie <code class="inline">sshd.service</code> darf nicht implizit erlaubt sein.</p>
+
+        <p>Jedes Kommando hat ein Hardtimeout (Spalte „dauer" mal 3). Läuft es länger, schickt der Daemon <code class="inline">SIGTERM</code>, nach weiteren 5 s <code class="inline">SIGKILL</code>. Concurrency ist auf 1 begrenzt — kein zweites <code class="inline">nala update</code> startet, solange das erste läuft.</p>
+      </div>
+    </section>
+
+    <!-- ===== 06 API ===== -->
+    <section class="section" id="api" data-screen-label="06 REST-API">
+      <div class="sec-head">
+        <div class="sec-num">06</div>
+        <div>
+          <div class="meta">№ 06 &nbsp;—&nbsp; REST-API</div>
+          <h2>Vier Endpoints.</h2>
+        </div>
+      </div>
+
+      <div class="prose">
+        <div class="codeblock">
+          <div class="cb-head">
+            <div class="cb-file"><span class="lang">HTTP</span>Endpoints</div>
+            <button class="cb-copy" data-copy>Kopieren</button>
+          </div>
+<pre>GET  /v1/commands          → JSON-Liste der Allowlist mit id/scope/dauer
+POST /v1/exec/{id}         → execute (body: {"args":{"unit":"loki.service"}})
+                             Response: {"exit":0,"stdout":"…","stderr":"","duration_ms":1842,"correlation_id":"…"}
+GET  /v1/audit?since=…     → Audit-Log (nur eigene Calls)
+GET  /healthz              → 200 ok ohne Auth</pre>
+        </div>
+
+        <p><code class="inline">/healthz</code> ist der einzige Endpoint ohne Identity-Check — read-only, ohne Side-Effect, nützlich für Uptime-Probes aus dem Monitoring-Stack. Alle anderen Endpoints lösen vor dem Routing den Peer auf und matchen die Allowlist.</p>
+
+        <h3 data-num="6.1 — Exec-Response">Exec-Response</h3>
+        <div class="codeblock">
+          <div class="cb-head">
+            <div class="cb-file"><span class="lang">JSON</span>POST /v1/exec/systemd.status</div>
+            <button class="cb-copy" data-copy>Kopieren</button>
+          </div>
+<pre>{
+  "command_id": "systemd.status",
+  "exit": 0,
+  "stdout": "● loki.service - Loki Logging Backend\n   Active: active (running)\n   …",
+  "stderr": "",
+  "duration_ms": 1842,
+  "correlation_id": "01J2Q7Y6XK3M0V5R9P8D4B1T2N",
+  "ts_start": "2026-05-21T10:14:22.103Z",
+  "ts_end":   "2026-05-21T10:14:23.945Z"
+}</pre>
+        </div>
+
+        <p><code class="inline">stdout</code> und <code class="inline">stderr</code> werden auf 64 KiB gekappt — wer mehr braucht, soll Logs direkt über Loki abrufen.</p>
+      </div>
+    </section>
+
+    <!-- ===== 07 AUDIT ===== -->
+    <section class="section" id="audit" data-screen-label="07 Audit-Log">
+      <div class="sec-head">
+        <div class="sec-num">07</div>
+        <div>
+          <div class="meta">№ 07 &nbsp;—&nbsp; AUDIT-LOG</div>
+          <h2>Append-only JSONL.</h2>
+        </div>
+      </div>
+
+      <div class="prose">
+        <p>Ein Eintrag pro Exec unter <code class="inline">/var/log/devopsd/audit.jsonl</code>:</p>
+
+        <div class="codeblock">
+          <div class="cb-head">
+            <div class="cb-file"><span class="lang">JSONL</span>audit.jsonl</div>
+            <button class="cb-copy" data-copy>Kopieren</button>
+          </div>
+<pre>{"ts":"2026-05-21T10:14:22.103Z","peer":"alex@github","peer_node":"macbook-alex","command_id":"systemd.status","argv":["systemctl","status","--no-pager","--","loki.service"],"exit":0,"duration_ms":1842,"correlation_id":"01J2Q7Y6XK3M0V5R9P8D4B1T2N","stdout_bytes":1842,"stderr_bytes":0,"prev_hash":"3f5c…","entry_hash":"a91e…"}</pre>
+        </div>
+
+        <p>Felder pro Eintrag: <code class="inline">ts</code>, <code class="inline">peer</code>, <code class="inline">peer_node</code>, <code class="inline">command_id</code>, <code class="inline">argv</code>, <code class="inline">exit</code>, <code class="inline">duration_ms</code>, <code class="inline">correlation_id</code>, <code class="inline">stdout_bytes</code>, <code class="inline">stderr_bytes</code>, <code class="inline">prev_hash</code>, <code class="inline">entry_hash</code>. Kein <code class="inline">stdout</code> selbst ins Log — das landet nur im Response. Der Audit-Log dokumentiert, <em>was</em> wann passiert ist, nicht <em>was rauskam</em>.</p>
+
+        <h3 data-num="7.1 — Tamper-Evidence">Tamper-Evidence</h3>
+        <p><code class="inline">O_APPEND</code> schützt nicht gegen einen kompromittierten <code class="inline">devopsd</code> selbst. Jeder Eintrag bekommt deshalb <code class="inline">prev_hash</code> (SHA-256 des kanonischen JSON des vorherigen Eintrags) und <code class="inline">entry_hash = HMAC-SHA256(k, canonical(entry_ohne_entry_hash))</code>. Der HMAC-Schlüssel <code class="inline">k</code> wird <strong>nicht</strong> im <code class="inline">devopsd</code>-Prozess gehalten, sondern liegt unter <code class="inline">/etc/devopsd-sealing/key</code> mode <code class="inline">0400 root:root</code> und wird beim Start in einen separaten Hilfsprozess <code class="inline">devopsd-seal</code> (privilegienarm, drop-priv) gemmapped. Der Daemon sendet Einträge per Unix-Domain-Socket an <code class="inline">devopsd-seal</code>, bekommt nur das resultierende <code class="inline">entry_hash</code> zurück. Bei jedem Daemon-Start verifiziert eine Wachthund-Routine die letzten 1024 Einträge gegen die Chain — bricht der Hash, schreibt der Daemon einen <strong>TAMPER</strong>-Marker und alarmiert über <code class="inline">journalctl --priority=err</code>.</p>
+
+        <p>Zusätzlich wird der Audit-Log <strong>gleichzeitig</strong> lokal geschrieben und live an Loki via Promtail geshippt — kompromittierte lokale Files lassen sich am Loki-Index ablesen.</p>
+
+        <p>Rotation über <code class="inline">/etc/logrotate.d/devopsd</code>: täglich rotieren, 7 Tage roh, 30 Tage gzipped, 1 Jahr Archive. Die Rotation ist out-of-process, der Daemon selbst hält nur den offenen Schreib-Handle und reagiert auf <code class="inline">SIGHUP</code> mit Reopen.</p>
+      </div>
+    </section>
+
+    <!-- ===== 08 DEPLOY ===== -->
+    <section class="section" id="deploy" data-screen-label="08 Deploy">
+      <div class="sec-head">
+        <div class="sec-num">08</div>
+        <div>
+          <div class="meta">№ 08 &nbsp;—&nbsp; DEPLOY-PLAN</div>
+          <h2>systemd-Unit, dedicated User, TLS via Tailscale.</h2>
+        </div>
+      </div>
+
+      <div class="prose">
+        <ul>
+          <li><strong>systemd-Unit</strong> <code class="inline">devopsd.service</code>:
+            <ul>
+              <li>User <code class="inline">devopsd</code>, Group <code class="inline">devopsd</code>, ohne Login-Shell (<code class="inline">/usr/sbin/nologin</code>).</li>
+              <li><code class="inline">NoNewPrivileges=true</code>, <code class="inline">ProtectSystem=strict</code>, <code class="inline">ProtectHome=true</code>.</li>
+              <li><code class="inline">ReadWritePaths=/var/log/devopsd</code>, sonst nichts schreibbar.</li>
+              <li><code class="inline">RestrictAddressFamilies=AF_INET AF_UNIX</code> (kein IPv6, kein Raw-Socket).</li>
+              <li><code class="inline">CapabilityBoundingSet=</code> (leer) — keine Caps, keine <code class="inline">CAP_NET_BIND_SERVICE</code> nötig bei Port 7777.</li>
+            </ul>
+          </li>
+          <li><strong>Binary</strong> unter <code class="inline">/usr/local/bin/devopsd</code>, root-owned, mode <code class="inline">0755</code>.</li>
+          <li><strong>Config</strong> unter <code class="inline">/etc/devopsd/config.toml</code>, mode <code class="inline">0640</code>, owner <code class="inline">root:devopsd</code>. Inhalt: User-Allowlist, optional Host-spezifische Command-Overrides, Listen-Port.</li>
+          <li><strong>TLS</strong> via <code class="inline">tailscale cert &lt;host&gt;.&lt;tailnet&gt;</code> — Cert landet in <code class="inline">/var/lib/devopsd/tls/</code>. Renewal über <code class="inline">tailscale cert</code> läuft als Timer-Unit <code class="inline">devopsd-cert.timer</code>, weekly.</li>
+          <li><strong>Alternative</strong> zu eigenem TLS-Handling: <code class="inline">tailscale serve --bg --https=7777 http://127.0.0.1:7777</code>. Tailscale terminiert TLS, der Daemon spricht plain HTTP gegen Loopback. Spart die Cert-Renewal-Logik, kostet das Direkt-Binding an die Tailscale-IP.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ===== 09 THREAT-MODEL ===== -->
+    <section class="section" id="threat" data-screen-label="09 Threat-Model">
+      <div class="sec-head">
+        <div class="sec-num">09</div>
+        <div>
+          <div class="meta">№ 09 &nbsp;—&nbsp; THREAT-MODEL</div>
+          <h2>Was wenn.</h2>
+        </div>
+      </div>
+
+      <div class="prose">
+        <h3 data-num="9.1 — Tailnet-Device kompromittiert">Tailnet-Device kompromittiert</h3>
+        <p>Der Daemon executet im Namen des kompromittierten Users. Die Allowlist begrenzt blast radius auf read-only Commands plus <code class="inline">nala update</code> und <code class="inline">nala upgrade --simulate</code>. Kein <code class="inline">pkg.upgrade --yes</code>, kein <code class="inline">restic forget</code>, kein <code class="inline">docker rm</code>. Worst case im MVP: ein aktualisierter apt-Cache und eine Liste, was upgradebar wäre — kein State-Change am laufenden System.</p>
+
+        <h3 data-num="9.2 — Daemon-Shell-Escape">Daemon-User erreicht Shell-Escape</h3>
+        <p>systemd-Hardening greift: kein Schreibzugriff außer auf <code class="inline">/var/log/devopsd</code>, kein neuer Capability-Erwerb, keine Privilege Escalation via SUID. Der <code class="inline">devopsd</code>-User hat keine Login-Shell, kein Home, keine sudo-Rechte.</p>
+
+        <h3 data-num="9.3 — Allowlist falsch konfiguriert">Allowlist falsch konfiguriert</h3>
+        <p>Default-deny. Unbekannte <code class="inline">command_id</code> → <code class="inline">404 Not Found</code>. Unbekannter User in <code class="inline">whois</code> → <code class="inline">403 Forbidden</code>. Beim Daemon-Start wird die Config validiert (Schema-Check, Argv-Existenz auf dem <code class="inline">$PATH</code>) — bei Fehler kein Listen-Start, systemd schlägt Alarm.</p>
+
+        <h3 data-num="9.4 — Argument-Injection">Argument-Injection</h3>
+        <p>Es gibt keine User-Argumente außer aus geschlossener Enum. <code class="inline">$UNIT</code> ist die einzige variable Stelle, regex-validiert vor <code class="inline">exec</code>. Kein <code class="inline">os/exec</code> mit <code class="inline">sh -c</code>, immer direkt mit <code class="inline">argv []string</code>. Speziell <code class="inline">systemd.status</code>: das <code class="inline">--</code> vor <code class="inline">$UNIT</code> blockt Option-Injection (z. B. <code class="inline">-H remote.host.service</code>); ohne <code class="inline">--</code> wäre Remote-Hosting möglich.</p>
+
+        <h3 data-num="9.5 — DoS">DoS</h3>
+        <p>Rate-Limit pro Peer 30 req/min, Exec-Concurrency global 1, jedes Kommando mit Hardtimeout. Ein flutender Client bekommt <code class="inline">429 Too Many Requests</code>, parallele Calls warten oder werden mit <code class="inline">409 Conflict</code> abgelehnt.</p>
+
+        <h3 data-num="9.6 — Log-Tampering">Log-Tampering</h3>
+        <p>Audit-Log ist append-only über <code class="inline">O_APPEND</code>, mode <code class="inline">0640</code>, owner <code class="inline">devopsd:adm</code>. Wer den Log manipuliert, hat Root — und damit den Daemon-User überstimmt. Realer Schutz wäre Append-only-Fs oder Remote-Shipping nach Loki — Slice V0.6.</p>
+
+        <h3 data-num="9.7 — Supply-Chain">Manipulierte Releases / Supply-Chain</h3>
+        <p>Der Daemon wird über GitHub-Release-Tarball plus <code class="inline">install.sh</code> verteilt. Vor V1: Cosign-Signatur des Tarballs, SHA-256 im Release-Body, Reproducible-Build über Goreleaser. <code class="inline">install.sh</code> verifiziert die Signatur vor jedem Replace — kein blindes <code class="inline">curl | sh</code>. Ohne diese Pipeline kein Production-Deploy. SBOM (CycloneDX) liegt jedem Release bei.</p>
+
+        <h3 data-num="9.8 — Symlink-Races / TOCTOU">Symlink-Races / TOCTOU</h3>
+        <p>Der Daemon öffnet jede Datei in <code class="inline">/var/log/devopsd</code>, <code class="inline">/var/lib/devopsd/tls/</code> und <code class="inline">/etc/devopsd</code> mit <code class="inline">O_NOFOLLOW</code> + <code class="inline">O_CLOEXEC</code>. Verzeichnis-Ownership ist <code class="inline">root:devopsd</code>, mode <code class="inline">0750</code>, keine <code class="inline">o+w</code>. Rotation und Reopen passieren atomar: neue Datei nach Tempname schreiben, <code class="inline">fsync</code>, <code class="inline">rename</code> — kein zwischenzeitliches Truncate.</p>
+
+        <h3 data-num="9.9 — SSRF / Client-Redirect">SSRF / Client-seitige Endpoint-Redirection</h3>
+        <p>Die <code class="inline">devops.html</code>-Console hält eine harte Liste erlaubter Daemon-Endpoints (<code class="inline">100.95.132.54:7777</code>, <code class="inline">100.92.62.9:7777</code>). Jeder <code class="inline">fetch(target)</code> wird gegen diese Liste validiert; ein manipulierter <code class="inline">target_host</code>-Param aus URL/localStorage führt zu Klick-Refuse mit Toast, nicht zu einem unbeabsichtigten Request gegen einen anderen Tailnet-Host.</p>
+      </div>
+    </section>
+
+    <!-- ===== 10 OFFENE FRAGEN ===== -->
+    <section class="section" id="offen" data-screen-label="10 Offene Fragen">
+      <div class="sec-head">
+        <div class="sec-num">10</div>
+        <div>
+          <div class="meta">№ 10 &nbsp;—&nbsp; OFFENE FRAGEN</div>
+          <h2>Vor der Implementation klären.</h2>
+        </div>
+      </div>
+
+      <div class="prose">
+        <ul>
+          <li>Brauchen wir <code class="inline">pkg.upgrade --apply</code> (also <code class="inline">nala upgrade -y</code>) im V1, oder erst nach 30 Tagen Audit-Log-Auswertung mit echten Nutzungsmustern?</li>
+          <li>Wie verteilen wir Daemon-Updates auf cachyos und server-ops — apt-Repo unter <code class="inline">apt.alexle135.de</code>, GitHub-Release-Tarball mit <code class="inline">install.sh</code>, oder ein Ansible-Playbook im homelab-Repo?</li>
+          <li>Audit-Log nach Loki shippen über Promtail, oder reicht das lokale JSONL für die ersten 90 Tage?</li>
+          <li>Wie unterscheiden wir Commands mit <code class="inline">host-scope: beide</code> zwischen den Hosts — Frontend schickt explizit <code class="inline">target_host</code>, oder der User wählt im UI vorher den Host und die Console hält den Endpoint?</li>
+          <li>Wie verteilen wir den Sealing-Key auf neue Hosts — manuell ssh-copy + Tag im Setup-Runbook, oder via Ansible-Vault?</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ===== 11 SLICES ===== -->
+    <section class="section" id="slices" data-screen-label="11 Slices">
+      <div class="sec-head">
+        <div class="sec-num">11</div>
+        <div>
+          <div class="meta">№ 11 &nbsp;—&nbsp; IMPLEMENTATION-SLICES</div>
+          <h2>V0.2 bis V0.6.</h2>
+        </div>
+      </div>
+
+      <div class="prose">
+        <ul>
+          <li><strong>V0.2</strong> — Build + systemd-Unit auf cachyos, nur read-only Commands (<code class="inline">docker.ps</code>, <code class="inline">systemd.status</code>, <code class="inline">tailscale.status</code>). Plain HTTP gegen die Tailscale-IP, kein TLS.</li>
+          <li><strong>V0.3</strong> — Audit-Log JSONL <strong>mit Hash-Chain via <code class="inline">devopsd-seal</code> Hilfsprozess</strong> + logrotate.d-Hookup + TLS via <code class="inline">tailscale cert</code> oder <code class="inline">tailscale serve --https=7777</code>.</li>
+          <li><strong>V0.4</strong> — Loki-Shipping (vorgezogen) + server-ops-Deploy + <code class="inline">pkg.update</code> und <code class="inline">pkg.upgrade-dry</code> auf cachyos + <code class="inline">restic.snapshots</code> auf server-ops.</li>
+          <li><strong>V0.5</strong> — Apply-Commands (<code class="inline">pkg.upgrade --yes</code>, <code class="inline">restic forget --prune</code>) nach abgeschlossener Audit-Phase, gegated nicht nur über <code class="inline">requires_confirm</code>, sondern zusätzlich über <code class="inline">last_tamper_check &lt; 24h</code>.</li>
+          <li><strong>V0.6</strong> — Reproducible-Build-Pipeline + Cosign-Signatur + SBOM (CycloneDX) für jeden Release-Tarball; Dashboard für DevOps-Aktivität im Grafana-Stack aus der Monitoring-Spec.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ===== 12 FRONTEND ===== -->
+    <section class="section" id="frontend" data-screen-label="12 Frontend">
+      <div class="sec-head">
+        <div class="sec-num">12</div>
+        <div>
+          <div class="meta">№ 12 &nbsp;—&nbsp; FRONTEND-ANBINDUNG</div>
+          <h2>devops.html ruft die Endpoints.</h2>
+        </div>
+      </div>
+
+      <div class="prose">
+        <p>Die Console hält eine fest verdrahtete Liste erlaubter Daemon-Endpoints (<code class="inline">const ALLOWED_DAEMONS = ['http://100.95.132.54:7777', 'http://100.92.62.9:7777']</code>). Jeder Klick auf einen Action-Button validiert das Ziel gegen diese Liste, bevor der <code class="inline">fetch</code> losgeht — kein offener <code class="inline">target_host</code>-Parameter aus URL oder localStorage.</p>
+
+        <p>Die <code class="inline">devops.html</code>-Console im homelab-Frontend lädt beim Start <code class="inline">GET /v1/commands</code> und rendert daraus die Button-Liste pro Host. Klick auf einen Button löst einen direkten <code class="inline">fetch('/devopsd/v1/exec/pkg.update', {method: 'POST'})</code> aus, das Response landet in einem Toast plus Detail-Panel (Exit-Code, Dauer, gekapptes stdout). Bei <code class="inline">403</code> wird der Toast rot mit Hinweis auf die Allowlist; bei <code class="inline">429</code> mit Hinweis auf den Rate-Limit.</p>
+
+        <p>Die Console ist reines HTML/JS ohne Build-Step — <code class="inline">fetch</code> gegen die Tailscale-IP der beiden Hosts, kein CORS-Stress, weil die Console selbst über das Tailnet ausgeliefert wird. Die konkrete UI ist nicht Teil dieser Spec — hier nur die Anbindungs-Skizze: welche Endpoints aufgerufen werden, welche Responses erwartet werden, wo die Fehlerklassen <code class="inline">403</code>/<code class="inline">404</code>/<code class="inline">409</code>/<code class="inline">429</code> auflaufen.</p>
+      </div>
+    </section>
+
+    <!-- ===== 13 CHANGELOG ===== -->
+    <section class="section" id="changelog" data-screen-label="13 Änderungen">
+      <div class="sec-head">
+        <div class="sec-num">13</div>
+        <div>
+          <div class="meta">№ 13 &nbsp;—&nbsp; ÄNDERUNGEN</div>
+          <h2>Versionshistorie.</h2>
+        </div>
+      </div>
+
+      <div class="prose">
+        <ul class="changelog">
+          <li>
+            <span class="date">21. Mai 2026</span>
+            <span class="ver">v0.1.1</span>
+            <span class="summary">Codex-Review-Findings eingearbeitet: <code class="inline">--</code> vor <code class="inline">$UNIT</code>, Hash-Chain im Audit-Log, SSRF-/Supply-Chain-/TOCTOU-Bedrohungen, Unit-Whitelist als MVP-Pflicht.</span>
+          </li>
+          <li>
+            <span class="date">21. Mai 2026</span>
+            <span class="ver">v0.1.0</span>
+            <span class="summary">Erstentwurf.</span>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <nav class="page-nav">
+      <a href="2026-05-20-monitoring-stack-design.html">
+        <span class="l">← Vorher</span>
+        <span class="t">Heim-Monitoring-Stack</span>
+      </a>
+      <a href="../index.html" class="next">
+        <span class="l">Übersicht →</span>
+        <span class="t">homelab</span>
+      </a>
+    </nav>
+
+  </main>
+
+  <aside class="right-rail" aria-label="Auf dieser Seite">
+    <div class="rr-kicker">Auf dieser Seite</div>
+    <ul class="rr-list" id="rr-list"><!-- auto --></ul>
+
+    <div class="edit-link">
+      <a href="2026-05-21-devops-control-daemon-design.md">Markdown-Quelle</a>
+    </div>
+  </aside>
+
+</div>
+
+<footer class="docfoot">
+  <div class="col">
+    <span class="l">Letzte Änderung</span>
+    <span class="v">21. Mai 2026</span>
+    <span>Plan-Version 0.1.1</span>
+  </div>
+  <div class="col">
+    <span class="l">Scope</span>
+    <span class="v">Tailnet-only</span>
+  </div>
+  <div class="col">
+    <span class="l">Autor</span>
+    <span class="v">Alexander Schneider</span>
+    <span><a href="mailto:schneider@alexle135.de">schneider@alexle135.de</a></span>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const html = document.documentElement;
+  const themeBtn = document.getElementById('theme-toggle');
+  const saved = localStorage.getItem('doc-theme');
+  if (saved) html.setAttribute('data-theme', saved);
+  themeBtn?.addEventListener('click', () => {
+    const cur = html.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+    html.setAttribute('data-theme', cur);
+    localStorage.setItem('doc-theme', cur);
+  });
+
+  document.querySelectorAll('[data-copy]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const pre = btn.closest('.codeblock').querySelector('pre');
+      try {
+        await navigator.clipboard.writeText(pre.innerText);
+        btn.textContent = 'Kopiert ✓';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = 'Kopieren'; btn.classList.remove('copied'); }, 1500);
+      } catch (e) { btn.textContent = 'Fehler'; }
+    });
+  });
+
+  function buildRightRail() {
+    const ul = document.getElementById('rr-list');
+    if (!ul) return;
+    const headings = document.querySelectorAll('section.section h3');
+    ul.innerHTML = '';
+    headings.forEach(h => {
+      if (!h.id) {
+        h.id = (h.textContent || '').toLowerCase()
+          .replace(/[^a-z0-9äöüß ]/gi, '').trim().replace(/\s+/g, '-');
+      }
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+      a.href = '#' + h.id; a.textContent = h.textContent.trim();
+      li.appendChild(a); ul.appendChild(li);
+    });
+  }
+  buildRightRail();
+
+  const tocLinks = document.querySelectorAll('#toc a');
+  const sections = document.querySelectorAll('section.section');
+  const sectionObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const id = e.target.id;
+        tocLinks.forEach(a => a.parentElement.classList.toggle('active', a.getAttribute('href') === '#' + id));
+      }
+    });
+  }, { rootMargin: '-30% 0px -60% 0px' });
+  sections.forEach(s => sectionObserver.observe(s));
+
+  const headings = document.querySelectorAll('section.section h3');
+  const rrLinks = () => document.querySelectorAll('#rr-list a');
+  const headingObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const id = e.target.id;
+        rrLinks().forEach(a => a.parentElement.classList.toggle('active', a.getAttribute('href') === '#' + id));
+      }
+    });
+  }, { rootMargin: '-25% 0px -65% 0px' });
+  headings.forEach(h => headingObserver.observe(h));
+})();
+</script>
+
+</body>
+</html>

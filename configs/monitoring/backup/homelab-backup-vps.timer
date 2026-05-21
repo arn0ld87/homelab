@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily Homelab VPS Backup
+
+[Timer]
+# Täglich 03:30 — versetzt zu CachyOS (03:00) damit nicht beide gleichzeitig
+OnCalendar=*-*-* 03:30:00
+RandomizedDelaySec=30min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

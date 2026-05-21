@@ -1,0 +1,12 @@
+[Unit]
+Description=Homelab Backup zu Google Drive
+Wants=network-online.target
+After=network-online.target docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/home/alex/monitoring/backup/homelab-backup.sh
+StandardOutput=journal
+StandardError=journal
+# Cleanup nach Abbruch — kein hängender mktemp-Dir
+TimeoutStartSec=30min

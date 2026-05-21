@@ -1,0 +1,12 @@
+[Unit]
+Description=Daily Homelab Backup
+
+[Timer]
+# Täglich 03:00, ± 30 min Jitter damit nicht alles auf einmal hochläuft
+OnCalendar=*-*-* 03:00:00
+RandomizedDelaySec=30min
+# Wenn Rechner zum Zeitpunkt aus war: beim nächsten Boot nachholen
+Persistent=true
+
+[Install]
+WantedBy=timers.target

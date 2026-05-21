@@ -1,0 +1,709 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Homelab Recovery · homelab/runbooks</title>
+
+<link rel="stylesheet" href="../../assets/colors_and_type.css">
+<link rel="stylesheet" href="../../assets/doc.css">
+</head>
+<body class="doc-layout">
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <a href="../../index.html" class="brand">alex<span class="n">le</span>135.de <span style="color:var(--fg-meta); font-family:var(--ff-mono); font-size:11px; letter-spacing:var(--ls-mono); text-transform:uppercase; margin-left:12px;">/ homelab</span></a>
+    <div class="crumbs">
+      <a href="../../index.html">homelab</a>
+      <span class="sep">/</span>
+      <span>docs</span>
+      <span class="sep">/</span>
+      <span>runbooks</span>
+      <span class="sep">/</span>
+      <span class="cur">Homelab Recovery</span>
+    </div>
+    <div class="topbar-right">
+      <span class="version">v 1.0.0</span>
+      <span class="status draft"><span class="dot"></span>Entwurf</span>
+      <button class="icon-btn" id="theme-toggle" title="Theme wechseln" aria-label="Theme">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      </button>
+      <button class="icon-btn" onclick="window.print()" title="Drucken / PDF" aria-label="Drucken">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="shell">
+
+  <aside class="left-rail" aria-label="Inhaltsverzeichnis">
+    <div class="toc-kicker">Inhalt</div>
+    <ol class="toc" id="toc">
+      <li><span class="n">01</span><a href="#scope">Was hier drin steht</a></li>
+      <li><span class="n">02</span><a href="#voraussetzungen">Voraussetzungen</a></li>
+      <li><span class="n">03</span><a href="#szenario-a">Szenario A — cachyos</a></li>
+      <li><span class="n">04</span><a href="#szenario-b">Szenario B — server-ops</a></li>
+      <li><span class="n">05</span><a href="#szenario-c">Szenario C — Einzel-Service</a></li>
+      <li><span class="n">06</span><a href="#restic-detail">Restic-Restore-Detail</a></li>
+      <li><span class="n">07</span><a href="#tailscale-acls">Tailscale-ACLs</a></li>
+      <li><span class="n">08</span><a href="#selbsttest">Selbst-Test</a></li>
+      <li><span class="n">09</span><a href="#fallstricke">Fallstricke</a></li>
+      <li><span class="n">10</span><a href="#haeufigkeit">Häufigkeit</a></li>
+      <li><span class="n">11</span><a href="#changelog">Änderungen</a></li>
+    </ol>
+
+    <div class="rail-meta">
+      <div class="row">
+        <span class="l">Status</span>
+        <span class="v">Entwurf</span>
+      </div>
+      <div class="row">
+        <span class="l">Hosts</span>
+        <span class="v">cachyos · server-ops</span>
+      </div>
+      <div class="row">
+        <span class="l">Lesedauer</span>
+        <span class="v">≈ 30 Min.</span>
+      </div>
+    </div>
+  </aside>
+
+  <main class="doc">
+
+    <header class="hero">
+      <div class="kicker">
+        <span><span class="a">№ 01</span> &nbsp;—&nbsp; RUNBOOK</span>
+        <span>STAND 21. MAI 2026</span>
+      </div>
+
+      <h1>Homelab<br><span class="it">Recovery</span>.</h1>
+
+      <p class="lead">Operative Schritt-Anleitung für den Tag, an dem entweder die cachyos-Festplatte stirbt oder der Contabo-VPS hinter server-ops verloren geht. Audience: Alex selbst, drei Uhr nachts, ohne Geduld für Pädagogik.</p>
+
+      <div class="meta-strip">
+        <div class="cell">
+          <span class="l">Version</span>
+          <span class="v mono">1.0.0</span>
+        </div>
+        <div class="cell">
+          <span class="l">Stand</span>
+          <span class="v">21. Mai 2026</span>
+        </div>
+        <div class="cell">
+          <span class="l">Scope</span>
+          <span class="v">cachyos + server-ops</span>
+        </div>
+        <div class="cell">
+          <span class="l">Modus</span>
+          <span class="v">Recovery</span>
+        </div>
+        <div class="cell">
+          <span class="l">Lesedauer</span>
+          <span class="v">≈ 30 Min.</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ===== 01 SCOPE ===== -->
+    <section class="section" id="scope" data-screen-label="01 Scope">
+      <div class="sec-head">
+        <div class="sec-num">01</div>
+        <div>
+          <div class="meta">№ 01 &nbsp;—&nbsp; SCOPE</div>
+          <h2>Was hier drin steht / was nicht.</h2>
+        </div>
+      </div>
+
+      <div class="prose">
+        <p>Dieses Dokument ist die operative Schritt-Anleitung für den Tag, an dem entweder die <code class="inline">cachyos</code>-Festplatte stirbt oder der Contabo-VPS hinter <code class="inline">server-ops</code> verloren geht.</p>
+        <p>Der IST-Stand der Maschinen wird in <code class="inline">docs/SETUP.md</code> gepflegt, der geplante Soll-Stack steht in <a href="../../specs/2026-05-20-monitoring-stack-design.html">Monitoring-Stack-Design</a> und <a href="../../specs/2026-05-20-tailnet-adblock-design.html">Tailnet-Adblock-Design</a>.</p>
+        <p>Wenn ein Schritt mit <code class="inline">TBD</code> markiert ist, ist die Lücke nicht aus dem Repo belegbar — bitte vor dem ersten Trockenlauf füllen.</p>
+      </div>
+    </section>
+
+    <!-- ===== 02 VORAUSSETZUNGEN ===== -->
+    <section class="section" id="voraussetzungen" data-screen-label="02 Voraussetzungen">
+      <div class="sec-head">
+        <div class="sec-num">02</div>
+        <div>
+          <div class="meta">№ 02 &nbsp;—&nbsp; VORAUSSETZUNGEN</div>
+          <h2>Sechs Dinge außerhalb der kaputten Maschine.</h2>
+        </div>
+      </div>
+
+      <div class="prose">
+        <p>Bevor irgendein Recovery-Schritt anfängt: diese sechs Ressourcen müssen erreichbar sein. Sonst Henne-Ei.</p>
+        <table class="data-table">
+          <thead>
+            <tr><th>#</th><th>Ressource</th><th>Quelle / Pfad</th><th>Anmerkung</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>1</td><td>Restic-Repo</td><td><code class="inline">gdrive:homelab-backups-restic/&lt;host&gt;</code> via rclone</td><td>Pro Host eigener Pfad</td></tr>
+            <tr><td>2</td><td>Restic-Passphrase</td><td>Bitwarden „Homelab · restic · &lt;host&gt;"</td><td>Niemals im Repo, niemals im Chat</td></tr>
+            <tr><td>3</td><td>rclone-OAuth / Google-Login</td><td>Bitwarden „Google · &lt;gdrive-account&gt;"</td><td>OAuth-App <code class="inline">temporal-state-497009-n0</code>; 7-Tage-Falle, siehe §9</td></tr>
+            <tr><td>4</td><td>Tailscale-Auth-Key</td><td>Admin Console → Settings → Keys</td><td>reusable, pre-approved, <code class="inline">tag:home</code></td></tr>
+            <tr><td>5</td><td>Repo-Clone</td><td><code class="inline">git@github.com:arn0ld87/homelab.git</code></td><td>Auf einem Drittgerät klonen, nicht auf der kaputten Maschine</td></tr>
+            <tr><td>6</td><td>VPS-Provisioning-Zugang</td><td>Contabo-Account-Login</td><td>Bitwarden „Contabo · root"</td></tr>
+          </tbody>
+        </table>
+        <p><code class="inline">.env</code>-Files mit AGH-/Alertmanager-/Sync-Secrets liegen ebenfalls in Bitwarden (Eintrag pro Stack). Sie sind <strong>nicht</strong> im Restic-Backup — darum hier explizit aufgelistet.</p>
+      </div>
+    </section>
+
+    <!-- ===== 03 SZENARIO A ===== -->
+    <section class="section" id="szenario-a" data-screen-label="03 Szenario A">
+      <div class="sec-head">
+        <div class="sec-num">03</div>
+        <div>
+          <div class="meta">№ 03 &nbsp;—&nbsp; SZENARIO A</div>
+          <h2>cachyos-Desktop neu aufsetzen.</h2>
+          <p class="sublead">Häufiger Fall. 90–120 min realistisch.</p>
+        </div>
+      </div>
+
+      <div class="prose">
+        <p>cachyos hält Prometheus, Grafana, Loki, ntopng, node_exporter, AdGuard-Home-Replica, Backrest-Server und das Restic-Repo gegen Google Drive.</p>
+
+        <h3 data-num="3.1 — Install">CachyOS-Installation</h3>
+        <p>ISO booten, Installation per <code class="inline">cachyos-installer</code>. Filesystem-Layout, Disk-Encryption (LUKS), Bootloader-Wahl: <strong>TBD</strong> — bitte aus früherem Setup-Doku ergänzen.</p>
+
+        <h3 data-num="3.2 — Basis">Basis-Pakete</h3>
+        <div class="codeblock">
+          <div class="cb-head"><div class="cb-file"><span class="lang">bash</span></div><button class="cb-copy" data-copy>Kopieren</button></div>
+<pre>sudo pacman -Syu --noconfirm
+sudo pacman -S --noconfirm restic rclone docker docker-compose git curl
+sudo systemctl enable --now docker
+sudo usermod -aG docker $USER  # neu einloggen danach</pre>
+        </div>
+
+        <h3 data-num="3.3 — Tailscale">Tailscale installieren + joinen</h3>
+        <div class="codeblock">
+          <div class="cb-head"><div class="cb-file"><span class="lang">bash</span></div><button class="cb-copy" data-copy>Kopieren</button></div>
+<pre>sudo pacman -S --noconfirm tailscale
+sudo systemctl enable --now tailscaled
+sudo tailscale up \
+  --hostname=cachyos \
+  --authkey=${TAILSCALE_AUTHKEY} \
+  --accept-dns=false
+tailscale ip -4   # erwartet 100.95.132.54 (oder neu zugewiesene IP)</pre>
+        </div>
+        <p><code class="inline">--accept-dns=false</code>, damit cachyos seinen lokalen AGH-Resolver weiter selbst betreiben kann — Tailscale-MagicDNS würde sonst konkurrieren.</p>
+
+        <h3 data-num="3.4 — Repo">Repo-Clone nach <code class="inline">~/monitoring</code></h3>
+        <div class="codeblock">
+          <div class="cb-head"><div class="cb-file"><span class="lang">bash</span></div><button class="cb-copy" data-copy>Kopieren</button></div>
+<pre>git clone git@github.com:arn0ld87/homelab.git ~/homelab
+mkdir -p ~/monitoring
+cp -a ~/homelab/configs/monitoring/* ~/monitoring/
+cp -a ~/homelab/configs/agh-cachyos    ~/monitoring/agh</pre>
+        </div>
+
+        <h3 data-num="3.5 — rclone">rclone-Remote <code class="inline">gdrive</code> einrichten</h3>
+        <div class="codeblock">
+          <div class="cb-head"><div class="cb-file"><span class="lang">bash</span></div><button class="cb-copy" data-copy>Kopieren</button></div>
+<pre>rclone config
+# n → name "gdrive" → drive → leere client_id → scope 1
+# Auto-Config: y → Browser-OAuth → Token kommt zurück
+# Shared Drive: n → y (confirm) → q (quit)
+rclone lsd gdrive:   # sanity check</pre>
+        </div>
+        <p>Headless? <code class="inline">rclone authorize "drive"</code> auf einer Maschine mit Browser, Token-Blob einspielen.</p>
+
+        <h3 data-num="3.6 — Restic">Restic-Repo öffnen + Snapshots prüfen</h3>
+        <div class="codeblock">
+          <div class="cb-head"><div class="cb-file"><span class="lang">bash</span></div><button class="cb-copy" data-copy>Kopieren</button></div>
+<pre>echo -n "${RESTIC_PASSWORD}" &gt; ~/restic-passphrase.txt
+chmod 600 ~/restic-passphrase.txt
+export RESTIC_REPOSITORY="rclone:gdrive:homelab-backups-restic/cachyos"
+export RESTIC_PASSWORD_FILE=~/restic-passphrase.txt
+restic snapshots --last 5</pre>
+        </div>
+        <p><code class="inline">Fatal: wrong password</code> → Bitwarden prüfen, kein Zeilenumbruch am Datei-Ende. <code class="inline">already locked</code> → §6.</p>
+
+        <h3 data-num="3.7 — Dryrun">Trockenlauf-Restore</h3>
+        <div class="codeblock">
+          <div class="cb-head"><div class="cb-file"><span class="lang">bash</span></div><button class="cb-copy" data-copy>Kopieren</button></div>
+<pre>restic restore latest --target /tmp/restore-dryrun --dry-run \
+  --include /home/alex/monitoring \
+  --include /home/alex/adguard \
+  --include /etc</pre>
+        </div>
+
+        <h3 data-num="3.8 — Restore">Echter Restore</h3>
+        <div class="codeblock">
+          <div class="cb-head"><div class="cb-file"><span class="lang">bash</span></div><button class="cb-copy" data-copy>Kopieren</button></div>
+<pre>restic restore latest --target /tmp/restore \
+  --include /home/alex/monitoring \
+  --include /home/alex/adguard \
+  --include /etc \
+  --include /var/lib/docker/volumes
+sudo cp -a /tmp/restore/home/alex/monitoring/. ~/monitoring/
+sudo cp -a /tmp/restore/home/alex/adguard      /home/alex/adguard
+sudo cp -a /tmp/restore/var/lib/docker/volumes/* /var/lib/docker/volumes/</pre>
+        </div>
+        <p>Volumes-Restore optional. Wer mit leerem TSDB starten will (sauberer Cut), lässt den <code class="inline">volumes</code>-Include weg.</p>
+
+        <h3 data-num="3.9 — Envs">.env-Files aus Bitwarden zurückspielen</h3>
+        <ul>
+          <li><code class="inline">~/monitoring/agh-sync/.env</code> — falls hier mitlaufend</li>
+          <li><code class="inline">~/monitoring/alertmanager/.secrets.env</code> — <code class="inline">NTFY_TOPIC</code>, <code class="inline">TELEGRAM_BOT_TOKEN</code>, <code class="inline">TELEGRAM_CHAT_ID</code></li>
+          <li><code class="inline">~/.grafana-token</code> (<code class="inline">chmod 600</code>)</li>
+        </ul>
+
+        <h3 data-num="3.10 — AGH">AdGuard-Home-Container hochfahren</h3>
+        <div class="codeblock">
+          <div class="cb-head"><div class="cb-file"><span class="lang">bash</span></div><button class="cb-copy" data-copy>Kopieren</button></div>
+<pre>cd ~/monitoring/agh
+docker compose up -d
+docker compose logs --tail 20 adguardhome
+dig @127.0.0.1 doubleclick.net +short   # erwartet 0.0.0.0</pre>
+        </div>
+
+        <h3 data-num="3.11 — Stack">Monitoring-Stack hochziehen</h3>
+        <div class="codeblock">
+          <div class="cb-head"><div class="cb-file"><span class="lang">bash</span></div><button class="cb-copy" data-copy>Kopieren</button></div>
+<pre>cd ~/monitoring/node_exporter && docker compose up -d
+cd ~/monitoring/prometheus    && docker compose up -d
+cd ~/monitoring/loki          && docker compose up -d   # bringt Promtail mit
+cd ~/monitoring/grafana       && docker compose up -d
+cd ~/monitoring/ntopng        && docker compose up -d
+docker ps   # erwartet 6+ container running</pre>
+        </div>
+
+        <h3 data-num="3.12 — Backrest">Backrest-Server-Container starten</h3>
+        <p>Compose: <a href="../../configs/monitoring/backrest/compose.yaml"><code class="inline">configs/monitoring/backrest/compose.yaml</code></a>. Repo-Pfad in der Backrest-UI manuell wieder einhängen. <strong>Nicht</strong> gleichzeitig auf server-ops einen Backrest-Server für dasselbe Repo laufen lassen — siehe §9.</p>
+        <div class="codeblock">
+          <div class="cb-head"><div class="cb-file"><span class="lang">bash</span></div><button class="cb-copy" data-copy>Kopieren</button></div>
+<pre>cd ~/monitoring/backrest && docker compose -f compose.yaml up -d
+# Web-UI: http://100.95.132.54:9898 (Tailnet only)</pre>
+        </div>
+
+        <h3 data-num="3.13 — Verify">Verify</h3>
+        <p>→ §8 Selbst-Test.</p>
+      </div>
+    </section>
+
+    <!-- ===== 04 SZENARIO B ===== -->
+    <section class="section" id="szenario-b" data-screen-label="04 Szenario B">
+      <div class="sec-head">
+        <div class="sec-num">04</div>
+        <div>
+          <div class="meta">№ 04 &nbsp;—&nbsp; SZENARIO B</div>
+          <h2>server-ops-VPS neu aufsetzen.</h2>
+          <p class="sublead">AGH-Primary, Promtail/node_exporter (Push), Alertmanager, agh-sync, Backrest-Client. 45–60 min realistisch.</p>
+        </div>
+      </div>
+
+      <div class="prose">
+        <h3 data-num="4.1 — VPS">VPS provisionieren</h3>
+        <p>Contabo Web-UI → neuer VPS, Debian 12 (LTS), IPv4 + IPv6, SSH-Key Upload. Hostname setzen: <code class="inline">hostnamectl set-hostname server-ops</code>.</p>
+
+        <h3 data-num="4.2 — Hardening">Initial-Hardening</h3>
+        <div class="codeblock">
+          <div class="cb-head"><div class="cb-file"><span class="lang">bash</span></div><button class="cb-copy" data-copy>Kopieren</button></div>
+<pre>apt update && apt -y full-upgrade
+apt install -y nala ufw unattended-upgrades fail2ban
+sed -i 's/^#\?PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
+systemctl reload ssh
+ufw default deny incoming
+ufw default allow outgoing
+ufw allow 22/tcp
+ufw --force enable
+dpkg-reconfigure -plow unattended-upgrades</pre>
+        </div>
+        <p>Detail-Hardening (User <code class="inline">admin</code> statt root, ssh-Port-Tausch): <strong>TBD</strong>.</p>
+
+        <h3 data-num="4.3 — Tailscale">Tailscale</h3>
+        <div class="codeblock">
+          <div class="cb-head"><div class="cb-file"><span class="lang">bash</span></div><button class="cb-copy" data-copy>Kopieren</button></div>
+<pre>curl -fsSL https://tailscale.com/install.sh | sh
+tailscale up --hostname=server-ops --authkey=${TAILSCALE_AUTHKEY}
+tailscale ip -4   # erwartet 100.92.62.9 oder neue IP</pre>
+        </div>
+
+        <h3 data-num="4.4 — Docker">Docker + Compose</h3>
+        <div class="codeblock">
+          <div class="cb-head"><div class="cb-file"><span class="lang">bash</span></div><button class="cb-copy" data-copy>Kopieren</button></div>
+<pre>nala install -y docker.io docker-compose-plugin git
+systemctl enable --now docker
+usermod -aG docker admin</pre>
+        </div>
+
+        <h3 data-num="4.5 — Repo">Repo-Clone nach <code class="inline">/home/admin/</code></h3>
+        <div class="codeblock">
+          <div class="cb-head"><div class="cb-file"><span class="lang">bash</span></div><button class="cb-copy" data-copy>Kopieren</button></div>
+<pre>sudo -u admin -i
+git clone git@github.com:arn0ld87/homelab.git ~/homelab
+mkdir -p ~/agh ~/agh-sync ~/monitoring
+cp ~/homelab/configs/agh-sync/docker-compose.yml ~/agh-sync/
+cp -a ~/homelab/configs/monitoring/vps-agents/. ~/monitoring/
+cp -a ~/homelab/configs/monitoring/alertmanager ~/monitoring/alertmanager</pre>
+        </div>
+        <p>Eigene Compose-Datei für VPS-AGH (<code class="inline">agh-primary</code>): aus <a href="../../journals/2026-05-20-adblock-impl.html">Journal 2026-05-20</a> nachbauen, oder <strong>TBD</strong>, sobald sie unter <code class="inline">configs/</code> versioniert ist.</p>
+
+        <h3 data-num="4.6 — Envs">.env-Files zurückspielen</h3>
+        <ul>
+          <li><code class="inline">~/agh/.env</code> mit <code class="inline">TAILSCALE_IP_VPS=100.92.62.9</code></li>
+          <li><code class="inline">~/agh-sync/.env</code> mit <code class="inline">ORIGIN_*</code> und <code class="inline">REPLICA1_*</code> (Template oben in <a href="../../configs/agh-sync/docker-compose.yml"><code class="inline">configs/agh-sync/docker-compose.yml</code></a>)</li>
+          <li><code class="inline">~/monitoring/alertmanager/.secrets.env</code></li>
+          <li><code class="inline">chmod 600</code> auf alle drei</li>
+        </ul>
+
+        <h3 data-num="4.7 — Agents">node_exporter + Promtail starten</h3>
+        <div class="codeblock">
+          <div class="cb-head"><div class="cb-file"><span class="lang">bash</span></div><button class="cb-copy" data-copy>Kopieren</button></div>
+<pre>cd ~/monitoring/node_exporter && docker compose up -d
+cd ~/monitoring/promtail      && docker compose up -d
+curl -s http://localhost:9100/metrics | head -5</pre>
+        </div>
+        <p>Verify auf cachyos: Prometheus-UI <code class="inline">Status → Targets</code> muss <code class="inline">server-ops:9100</code> als <code class="inline">up</code> zeigen.</p>
+
+        <h3 data-num="4.8 — AM">Alertmanager starten</h3>
+        <div class="codeblock">
+          <div class="cb-head"><div class="cb-file"><span class="lang">bash</span></div><button class="cb-copy" data-copy>Kopieren</button></div>
+<pre>cd ~/monitoring/alertmanager && docker compose up -d
+curl -s http://localhost:9093/-/healthy</pre>
+        </div>
+        <p>Bridge <code class="inline">alertmanager-ntfy</code> für lesbare Titel: <strong>TBD</strong> (loose end vom 2026-05-21).</p>
+
+        <h3 data-num="4.9 — Backrest">Backrest-Client starten</h3>
+        <p>server-ops ist Backrest-<strong>Multihost-Client</strong>; die Server-Rolle liegt auf cachyos. Compose für reinen Client-Mode: <strong>TBD</strong> — aktuell nur die Server-Variante <a href="../../configs/monitoring/backrest/compose.yaml"><code class="inline">compose.yaml</code></a> im Repo. Pragmatisch: gleichen Compose nehmen, UI gegen <code class="inline">gdrive:homelab-backups-restic/vps</code> verbinden, Port <code class="inline">9898</code> nicht via Tailscale exponieren.</p>
+
+        <h3 data-num="4.10 — AGH">AGH-Primary starten</h3>
+        <div class="codeblock">
+          <div class="cb-head"><div class="cb-file"><span class="lang">bash</span></div><button class="cb-copy" data-copy>Kopieren</button></div>
+<pre>export RESTIC_REPOSITORY="rclone:gdrive:homelab-backups-restic/vps"
+export RESTIC_PASSWORD_FILE=~/restic-passphrase.txt
+restic restore latest --target /tmp/restore --include /home/admin/agh
+sudo cp -a /tmp/restore/home/admin/agh/. /home/admin/agh/
+cd /home/admin/agh && docker compose up -d</pre>
+        </div>
+        <p>Wenn kein Snapshot greifbar: AGH-Wizard wie in Journal 2026-05-20 Schritt 3 neu durchgehen — Sync übernimmt CachyOS-Filter binnen 5 Minuten.</p>
+
+        <h3 data-num="4.11 — Verify">Verify</h3>
+        <p>→ §8 Selbst-Test.</p>
+      </div>
+    </section>
+
+    <!-- ===== 05 SZENARIO C ===== -->
+    <section class="section" id="szenario-c" data-screen-label="05 Szenario C">
+      <div class="sec-head">
+        <div class="sec-num">05</div>
+        <div>
+          <div class="meta">№ 05 &nbsp;—&nbsp; SZENARIO C</div>
+          <h2>Nur ein Service stirbt.</h2>
+        </div>
+      </div>
+
+      <div class="prose">
+        <p>Kein Total-Restore, nur Container re-create. Reihenfolge egal, Repo-Zustand reicht.</p>
+        <table class="data-table">
+          <thead>
+            <tr><th>Service</th><th>Host</th><th>Recovery-Befehl</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Prometheus</td><td>cachyos</td><td><code class="inline">cd ~/monitoring/prometheus && docker compose up -d --force-recreate</code></td></tr>
+            <tr><td>Grafana</td><td>cachyos</td><td><code class="inline">cd ~/monitoring/grafana && docker compose up -d --force-recreate</code></td></tr>
+            <tr><td>Loki + Promtail</td><td>cachyos</td><td><code class="inline">cd ~/monitoring/loki && docker compose up -d --force-recreate</code></td></tr>
+            <tr><td>ntopng</td><td>cachyos</td><td><code class="inline">cd ~/monitoring/ntopng && docker compose up -d --force-recreate</code></td></tr>
+            <tr><td>node_exporter</td><td>beide</td><td><code class="inline">cd ~/monitoring/node_exporter && docker compose up -d --force-recreate</code></td></tr>
+            <tr><td>AGH-Replica</td><td>cachyos</td><td><code class="inline">cd ~/monitoring/agh && docker compose up -d --force-recreate</code></td></tr>
+            <tr><td>AGH-Primary</td><td>server-ops</td><td><code class="inline">cd ~/agh && docker compose up -d --force-recreate</code></td></tr>
+            <tr><td>agh-sync</td><td>server-ops</td><td><code class="inline">cd ~/agh-sync && docker compose up -d --force-recreate</code></td></tr>
+            <tr><td>Alertmanager</td><td>server-ops</td><td><code class="inline">cd ~/monitoring/alertmanager && docker compose up -d --force-recreate</code></td></tr>
+            <tr><td>Backrest (Server)</td><td>cachyos</td><td><code class="inline">cd ~/monitoring/backrest && docker compose -f compose.yaml up -d --force-recreate</code></td></tr>
+          </tbody>
+        </table>
+        <p>Bei Volume-Konflikt: <code class="inline">docker compose down</code> zuerst, dann <code class="inline">up -d</code>. <strong>Niemals</strong> <code class="inline">down --volumes</code> für Prometheus, Loki, Grafana, AGH — das nuked die Daten.</p>
+      </div>
+    </section>
+
+    <!-- ===== 06 RESTIC-DETAIL ===== -->
+    <section class="section" id="restic-detail" data-screen-label="06 Restic-Detail">
+      <div class="sec-head">
+        <div class="sec-num">06</div>
+        <div>
+          <div class="meta">№ 06 &nbsp;—&nbsp; RESTIC-RESTORE-DETAIL</div>
+          <h2>Single Source of Truth: Restic-Binary.</h2>
+        </div>
+      </div>
+
+      <div class="prose">
+        <p>Diese Befehle stammen aus <a href="../../configs/monitoring/backrest/DISASTER-RECOVERY.md"><code class="inline">configs/monitoring/backrest/DISASTER-RECOVERY.md</code></a>. Funktioniert auf jedem System mit Restic-Binary, ohne Backrest-UI.</p>
+        <div class="codeblock">
+          <div class="cb-head"><div class="cb-file"><span class="lang">bash</span></div><button class="cb-copy" data-copy>Kopieren</button></div>
+<pre>export RESTIC_REPOSITORY="rclone:gdrive:homelab-backups-restic/&lt;host&gt;"
+export RESTIC_PASSWORD_FILE=~/restic-passphrase.txt
+
+restic snapshots --last 10
+restic restore latest --target /tmp/restore-dryrun --dry-run
+restic restore latest --target /tmp/restore --include /home/alex/monitoring
+restic restore &lt;snap-id&gt; --target /tmp/restore
+restic check</pre>
+        </div>
+
+        <h3 data-num="6.1 — Fehlermodi">Typische Fehlermodi</h3>
+        <ul>
+          <li><code class="inline">Fatal: wrong password</code> → Passphrase falsch. Bitwarden „Homelab · restic · &lt;host&gt;". Kein Trailing-Newline.</li>
+          <li><code class="inline">repository is already locked</code> → Stale Lock.
+            <code class="inline">restic unlock</code> bei eigenem Lock,
+            <code class="inline">restic unlock --remove-all</code> nur wenn keine andere Instanz parallel zugreift.</li>
+          <li>gdrive-Quota / <code class="inline">App not verified</code> → <code class="inline">rclone config reconnect gdrive:</code> oder OAuth-App auf „In Production" schieben.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ===== 07 TAILSCALE ACLs ===== -->
+    <section class="section" id="tailscale-acls" data-screen-label="07 Tailscale-ACLs">
+      <div class="sec-head">
+        <div class="sec-num">07</div>
+        <div>
+          <div class="meta">№ 07 &nbsp;—&nbsp; TAILSCALE-ACLs</div>
+          <h2>Wenn die ACL-Datei selbst weg ist.</h2>
+        </div>
+      </div>
+
+      <div class="prose">
+        <ol>
+          <li>Login auf <code class="inline">https://login.tailscale.com</code> → Admin Console → Access Controls.</li>
+          <li>ACL-JSON-Backup aus Bitwarden „Tailscale · ACL" einfügen, Save, Test.</li>
+          <li>Kein Backup? Minimal-Set, das den Recovery freischaltet:</li>
+        </ol>
+        <div class="codeblock">
+          <div class="cb-head"><div class="cb-file"><span class="lang">json</span></div><button class="cb-copy" data-copy>Kopieren</button></div>
+<pre>{
+  "tagOwners": {
+    "tag:home": ["autogroup:admin"]
+  },
+  "acls": [
+    { "action": "accept", "src": ["tag:home"], "dst": ["tag:home:*"] }
+  ],
+  "ssh": [
+    { "action": "accept", "src": ["autogroup:admin"], "dst": ["tag:home"], "users": ["root", "alex", "admin"] }
+  ]
+}</pre>
+        </div>
+        <p>Danach beide Hosts mit <code class="inline">--advertise-tags=tag:home</code> neu joinen oder <code class="inline">tailscale set --advertise-tags=tag:home</code>.</p>
+        <p>Subnet-Routes, exit-Nodes, Magic-DNS-Split: <strong>TBD</strong> — Detail eintragen, sobald die ACL-Datei einmal in Bitwarden archiviert ist.</p>
+      </div>
+    </section>
+
+    <!-- ===== 08 SELBSTTEST ===== -->
+    <section class="section" id="selbsttest" data-screen-label="08 Selbst-Test">
+      <div class="sec-head">
+        <div class="sec-num">08</div>
+        <div>
+          <div class="meta">№ 08 &nbsp;—&nbsp; SELBST-TEST NACH RECOVERY</div>
+          <h2>Erst grün abhaken, dann ist Recovery „done".</h2>
+        </div>
+      </div>
+
+      <div class="prose">
+        <ul class="checklist">
+          <li>[ ] <code class="inline">tailscale status</code> zeigt beide Hosts mit korrekten Tailnet-IPs</li>
+          <li>[ ] <code class="inline">dig @100.95.132.54 doubleclick.net +short</code> → <code class="inline">0.0.0.0</code> (CachyOS-AGH)</li>
+          <li>[ ] <code class="inline">dig @100.92.62.9 doubleclick.net +short</code> → <code class="inline">0.0.0.0</code> (VPS-AGH)</li>
+          <li>[ ] <code class="inline">curl -fsS http://100.95.132.54:9090/-/healthy</code> → <code class="inline">Prometheus Server is Healthy.</code></li>
+          <li>[ ] <code class="inline">curl -fsS http://100.95.132.54:3001/api/health</code> → <code class="inline">{"database":"ok",...}</code></li>
+          <li>[ ] <code class="inline">curl -fsS http://100.95.132.54:3100/ready</code> → <code class="inline">ready</code></li>
+          <li>[ ] <code class="inline">curl -fsS http://100.92.62.9:9093/-/healthy</code> → 200</li>
+          <li>[ ] Prometheus <code class="inline">Status → Targets</code> zeigt cachyos:9100 und server-ops:9100 als <code class="inline">up</code></li>
+          <li>[ ] Grafana-Dashboard „CachyOS Host" zeigt Werte der letzten 5 min</li>
+          <li>[ ] Grafana-Dashboard „multi-host-overview" zeigt beide Hosts</li>
+          <li>[ ] <code class="inline">devops.html</code> — alle 12 Heartbeat-Badges grün</li>
+          <li>[ ] <code class="inline">restic snapshots --last 5</code> auf beiden Hosts zeigt frische Snapshots</li>
+          <li>[ ] AGH-Stats <code class="inline">http://100.92.62.9:3000</code> zeigen Queries der letzten Stunde</li>
+          <li>[ ] Test-Alert <code class="inline">amtool alert add testalert severity=critical</code> → ntfy-Push + Telegram empfangen</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ===== 09 FALLSTRICKE ===== -->
+    <section class="section" id="fallstricke" data-screen-label="09 Fallstricke">
+      <div class="sec-head">
+        <div class="sec-num">09</div>
+        <div>
+          <div class="meta">№ 09 &nbsp;—&nbsp; BEKANNTE FALLSTRICKE</div>
+          <h2>Aus den Journals zusammengezogen.</h2>
+        </div>
+      </div>
+
+      <div class="prose">
+        <h3 data-num="9.1 — gdrive">gdrive-OAuth-Token 7-Tage-Falle</h3>
+        <p>OAuth-App <code class="inline">temporal-state-497009-n0</code> im Status „Testing" → Refresh-Token läuft nach 7 Tagen ab, Backups + Restore sterben mit <code class="inline">oauth2: token expired</code>. Fix: App auf <strong>„In Production"</strong> schieben oder Service-Account-JSON statt OAuth nutzen. Loose end aus CLAUDE.md.</p>
+
+        <h3 data-num="9.2 — DoT">CachyOS-AGH DoT-Timeouts</h3>
+        <p><code class="inline">tls://dns.quad9.net:853</code> und <code class="inline">tls://1.1.1.1:853</code> zeigen periodische Timeouts in Loki-Logs. Nach Reboot kurz warten, Bootstrap-DNS (9.9.9.9 / 1.1.1.1) prüfen, IPv6 checken (<code class="inline">ping6 -c 1 dns.quad9.net</code>).</p>
+
+        <h3 data-num="9.3 — Datasource">Doppelte Prometheus-Datasource</h3>
+        <p>Provisioning legt manchmal einen zweiten Auto-Eintrag an (<code class="inline">Prometheus</code> + <code class="inline">prometheus</code>). Nach Restore im Grafana-UI eine löschen — sonst leere Panels durch falsche UID.</p>
+
+        <h3 data-num="9.4 — Querylog">AGH-Query-Log → Loki</h3>
+        <p>Promtail liest aktuell nur stdout. Query-Log liegt in <code class="inline">/home/alex/adguard/work/data/querylog.json</code> und kommt erst mit dem zusätzlichen <code class="inline">static_configs</code>-Job rein (PR #4). Leere <code class="inline">{container="adguardhome"}</code>-Queries sind erwartet, kein Bug.</p>
+
+        <h3 data-num="9.5 — Backrest">Backrest-Multihost-Topologie</h3>
+        <p>cachyos = Server, server-ops = Client. <strong>Nicht beide gleichzeitig</strong> Backrest-Server gegen dasselbe Restic-Repo laufen lassen — Lock-Konflikte und korrupte Snapshot-Indizes. Beim Recovery alten Container hart stoppen (<code class="inline">docker stop backrest</code>).</p>
+
+        <h3 data-num="9.6 — AGH-Port">AGH-Port-Default 80</h3>
+        <p>Frischer AGH-Container lauscht intern wieder auf <code class="inline">0.0.0.0:80</code>, Compose erwartet 3000. Nach Restore prüfen, dass <code class="inline">http.address: 0.0.0.0:3000</code> im <code class="inline">AdGuardHome.yaml</code> steht (Stolperstein 8 aus Journal 2026-05-20).</p>
+
+        <h3 data-num="9.7 — Prom-UID">Prometheus UID 65534</h3>
+        <p>Named Volume statt Bind-Mount benutzen — bei Bind-Mount unter falschem Owner crasht der Container.</p>
+
+        <h3 data-num="9.8 — Loki">Loki rejects old samples</h3>
+        <p>Nach Restore mit alten Logs: <code class="inline">entry has timestamp too old</code>. <code class="inline">reject_old_samples: false</code> in <code class="inline">loki-config.yml</code> ist dafür da — falls aus Restore weg, manuell setzen und Loki neu starten.</p>
+
+        <h3 data-num="9.9 — Mac-DNS">Tailscale-Override auf macOS</h3>
+        <p>Vom Mac aus prüfen, ob CachyOS-AGH auf LAN-IP funktioniert: <code class="inline">dig @192.168.178.74</code> direkt — <code class="inline">scutil --dns</code> zeigt sonst nur den Tailscale-Resolver.</p>
+      </div>
+    </section>
+
+    <!-- ===== 10 HÄUFIGKEIT ===== -->
+    <section class="section" id="haeufigkeit" data-screen-label="10 Häufigkeit">
+      <div class="sec-head">
+        <div class="sec-num">10</div>
+        <div>
+          <div class="meta">№ 10 &nbsp;—&nbsp; HÄUFIGKEIT</div>
+          <h2>Quartals-Trockenlauf.</h2>
+        </div>
+      </div>
+
+      <div class="prose">
+        <p>Einmal pro Quartal — wegwerfbare VM (libvirt / VirtualBox / Multipass), eines der Szenarien §3 oder §4 von Schritt 1 bis Verify. Erkenntnisse als Journal-Eintrag <code class="inline">YYYY-MM-DD-recovery-dryrun-&lt;host&gt;.md</code> ablegen, Soll/Ist/Lernpunkt-Schema wie alle anderen Journals.</p>
+        <p>Bei jeder strukturellen Stack-Änderung (neuer Service, neuer Host, neuer Backup-Pfad): dieses Runbook im <strong>selben PR</strong> mitaktualisieren — sonst läuft es stillschweigend tot.</p>
+      </div>
+    </section>
+
+    <!-- ===== 11 CHANGELOG ===== -->
+    <section class="section" id="changelog" data-screen-label="11 Änderungen">
+      <div class="sec-head">
+        <div class="sec-num">11</div>
+        <div>
+          <div class="meta">№ 11 &nbsp;—&nbsp; ÄNDERUNGEN</div>
+          <h2>Versionshistorie.</h2>
+        </div>
+      </div>
+
+      <div class="prose">
+        <ul class="changelog">
+          <li>
+            <span class="date">21. Mai 2026</span>
+            <span class="ver">v1.0.0</span>
+            <span class="summary">Initial-Entwurf — Szenarien A/B/C, Restic-Detail, Selbst-Test, Fallstricke aus Journals und DISASTER-RECOVERY.md.</span>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <nav class="page-nav">
+      <a href="../../index.html">
+        <span class="l">← Übersicht</span>
+        <span class="t">homelab</span>
+      </a>
+      <a href="../../specs/2026-05-20-monitoring-stack-design.html" class="next">
+        <span class="l">Verwandt →</span>
+        <span class="t">Monitoring-Stack-Design</span>
+      </a>
+    </nav>
+
+  </main>
+
+  <aside class="right-rail" aria-label="Auf dieser Seite">
+    <div class="rr-kicker">Auf dieser Seite</div>
+    <ul class="rr-list" id="rr-list"><!-- auto --></ul>
+
+    <div class="edit-link">
+      <a href="homelab-recovery.md">Markdown-Quelle</a>
+    </div>
+  </aside>
+
+</div>
+
+<footer class="docfoot">
+  <div class="col">
+    <span class="l">Letzte Änderung</span>
+    <span class="v">21. Mai 2026</span>
+    <span>Runbook-Version 1.0.0</span>
+  </div>
+  <div class="col">
+    <span class="l">Status</span>
+    <span class="v">Entwurf</span>
+  </div>
+  <div class="col">
+    <span class="l">Autor</span>
+    <span class="v">Alexander Schneider</span>
+    <span><a href="mailto:schneider@alexle135.de">schneider@alexle135.de</a></span>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const html = document.documentElement;
+  const themeBtn = document.getElementById('theme-toggle');
+  const saved = localStorage.getItem('doc-theme');
+  if (saved) html.setAttribute('data-theme', saved);
+  themeBtn?.addEventListener('click', () => {
+    const cur = html.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+    html.setAttribute('data-theme', cur);
+    localStorage.setItem('doc-theme', cur);
+  });
+
+  document.querySelectorAll('[data-copy]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const pre = btn.closest('.codeblock').querySelector('pre');
+      try {
+        await navigator.clipboard.writeText(pre.innerText);
+        btn.textContent = 'Kopiert ✓';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = 'Kopieren'; btn.classList.remove('copied'); }, 1500);
+      } catch (e) { btn.textContent = 'Fehler'; }
+    });
+  });
+
+  function buildRightRail() {
+    const ul = document.getElementById('rr-list');
+    if (!ul) return;
+    const headings = document.querySelectorAll('section.section h3');
+    ul.innerHTML = '';
+    headings.forEach(h => {
+      if (!h.id) {
+        h.id = (h.textContent || '').toLowerCase()
+          .replace(/[^a-z0-9äöüß ]/gi, '').trim().replace(/\s+/g, '-');
+      }
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+      a.href = '#' + h.id; a.textContent = h.textContent.trim();
+      li.appendChild(a); ul.appendChild(li);
+    });
+  }
+  buildRightRail();
+
+  const tocLinks = document.querySelectorAll('#toc a');
+  const sections = document.querySelectorAll('section.section');
+  const sectionObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const id = e.target.id;
+        tocLinks.forEach(a => a.parentElement.classList.toggle('active', a.getAttribute('href') === '#' + id));
+      }
+    });
+  }, { rootMargin: '-30% 0px -60% 0px' });
+  sections.forEach(s => sectionObserver.observe(s));
+
+  const headings = document.querySelectorAll('section.section h3');
+  const rrLinks = () => document.querySelectorAll('#rr-list a');
+  const headingObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const id = e.target.id;
+        rrLinks().forEach(a => a.parentElement.classList.toggle('active', a.getAttribute('href') === '#' + id));
+      }
+    });
+  }, { rootMargin: '-25% 0px -65% 0px' });
+  headings.forEach(h => headingObserver.observe(h));
+})();
+</script>
+
+</body>
+</html>

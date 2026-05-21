@@ -96,6 +96,10 @@ homelab/
 ├── assets/                    Design-Tokens, CSS, Fraunces+Geist, Logo
 ├── specs/                     Markdown + HTML pro Plan (Source of Truth = MD)
 │   └── YYYY-MM-DD-<slug>-design.{md,html}
+├── docs/                      Lebende Doku (nicht Plan, nicht Log)
+│   ├── SETUP.{md,html}        IST-Stand: Hosts, Dienste, Volumes, Versionen
+│   └── runbooks/              Operative Anleitungen
+│       └── homelab-recovery.{md,html}  Wiederherstellung nach Total-Verlust
 ├── journals/                  Implementations-Logs (Soll/Ist/Lernpunkt)
 │   └── YYYY-MM-DD-<slug>.md
 ├── configs/                   Tatsächlich deployte Compose-/YAML-Files
@@ -122,7 +126,10 @@ Top-Level-Seite anlegt, dokumentiert ihren Stil in dieser Tabelle.
 
 - **MD ist Source of Truth.** HTML spiegelt MD 1:1. Bei Spec-Änderungen beide aktualisieren.
 - **Datei-Schema Specs:** `YYYY-MM-DD-<slug>-design.md` mit Frontmatter (`title`, `slug`, `version`, `status`, `date`, `author`, `scope`, `reading_time`).
+- **Datei-Schema docs/SETUP.md:** lebende IST-Doku, semver-versioniert (`1.x.y`), Update bei jedem nicht-trivialen Change am Stack.
+- **Datei-Schema docs/runbooks/<slug>.md:** operative Schritt-Anleitung, semver-versioniert, Trockenlauf-Häufigkeit explizit nennen.
 - **Datei-Schema Journals:** `YYYY-MM-DD-<slug>.md`, Schritte als **Soll → Ist → Lernpunkt**.
+- **Trennung Spec vs. Doku vs. Runbook vs. Journal:** Spec = Plan vorher · Doku = Was-ist-jetzt · Runbook = Wie-mach-ich-X · Journal = Was-ist-passiert. Keine Vermischung — wer das Falsche editiert, soll erstmal nach der richtigen Schublade fragen.
 - **Tutor-Modus** in einigen Specs (`modus: tutor`): Claude erklärt, liefert Vorlagen auf Nachfrage, führt **keine** Befehle aus, installiert nichts auf den Hosts.
 - **Keine echten Secrets, IPs außerhalb Tailnet, oder Hostnames im Klartext** committen — Platzhalter `${...}` nutzen. Tailnet-IPs (100.x.x.x) sind ok, weil das CGNAT-Bereich ist.
 - `*.standalone.html` ist in `.gitignore` — nicht committen.

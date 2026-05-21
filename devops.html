@@ -1187,7 +1187,7 @@
   setTimeout(() => {
     if (!sessionStorage.getItem('alex-hint')) {
       const t = document.getElementById('toast');
-      t.textContent = 'shift+click or right-click to copy a URL · ⌘K to filter · tailnet only';
+      t.textContent = 'Shift+Klick oder Rechtsklick zum Kopieren · ⌘K für Filter · nur im Tailnet';
       t.classList.add('show');
       sessionStorage.setItem('alex-hint', '1');
       setTimeout(() => t.classList.remove('show'), 3200);

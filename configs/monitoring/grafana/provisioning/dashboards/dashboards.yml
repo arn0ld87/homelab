@@ -1,0 +1,21 @@
+# Grafana-Dashboard-Provisioning.
+#
+# Grafana liest beim Start alle *.json in `path` ein und legt sie als
+# Dashboards an. Bei Änderung der Files (alle 30 s neu eingelesen)
+# werden sie aktualisiert, sofern `allowUiUpdates: true` — UI-Änderungen
+# überleben den nächsten Sync NICHT, wenn das File anders ist. Daher
+# weiterhin: Source of Truth = die JSONs im Repo.
+
+apiVersion: 1
+
+providers:
+  - name: homelab
+    orgId: 1
+    folder: 'Homelab'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: false

@@ -1,7 +1,7 @@
 ---
 title: Heim-Monitoring-Stack
 slug: monitoring-stack
-version: 0.1.1
+version: 0.2.1
 status: draft
 date: 2026-05-20
 author: Alexander Schneider
@@ -293,9 +293,40 @@ Was ich nicht tue:
 - Befehle in deiner Shell ausführen
 - Lerncheck-Antworten vorbeten
 
+## Dashboards (Zusatz, 2026-05-21)
+
+Phase 1 hat genau **ein** Lern-Dashboard hervorgebracht (`cachyos-host.json`,
+drei Panels, nur CachyOS). Damit das Setup im Alltag tatsächlich brauchbar
+wird, liegen seit 2026-05-21 fünf ergänzende Dashboards in
+`configs/monitoring/grafana/dashboards/`:
+
+| Dashboard | Zweck |
+|---|---|
+| `multi-host-overview` | CachyOS und VPS nebeneinander — CPU, RAM, Load, Root-FS, Net RX/TX, Uptime |
+| `network-traffic` | Per-Interface RX/TX in Mbit/s, Errors, Drops, TCP/Conntrack |
+| `disk-storage` | Filesystem-Füllstand pro Mount, freie GB, IOPS, I/O-Saturation, Inodes |
+| `logs-overview` | Loki: Volume + Error-Rate pro Host, Top-Quellen, Live-Errors |
+| `alerts-health` | Aktive Alerts, `up`-Status aller Targets, Scrape-Dauer, TSDB-Series |
+
+Konvention: Datasource-UIDs sind **fest** (`prometheus`, `loki`) und in
+`configs/monitoring/grafana/provisioning/datasources/datasources.yml`
+zentral definiert. Host-Filter via Variable `$host`. Beim Container-Start
+liest Grafana das Provisioning-Verzeichnis und legt Datasources +
+Dashboards automatisch an — kein manueller Import. Der File-Provider
+scannt alle 30 s, Änderungen an einer JSON-Datei sind innerhalb einer
+halben Minute live. Details in
+`configs/monitoring/grafana/dashboards/README.md`.
+
+Warum erst jetzt: Phase 1 hat „selber bauen, nicht importieren" als Lern-
+Ziel — das gilt für das erste Dashboard. Ab dem zweiten geht es nicht mehr
+um den Lerneffekt, sondern darum, dass im Störfall der Blick auf die
+richtige Kachel reicht.
+
 ## Changelog
 
 | Datum       | Version | Änderung                                                |
 |-------------|---------|---------------------------------------------------------|
 | 2026-05-20  | 0.1.0   | Erstentwurf                                             |
 | 2026-05-20  | 0.1.1   | Sprache entkitscht, Pullquote und Aha-Momente raus      |
+| 2026-05-21  | 0.2.0   | Zusatz-Dashboards (multi-host, network, disk, logs, alerts) |
+| 2026-05-21  | 0.2.1   | Datasource- und Dashboard-Provisioning komplett verkabelt    |

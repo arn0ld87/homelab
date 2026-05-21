@@ -1,0 +1,43 @@
+# Grafana-Datasource-Provisioning.
+#
+# Beim Container-Start liest Grafana dieses File aus und legt die
+# Datasources automatisch an. Feste UIDs sind wichtig, weil die
+# Dashboards exakt darauf verweisen.
+#
+# Beide Datasources zeigen auf localhost, weil Grafana, Prometheus und
+# Loki alle network_mode: host laufen.
+
+apiVersion: 1
+
+# Vorher: räume alte manuell angelegte Datasources mit gleichem Namen weg,
+# damit das Anlegen mit fester UID nicht am Name-Konflikt scheitert.
+deleteDatasources:
+  - name: Prometheus
+    orgId: 1
+  - name: Loki
+    orgId: 1
+  - name: prometheus
+    orgId: 1
+  - name: loki
+    orgId: 1
+
+datasources:
+  - name: Prometheus
+    uid: prometheus
+    type: prometheus
+    access: proxy
+    url: http://localhost:9090
+    isDefault: true
+    editable: true
+    jsonData:
+      httpMethod: POST
+      timeInterval: 15s
+
+  - name: Loki
+    uid: loki
+    type: loki
+    access: proxy
+    url: http://localhost:3100
+    editable: true
+    jsonData:
+      maxLines: 1000

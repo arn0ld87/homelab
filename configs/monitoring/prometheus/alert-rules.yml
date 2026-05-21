@@ -89,6 +89,62 @@ groups:
           summary: "VPS-RAM unter 3 GB verfügbar"
           description: "Nur noch {{ $value | humanize1024 }}B frei. Paperless + Dify + Ollama im Speicherdruck."
 
+      # --- VPS-Security: Angriffe, Scans, Anomalien (Live-Alerts wie Cronjob-Reports) ---
+
+      - alert: ZombieProcs
+        expr: node_procs_blocked{host="vps"} > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $value | printf \"%.0f\" }} blockierte Prozesse auf dem VPS"
+          description: "Prozesse hängen im I/O-Wait — Zombie- oder Deadlock-Verdacht. `ps aux | grep ' D'` prüfen."
+
+      - alert: NetworkRXSpike
+        expr: rate(node_network_receive_packets_total{host="vps", device="eth0"}[5m]) * 60 > 10000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Netzwerk-Spike: {{ $value | printf \"%.0f\" }} pkts/min incoming auf VPS"
+          description: "Eingehende Paketrate ungewöhnlich hoch — möglicher Scan/Angriff. Traefik-Logs prüfen."
+
+      - alert: TCPConnectionFlood
+        expr: node_netstat_Tcp_CurrEstab{host="vps"} > 500
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $value | printf \"%.0f\" }} aktive TCP-Verbindungen auf VPS"
+          description: "Ungewöhnlich viele offene TCP-Sessions — SYN-Flood oder Connection-Exhaustion möglich."
+
+      - alert: FDNearLimit
+        expr: |
+          (node_filefd_allocated{host="vps"} / node_filefd_maximum{host="vps"}) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "File-Deskriptoren {{ $value | printf \"%.0f\" }}% ausgeschöpft auf VPS"
+          description: "FD-Limit fast erreicht — Container/Dienst könnte bald keine Verbindungen mehr annehmen."
+
+      - alert: DiskReadSpike
+        expr: rate(node_disk_reads_completed_total{host="vps", device=~"sd.*"}[10m]) * 60 > 500
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Massive Disk-Reads: {{ $value | printf \"%.0f\" }} IOPS auf VPS"
+          description: "Hohe Lese-IOPS — möglicher Massenscan (grep/find über Filesystem) oder Backup-Amok."
+
+      - alert: RebootDetected
+        expr: node_boot_time_seconds{host="vps"} != node_boot_time_seconds{host="vps"} offset 5m
+        labels:
+          severity: info
+        annotations:
+          summary: "VPS wurde neu gestartet (Uptime-Reset)"
+          description: "Boot-Time hat sich geändert — prüfen ob absichtlich oder Crash."
+
       # --- TODO: Aktivieren, sobald cadvisor-Target vorhanden ---
       #
       # Voraussetzung: cadvisor läuft auf dem VPS (port 8080), Scrape-Target in prometheus.yml.

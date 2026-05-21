@@ -89,7 +89,7 @@ groups:
           summary: "VPS-RAM unter 3 GB verfügbar"
           description: "Nur noch {{ $value | humanize1024 }}B frei. Paperless + Dify + Ollama im Speicherdruck."
 
-      # --- VPS-Security: Angriffe, Scans, Anomalien (Live-Alerts wie Cronjob-Reports) ---
+      # --- VPS-Security: Angriffe, Scans, Anomalien ---
 
       - alert: ZombieProcs
         expr: node_procs_blocked{host="vps"} > 10
@@ -145,52 +145,53 @@ groups:
           summary: "VPS wurde neu gestartet (Uptime-Reset)"
           description: "Boot-Time hat sich geändert — prüfen ob absichtlich oder Crash."
 
-      # --- TODO: Aktivieren, sobald cadvisor-Target vorhanden ---
-      #
-      # Voraussetzung: cadvisor läuft auf dem VPS (port 8080), Scrape-Target in prometheus.yml.
-      #
-      # - alert: ContainerDown
-      #   expr: absent(container_last_seen{name=~"traefik|paperless.*|dify.*|n8n.*|coolify.*"})
-      #   for: 2m
-      #   labels:
-      #     severity: critical
-      #   annotations:
-      #     summary: "Kritischer Container {{ $labels.name }} verschwunden"
-      #
-      # - alert: ContainerRestarting
-      #   expr: rate(container_tasks_state{state="running"}[5m]) == 0 and rate(container_tasks_state[10m]) > 0
-      #   for: 3m
-      #   labels:
-      #     severity: warning
-      #   annotations:
-      #     summary: "Container {{ $labels.name }} restartet dauernd"
+      # --- Container (cadvisor auf VPS:8180) ---
 
-      # --- TODO: Aktivieren, sobald Traefik-Metrics-Endpoint vorhanden ---
-      #
-      # Voraussetzung: Traefik --metrics.prometheus in docker-compose.yml, Scrape-Target.
-      #
-      # - alert: TraefikHigh5xx
-      #   expr: rate(traefik_service_requests_total{code=~"5.."}[5m]) > 0.1
-      #   for: 5m
-      #   labels:
-      #     severity: critical
-      #   annotations:
-      #     summary: "Traefik 5xx-Rate {{ $value | printf \"%.2f\" }}/s"
-      #
-      # - alert: TraefikSSLCertExpiring
-      #   expr: traefik_tls_certs_not_after{domain=~".*alexle135\\.de"} - time() < 86400 * 7
-      #   for: 5m
-      #   labels:
-      #     severity: warning
-      #   annotations:
-      #     summary: "TLS-Zertifikat {{ $labels.domain }} läuft in < 7 Tagen ab"
+      - alert: ContainerDown
+        expr: absent(container_last_seen{name=~"traefik|paperless.*|dify.*|n8n.*|coolify.*"})
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Kritischer Container {{ $labels.name }} verschwunden"
+          description: "Container läuft nicht mehr und ist nicht in docker ps sichtbar."
 
-      # --- TODO: Aktivieren, sobald Blackbox-Exporter für CrowdSec eingerichtet ---
-      #
-      # - alert: CrowdSecAPIDown
-      #   expr: probe_success{job="crowdsec"} == 0
-      #   for: 5m
-      #   labels:
-      #     severity: warning
-      #   annotations:
-      #     summary: "CrowdSec LAPI nicht erreichbar — Security-Blindflug"
+      - alert: ContainerRestarting
+        expr: rate(container_tasks_state{state="running"}[5m]) == 0 and rate(container_tasks_state[10m]) > 0
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container {{ $labels.name }} restartet dauernd"
+          description: "Container wechselt ständig zwischen running/non-running — Restart-Loop."
+
+      # --- Traefik (Metrics-Endpoint auf VPS:8082) ---
+
+      - alert: TraefikHigh5xx
+        expr: rate(traefik_service_requests_total{code=~"5.."}[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Traefik 5xx-Rate {{ $value | printf \"%.2f\" }}/s"
+          description: "Backend-Fehler über Traefik — Services prüfen (docker ps, Container-Logs)."
+
+      - alert: TraefikSSLCertExpiring
+        expr: traefik_tls_certs_not_after{domain=~".*alexle135\\.de"} - time() < 86400 * 7
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "TLS-Zertifikat {{ $labels.domain }} läuft in < 7 Tagen ab"
+          description: "Let's Encrypt-Renewal prüfen — Traefik-Logs, acme.json, DNS-Propagation."
+
+      # --- CrowdSec (node_exporter textfile collector auf VPS) ---
+
+      - alert: CrowdSecAPIDown
+        expr: crowdsec_lapi_up{host="vps"} == 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "CrowdSec LAPI auf VPS nicht erreichbar — Security-Blindflug"
+          description: "Keine aktiven Intrusion-Detection-Entscheidungen. `sudo cscli decisions list` prüfen."

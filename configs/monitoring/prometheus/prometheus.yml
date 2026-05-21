@@ -2,11 +2,8 @@
 #
 # scrape_interval: alle 15s holt sich Prometheus die Metriken
 # evaluation_interval: alle 15s prüft Prometheus die Recording/Alert-Rules
-#                      (haben wir aktuell keine, harmlos)
 #
-# Jeder job_name ist eine logische Gruppe von Targets. Hier nur ein Job
-# für node_exporter auf dem CachyOS-Host. Spätere Jobs (Loki, ntopng,
-# AGH-Exporter) kommen als weitere Einträge dazu.
+# Jeder job_name ist eine logische Gruppe von Targets.
 
 global:
   scrape_interval: 15s
@@ -22,6 +19,8 @@ alerting:
             - '100.92.62.9:9093'   # Alertmanager auf VPS via Tailnet
 
 scrape_configs:
+  # --- Host-Metriken (node_exporter) ---
+
   - job_name: 'node_exporter'
     static_configs:
       - targets: ['localhost:9100']
@@ -31,8 +30,28 @@ scrape_configs:
         labels:
           host: 'vps'
 
+  # --- Prometheus self-monitoring ---
+
   - job_name: 'prometheus'
     static_configs:
       - targets: ['localhost:9090']
         labels:
           host: 'cachyos'
+
+  # --- cadvisor (Docker Container-Metriken auf VPS) ---
+
+  - job_name: 'cadvisor'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['100.92.62.9:8180']
+        labels:
+          host: 'vps'
+
+  # --- Traefik-Metrics (VPS, Port 8082 via Tailnet) ---
+
+  - job_name: 'traefik'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['100.92.62.9:8082']
+        labels:
+          host: 'vps'

@@ -1,0 +1,34 @@
+# ntopng — Network-Traffic-Monitor (NetFlow/IPFIX-Konzepte).
+#
+# network_mode: host  →  ntopng muss am Host-Interface lauschen
+#                        (wlan0), Bridge würde nichts sehen
+# cap_add NET_ADMIN, NET_RAW  →  Promiscuous Mode + Raw-Sockets
+#                                ohne komplette --privileged-Eskalation
+#
+# Realistische Erwartung:
+# WLAN-Treiber zeigen oft nur eigenen Traffic, nicht das ganze LAN.
+# Für LAN-weite Sicht bräuchte es einen Managed Switch mit Port-Mirror
+# (z.B. Mikrotik CRS112).
+#
+# Web-UI auf :3002 — 3000/3001 sind durch AGH/Grafana belegt.
+# Login default: admin/admin → Pflicht-Wechsel beim ersten Aufruf.
+
+services:
+  ntopng:
+    image: ntop/ntopng:latest
+    container_name: ntopng
+    restart: unless-stopped
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    command:
+      - '--community'
+      - '--http-port=3002'
+      - '--interface=wlan0'
+      - '--data-dir=/var/lib/ntopng'
+    volumes:
+      - ntopng-data:/var/lib/ntopng
+
+volumes:
+  ntopng-data:

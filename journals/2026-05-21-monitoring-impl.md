@@ -2,7 +2,7 @@
 title: Implementation-Journal — Heim-Monitoring-Stack
 slug: monitoring-impl
 date: 2026-05-21
-status: in progress
+status: complete
 spec: ../specs/2026-05-20-monitoring-stack-design.md
 host: CachyOS Desktop (asus)
 author: Alexander Schneider
@@ -390,12 +390,102 @@ gesetzt. **Phase 2 abgeschlossen.**
 
 ---
 
-## Offen
+---
 
-- Phase 3: ntopng (NetFlow auf Desktop-Traffic)
-- Loose End: CachyOS-AGH DNS-Upstream-Timeouts debuggen
-- Loose End: Doppelte Prometheus-Datasource aufräumen
-- Loose End: Promtail erweitern um AGH-Query-Log-Datei (für Block-Stats)
+## 6. ntopng — Network-Traffic auf wlan0
+
+### Soll
+
+ntopng als Container, hört am Host-Interface `wlan0`, Web-UI auf :3002
+(3000/3001/9090 sind belegt von AGH/Grafana/Prometheus).
+
+### Ist
+
+Erster Pull-Versuch scheiterte:
+
+```
+docker.io/ntop/ntopng:stable: not found
+```
+
+Stolperstein 14 — der von der Spec referenzierte `:stable`-Tag
+existiert nicht (mehr). Korrekter Tag laut `docker search`:
+`ntop/ntopng:latest`.
+
+Compose-File mit `network_mode: host`, `cap_add: NET_ADMIN, NET_RAW`
+(statt `--privileged`), Command-Args:
+
+```
+--community  --http-port=3002  --interface=wlan0
+```
+
+Hochgefahren, Logs zeigen Threat-Intelligence-Listen geladen
+(IPsum, NoCoin, Stratosphere Lab, ThreatFox, dshield) — `~110k Rules`.
+Dann `Started polling on interface 'wlan0'`.
+
+Verifikation vom Mac via Tailscale:
+
+```bash
+nc -zv 100.95.132.54 3002
+# → open  ✅
+```
+
+### Erwartung vs. Realität
+
+WLAN-Treiber zeigen oft nur eigenen Traffic in Promiscuous Mode, nicht
+das ganze LAN. ntopng auf dem Desktop sieht damit den
+Desktop-Eigentraffic — Lerneffekt für das NetFlow-Konzept, aber kein
+LAN-weites Monitoring.
+
+Für echte LAN-weite Sicht: Managed Switch mit Port-Mirror (z. B.
+Mikrotik CRS112) zwischen FritzBox und Endgeräten. Eigenes
+Hardware-Projekt.
+
+### Lernpunkt
+
+- **`cap_add` statt `--privileged`** — minimale Capability-Vergabe
+  statt komplette Root-Eskalation. NET_ADMIN für Promiscuous-Mode-
+  Setup auf Interfaces, NET_RAW für Raw-Sockets (Packet-Capture).
+- **Threat-Intelligence-Feeds** kommen bei ntopng „gratis" mit:
+  IPsum, ThreatFox, Stratosphere etc. werden automatisch geladen und
+  matched gegen jeden Flow. Sehr nützlich für Erkennung von
+  Verbindungen zu bekannten C2-Servern oder Malware-IPs.
+- **`:stable` vs. `:latest` vs. fixe Version** — Tags sind Vereinbarung
+  zwischen Image-Maintainer und Nutzer. Wenn ein Tag fehlt:
+  `docker search` oder Image-Repo-URL checken statt blind aus
+  alten Specs kopieren.
+
+### Status
+
+ntopng läuft, sniffed wlan0. **Phase 3 abgeschlossen.**
+
+---
+
+## Schluss-Status Monitoring
+
+| Phase | Inhalt | Status |
+|-------|--------|--------|
+| 1 | node_exporter + Prometheus + Grafana + Dashboard | ✅ |
+| 2 | Loki + Promtail + Grafana-Datasource | ✅ |
+| 3 | ntopng | ✅ |
+
+Vier Container im Monitoring-Stack:
+
+| Service | Port | Web-UI |
+|---------|------|--------|
+| node_exporter | :9100 | nur `/metrics` |
+| Prometheus | :9090 | http://100.95.132.54:9090 |
+| Grafana | :3001 | http://100.95.132.54:3001 |
+| Loki | :3100 | API nur |
+| Promtail | — | nur Egress |
+| ntopng | :3002 | http://100.95.132.54:3002 |
+
+## Offen / Loose Ends (für später)
+
+- CachyOS-AGH DNS-Upstream-Timeouts debuggen (sichtbar in Loki-Logs)
+- Doppelte Prometheus-Datasource in Grafana aufräumen
+- Promtail um AGH-Query-Log-Datei erweitern (für Block-Stats)
+- Managed Switch für LAN-weite ntopng-Sicht (Hardware-Projekt)
+- CachyOS-AGH-Container auf `docker compose` migrieren (loose end aus Adblock-Phase)
 
 ## Changelog
 
@@ -404,3 +494,4 @@ gesetzt. **Phase 2 abgeschlossen.**
 | 2026-05-21  | Initial — Vorbereitungs-Check + node_exporter                     |
 | 2026-05-21  | Schritte 3+4 — Prometheus + Grafana + Dashboard, Stolperstein 11+12, Phase 1 durch |
 | 2026-05-21  | Schritt 5 — Loki + Promtail, Stolperstein 13 (timestamps too old), Phase 2 durch |
+| 2026-05-21  | Schritt 6 — ntopng, Stolperstein 14 (`:stable`-Tag fehlt), Phase 3 durch, Monitoring komplett |

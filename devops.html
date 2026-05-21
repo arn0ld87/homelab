@@ -1161,8 +1161,9 @@
       copy(row.getAttribute('href'));
     });
     row.addEventListener('click', (e) => {
-      if (e.shiftKey || e.metaKey || e.ctrlKey && !e.altKey) {
-        if (e.shiftKey) { e.preventDefault(); copy(row.getAttribute('href')); }
+      if (e.shiftKey) {
+        e.preventDefault();
+        copy(row.getAttribute('href'));
       }
     });
   });

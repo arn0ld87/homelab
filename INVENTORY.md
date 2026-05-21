@@ -22,7 +22,7 @@ SSH-User: `admin` auf VPS, `alex` auf CachyOS. Beide in `sudo` und `docker`.
 | `agh-primary` | `adguard/adguardhome:latest` | `agh/` (vermutlich) | bridge | `/home/admin/agh/work` → `/opt/adguardhome/work`, `…/conf` → `…/conf` |
 | `agh-sync` | `ghcr.io/bakito/adguardhome-sync:latest` | s. o. | bridge | — |
 | `alertmanager` | `prom/alertmanager:latest` | `monitoring/alertmanager/` | host | `alertmanager.yml` → `/etc/alertmanager/` |
-| `alertmanager-ntfy` | `xenrox/ntfy-alertmanager:latest` | `monitoring/alertmanager-ntfy/` | host | `config.scfg` → `/etc/ntfy-alertmanager/config` |
+| `alertmanager-ntfy` | `xenrox/ntfy-alertmanager:v1.0.0` | `monitoring/alertmanager-ntfy/` | host | `config.scfg` → `/etc/ntfy-alertmanager/config` |
 | `promtail` | `grafana/promtail:latest` | `monitoring/promtail/` | host | `promtail-config.yml` → `/etc/promtail/config.yml` |
 | `node-exporter` | `prom/node-exporter:latest` | `monitoring/node-exporter/` | host | — |
 | `backrest` | `garethgeorge/backrest:latest` | `monitoring/backup/` | bridge | `/home/admin/.config/rclone` → `/root/.config/rclone` (rw!) |

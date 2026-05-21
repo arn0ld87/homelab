@@ -43,3 +43,33 @@ scrape_configs:
         target_label: 'container'
       - source_labels: ['__meta_docker_container_log_stream']
         target_label: 'stream'
+
+  # ───── 3) AdGuard-Querylog ─────────────────────────────────────────
+  # Original-JSON-Zeile bleibt im Body; ad-hoc Filter via `| json` in
+  # Grafana. Nur niedrig-kardinale Felder als Labels.
+  - job_name: adguard
+    static_configs:
+      - targets: [localhost]
+        labels:
+          job: adguard
+          host: cachyos
+          __path__: /var/agh-log/querylog.json*
+    pipeline_stages:
+      - json:
+          expressions:
+            ts: T
+            qtype: QT
+            upstream: Upstream
+      # AGH liefert `Upstream` leer bei Cache-Hits und blockierten
+      # Queries. Loki lehnt leere Label-Werte mit 400 Bad Request ab,
+      # deshalb Fallback auf `none` — bleibt als eigene Kategorie in
+      # LogQL grep- und filterbar (`{upstream="none"}`).
+      - template:
+          source: upstream
+          template: '{{ if .Value }}{{ .Value }}{{ else }}none{{ end }}'
+      - labels:
+          qtype:
+          upstream:
+      - timestamp:
+          source: ts
+          format: RFC3339Nano

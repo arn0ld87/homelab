@@ -36,6 +36,8 @@ services:
       - /run/log/journal:/run/log/journal:ro
       - /etc/machine-id:/etc/machine-id:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      # AGH-Querylog (root:root 600, Promtail liest als root im Container).
+      - /home/alex/adguard/work/data:/var/agh-log:ro
       - promtail-positions:/tmp
     command:
       - '-config.file=/etc/promtail/config.yml'

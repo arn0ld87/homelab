@@ -40,3 +40,30 @@ scrape_configs:
         target_label: 'stream'
       - target_label: 'host'
         replacement: 'vps'
+
+  # AGH-Querylog. Original-JSON-Zeile bleibt im Body; ad-hoc Filter
+  # via `| json` in Grafana. Nur niedrig-kardinale Felder als Labels.
+  - job_name: adguard
+    static_configs:
+      - targets: [localhost]
+        labels:
+          job: adguard
+          host: vps
+          __path__: /var/agh-log/querylog.json*
+    pipeline_stages:
+      - json:
+          expressions:
+            ts: T
+            qtype: QT
+            upstream: Upstream
+      # Cache-Hits und Blocks liefern `Upstream` leer — Loki würde
+      # den Push mit 400 verwerfen. Fallback `none` bleibt grep-bar.
+      - template:
+          source: upstream
+          template: '{{ if .Value }}{{ .Value }}{{ else }}none{{ end }}'
+      - labels:
+          qtype:
+          upstream:
+      - timestamp:
+          source: ts
+          format: RFC3339Nano

@@ -92,17 +92,36 @@ außerhalb des Repos kopieren und mit Datum benennen.
 
 ## Aktuelle Specs
 
-| Datum       | Titel                  | Version | Status                 |
-|-------------|------------------------|---------|------------------------|
-| 2026-05-20  | Tailnet-Werbeblocker   | 0.1.1   | Entwurf                |
-| 2026-05-20  | Heim-Monitoring-Stack  | 0.1.1   | Entwurf · Tutor-Modus  |
+| Datum       | Titel                       | Version | Status                 |
+|-------------|-----------------------------|---------|------------------------|
+| 2026-05-20  | Tailnet-Werbeblocker        | 0.1.1   | Entwurf                |
+| 2026-05-20  | Heim-Monitoring-Stack       | 0.1.1   | Entwurf · Tutor-Modus  |
+| 2026-05-21  | DevOps Control Daemon       | 0.1.1   | Entwurf                |
+
+## DevOps Console
+
+[`devops.html`](devops.html) ist die zweite Top-Level-Seite neben der
+editorialen Spec-Übersicht — eine blackbox-style DevOps-Console
+(Inter + JetBrains Mono, dark) mit Direktlinks und Live-Status-Pings
+auf alle Tailnet-Dienste (Grafana, Backrest, ntopng, AdGuard Primary
++ Fallback). ⌘K für Filter, shift-click oder right-click kopiert die
+URL, "Copy all URLs" sammelt alle 12 Endpoints in die Zwischenablage.
+
+Erreichbar **nur im Tailnet**. Die Direkt-Links zeigen auf
+`100.x.x.x`-Adressen; außerhalb des Tailnets sind die Hosts nicht
+auflösbar und nicht erreichbar.
 
 ## Design-System
 
-Stil und Tokens stammen aus der alexle135.de-Designsprache: dark-first
-editorial, Fraunces als Display-Serif, Geist Sans und Geist Mono für
-Text und Tags, Neon-Orange-Akzent (`#ff6a00`). Theme-Toggle (dark/light)
-im HTML-Header jeder Spec.
+Zwei Looks im selben Repo, bewusst getrennt:
+
+- **Specs/Runbooks**: dark-first editorial, Fraunces als
+  Display-Serif, Geist Sans und Geist Mono für Text und Tags,
+  Neon-Orange-Akzent (`#ff6a00`). Theme-Toggle in jedem Spec-HTML.
+- **DevOps Console** (`devops.html`): blackbox-inspirierter Operator
+  Look — Inter + JetBrains Mono, `#060606` Hintergrund, gap-1px
+  Card-Grid, Terminal-Diff-Preview, Live-Heartbeat-Badges. Eigenes
+  Token-Set, kein Theme-Toggle.
 
 ## Lizenz
 

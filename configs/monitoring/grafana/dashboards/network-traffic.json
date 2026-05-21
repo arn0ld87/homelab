@@ -55,7 +55,7 @@
     {
       "id": 1,
       "type": "timeseries",
-      "title": "RX (Mbit/s)",
+      "title": "RX",
       "gridPos": {
         "h": 8,
         "w": 12,
@@ -68,13 +68,13 @@
       },
       "fieldConfig": {
         "defaults": {
-          "unit": "Mbits"
+          "unit": "bps"
         }
       },
       "targets": [
         {
           "refId": "A",
-          "expr": "rate(node_network_receive_bytes_total{host=~\"$host\",device=~\"$device\"}[5m]) * 8 / 1024 / 1024",
+          "expr": "rate(node_network_receive_bytes_total{host=~\"$host\",device=~\"$device\"}[5m]) * 8",
           "legendFormat": "{{host}} {{device}}",
           "datasource": {
             "type": "prometheus",
@@ -86,7 +86,7 @@
     {
       "id": 2,
       "type": "timeseries",
-      "title": "TX (Mbit/s)",
+      "title": "TX",
       "gridPos": {
         "h": 8,
         "w": 12,
@@ -99,13 +99,13 @@
       },
       "fieldConfig": {
         "defaults": {
-          "unit": "Mbits"
+          "unit": "bps"
         }
       },
       "targets": [
         {
           "refId": "A",
-          "expr": "rate(node_network_transmit_bytes_total{host=~\"$host\",device=~\"$device\"}[5m]) * 8 / 1024 / 1024",
+          "expr": "rate(node_network_transmit_bytes_total{host=~\"$host\",device=~\"$device\"}[5m]) * 8",
           "legendFormat": "{{host}} {{device}}",
           "datasource": {
             "type": "prometheus",

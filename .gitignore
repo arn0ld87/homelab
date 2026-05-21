@@ -11,3 +11,8 @@ conf/AdGuardHome.yaml
 
 # Standalone-HTML (generiert, siehe tools/build-singlefile.py)
 *.standalone.html
+
+# Designer-Handoff-Bundles aus claude.ai/design (lokal entpackt, nicht im Repo)
+DevOps und Monitoring-handoff.zip
+*-handoff.zip
+.code-review-graph/

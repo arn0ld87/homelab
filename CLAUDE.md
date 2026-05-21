@@ -80,7 +80,7 @@ Parallele unabhängige Calls in **einer** Message bündeln.
 | node_exporter | beide | 9100 | Host-Metriken |
 | Alertmanager | VPS | 9093 | ntfy + Telegram Routing |
 | Backrest | beide | 9898 | restic-UI, CachyOS=Server, VPS=Client |
-| restic→rclone→gdrive | CachyOS | — | eigenes OAuth-Projekt `temporal-state-497009-n0` |
+| restic→rclone→gdrive | CachyOS | — | eigenes OAuth-Projekt `${GCP_PROJECT_ID}` |
 | AdGuard Home | CachyOS | 53/3000 | Tailnet-DNS + Adblock |
 
 ## Repo-Struktur
@@ -151,5 +151,5 @@ Aus `journals/2026-05-21-backrest-impl.md` — Kontext für Folge-Sessions:
 - Alertmanager-ntfy-Bridge für lesbare Titel
 - Doppelte Prometheus-Datasource in Grafana — eine entfernen
 - AGH-Query-Log noch nicht in Loki — zweiter Promtail-Job fehlt
-- CachyOS-AGH-Container nicht via Compose — Migration steht aus
+- ~~CachyOS-AGH-Container nicht via Compose~~ — Compose-Migration in [`configs/agh-cachyos/`](configs/agh-cachyos/) (Image gepinnt auf `v0.107.52`, siehe diesen PR). Cutover auf den Host steht noch aus.
 - OAuth-App auf "In Production" oder Service-Account (sonst stirbt Backup nach 7d Token-Validity)

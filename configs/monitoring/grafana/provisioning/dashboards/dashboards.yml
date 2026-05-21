@@ -15,7 +15,10 @@ providers:
     type: file
     disableDeletion: false
     updateIntervalSeconds: 30
-    allowUiUpdates: true
+    # Repo ist Source of Truth — UI-Edits gehen beim nächsten Sync
+    # ohnehin verloren. Wer ein Dashboard ändert, exportiert als JSON
+    # und committet.
+    allowUiUpdates: false
     options:
       path: /var/lib/grafana/dashboards
       foldersFromFilesStructure: false

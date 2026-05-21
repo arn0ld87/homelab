@@ -56,6 +56,11 @@ scrape_configs:
             ts: T
             qtype: QT
             upstream: Upstream
+      # Cache-Hits und Blocks liefern `Upstream` leer — Loki würde
+      # den Push mit 400 verwerfen. Fallback `none` bleibt grep-bar.
+      - template:
+          source: upstream
+          template: '{{ if .Value }}{{ .Value }}{{ else }}none{{ end }}'
       - labels:
           qtype:
           upstream:

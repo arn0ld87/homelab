@@ -15,7 +15,10 @@
 
 services:
   alertmanager-ntfy:
-    image: xenrox/ntfy-alertmanager:latest
+    # Auf konkrete Version gepinnt — :latest würde beim Recreate
+    # ungewollte Breaking-Changes durchwinken. Bumps gehen über
+    # eigenen Commit + Journal-Eintrag.
+    image: xenrox/ntfy-alertmanager:v1.0.0
     container_name: alertmanager-ntfy
     restart: unless-stopped
     network_mode: host        # damit Alertmanager localhost:9095 erreicht

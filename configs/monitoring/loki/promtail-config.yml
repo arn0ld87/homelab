@@ -60,6 +60,13 @@ scrape_configs:
             ts: T
             qtype: QT
             upstream: Upstream
+      # AGH liefert `Upstream` leer bei Cache-Hits und blockierten
+      # Queries. Loki lehnt leere Label-Werte mit 400 Bad Request ab,
+      # deshalb Fallback auf `none` — bleibt als eigene Kategorie in
+      # LogQL grep- und filterbar (`{upstream="none"}`).
+      - template:
+          source: upstream
+          template: '{{ if .Value }}{{ .Value }}{{ else }}none{{ end }}'
       - labels:
           qtype:
           upstream:

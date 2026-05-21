@@ -66,4 +66,24 @@ Erwartet auf dem Handy: ntfy-Notification mit Title
 |---|---|
 | alertmanager Compose | `/home/admin/monitoring/alertmanager/` |
 | alertmanager-ntfy Compose | `/home/admin/monitoring/alertmanager-ntfy/` |
-| ntfy.sh-Topic | `ha-hpXCeqyiWiQaqUdbfarq8JIOxXLzzjTg` |
+| ntfy.sh-Topic | `${NTFY_TOPIC}` aus `../alertmanager/.secrets.env` (gitignored) |
+
+## Hinweis zum Topic
+
+ntfy.sh hat ohne explizite Account-ACLs **kein** Auth-Modell — der
+Topic-Name selbst ist effektiv das Shared Secret. Deshalb gilt:
+
+- Der echte Topic-Wert ist **niemals** im Repo (auch nicht in Doku-
+  Beispielen, Compose-Files, Test-Skripten oder Issue-Texten).
+- Er liegt ausschließlich in `alertmanager/.secrets.env` auf dem VPS,
+  das File ist `chmod 600` und git-ignoriert.
+- Beim Setup neuer Hosts oder beim Onboarding eines weiteren Geräts
+  wird der Topic out-of-band geteilt (Bitwarden, signed-message, Voice).
+
+## Security
+
+| Risiko | Gegenmassnahme |
+|---|---|
+| Bridge auf öffentlichem Interface erreichbar | `http-address 127.0.0.1:9095` in `config.scfg.tpl` — explizites Loopback-Binding, weil der Container im `network_mode: host` läuft und keine eigene Auth hat. |
+| Latest-Image bringt Breaking Changes mit Recreate | Image auf `xenrox/ntfy-alertmanager:v1.0.0` gepinnt. Bumps gehen über eigenen Commit + Journal-Eintrag. |
+| Topic-Leak via Repo-Commit oder Code-Comment | Wert nur in `.secrets.env`, nie im Klartext in Versionierung. Bei vermutetem Leak: Topic rotieren (neuer ntfy-Topic + AM-Config-Rerender). |

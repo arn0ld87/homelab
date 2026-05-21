@@ -80,7 +80,7 @@ Parallele unabhängige Calls in **einer** Message bündeln.
 | node_exporter | beide | 9100 | Host-Metriken |
 | Alertmanager | VPS | 9093 | ntfy + Telegram Routing |
 | Backrest | beide | 9898 | restic-UI, CachyOS=Server, VPS=Client |
-| restic→rclone→gdrive | CachyOS | — | eigenes OAuth-Projekt `temporal-state-497009-n0` |
+| restic→rclone→gdrive | CachyOS | — | eigenes OAuth-Projekt ${GCP_PROJECT_ID} |
 | AdGuard Home | CachyOS | 53/3000 | Tailnet-DNS + Adblock |
 
 ## Repo-Struktur

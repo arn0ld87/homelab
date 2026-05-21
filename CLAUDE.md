@@ -80,7 +80,7 @@ Parallele unabhängige Calls in **einer** Message bündeln.
 | node_exporter | beide | 9100 | Host-Metriken |
 | Alertmanager | VPS | 9093 | ntfy + Telegram Routing |
 | Backrest | beide | 9898 | restic-UI, CachyOS=Server, VPS=Client |
-| restic→rclone→gdrive | CachyOS | — | eigenes OAuth-Projekt ${GCP_PROJECT_ID} |
+| restic→rclone→gdrive | CachyOS | — | eigenes OAuth-Projekt `${GCP_PROJECT_ID}` |
 | AdGuard Home | CachyOS | 53/3000 | Tailnet-DNS + Adblock |
 
 ## Repo-Struktur
@@ -90,7 +90,8 @@ homelab/
 ├── README.md                  Projekt-Übersicht
 ├── CLAUDE.md                  Diese Datei
 ├── AGENTS.md                  Vendor-neutrale Variante (Codex/Gemini/…)
-├── index.html                 HTML-Build der Spec-Übersicht
+├── index.html                 Spec-Übersicht (Editorial, Fraunces+Geist)
+├── devops.html                DevOps Console (blackbox-Look, Inter+JetBrains Mono)
 ├── LICENSE                    CC BY 4.0 für Docs
 ├── assets/                    Design-Tokens, CSS, Fraunces+Geist, Logo
 ├── specs/                     Markdown + HTML pro Plan (Source of Truth = MD)
@@ -101,9 +102,21 @@ homelab/
 │   ├── monitoring/            prometheus, grafana, loki, alertmanager, ntopng, node_exporter, vps-agents
 │   ├── backrest/              Backrest Compose + Forget-Policy
 │   ├── backup/                rclone→gdrive (CachyOS), VPS-Script (deaktiviert)
-│   └── agh-sync/              AdGuard-Home Replikation
+│   ├── agh-sync/              AdGuard-Home Replikation
+│   └── agh-cachyos/           AdGuard-Home Container auf CachyOS (Migration aus Bare-Metal)
 └── tools/                     Hilfs-Skripte (Single-File-HTML-Build)
 ```
+
+## Zwei Top-Level-HTML-Seiten, bewusst getrennt
+
+| File          | Look                                  | Zweck                                                   |
+|---------------|---------------------------------------|---------------------------------------------------------|
+| `index.html`  | Editorial dark · Fraunces · `#ff6a00` | Spec-Übersicht, lebende Plan-Liste                      |
+| `devops.html` | Operator-Konsole · Inter+JetBrains Mono · `#060606` | Tailnet-Endpoint-Index mit Live-Heartbeat-Pings         |
+
+Beide werden parallel gepflegt. **Nicht zusammenführen, nicht restylen** — die Stilbruch
+ist Designer-Intent (editorial Spec-Repo vs. operator dashboard). Wer eine dritte
+Top-Level-Seite anlegt, dokumentiert ihren Stil in dieser Tabelle.
 
 ## Konventionen
 
@@ -113,6 +126,7 @@ homelab/
 - **Tutor-Modus** in einigen Specs (`modus: tutor`): Claude erklärt, liefert Vorlagen auf Nachfrage, führt **keine** Befehle aus, installiert nichts auf den Hosts.
 - **Keine echten Secrets, IPs außerhalb Tailnet, oder Hostnames im Klartext** committen — Platzhalter `${...}` nutzen. Tailnet-IPs (100.x.x.x) sind ok, weil das CGNAT-Bereich ist.
 - `*.standalone.html` ist in `.gitignore` — nicht committen.
+- **`devops.html`-Action-Buttons** dürfen nur gegen Endpoints aus der harten `ALLOWED_DAEMONS`-Liste rufen (siehe Daemon-Spec, Frontend-Anbindung). Kein `target_host`-Param aus URL/localStorage.
 
 ## Workflow-Regeln
 
@@ -137,5 +151,5 @@ Aus `journals/2026-05-21-backrest-impl.md` — Kontext für Folge-Sessions:
 - Alertmanager-ntfy-Bridge für lesbare Titel
 - Doppelte Prometheus-Datasource in Grafana — eine entfernen
 - AGH-Query-Log noch nicht in Loki — zweiter Promtail-Job fehlt
-- CachyOS-AGH-Container nicht via Compose — Migration steht aus
+- ~~CachyOS-AGH-Container nicht via Compose~~ — Compose-Migration in [`configs/agh-cachyos/`](configs/agh-cachyos/) (Image gepinnt auf `v0.107.52`, siehe diesen PR). Cutover auf den Host steht noch aus.
 - OAuth-App auf "In Production" oder Service-Account (sonst stirbt Backup nach 7d Token-Validity)

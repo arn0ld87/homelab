@@ -1,12 +1,14 @@
-# Prometheus-Alert-Regeln.
+# Prometheus-Alert-Regeln — Homelab Monitoring Stack
 #
-# Erste Iteration: vier basics, die im Heim-Lab relevant sind.
-# Mehr kommt nach Bedarf (LogQL-basierte Alerts via Grafana später).
+# Alertmanager auf VPS (100.92.62.9:9093) → Telegram (@fisi_dev_bot) + ntfy.sh
+# Konfiguriert für CachyOS (host=cachyos) und Contabo VPS (host=vps)
 
 groups:
   - name: host-health
     interval: 30s
     rules:
+
+      # --- Beide Hosts ---
 
       - alert: TargetDown
         expr: up == 0
@@ -27,13 +29,31 @@ groups:
           description: "CPU-Auslastung seit 5 min über 90% ({{ $value | printf \"%.1f\" }}%)."
 
       - alert: LowMemory
-        expr: node_memory_MemAvailable_bytes < 500 * 1024 * 1024
+        expr: node_memory_MemAvailable_bytes < 2 * 1024 * 1024 * 1024
         for: 3m
         labels:
           severity: warning
         annotations:
-          summary: "RAM-verfügbar unter 500 MB auf {{ $labels.host }}"
+          summary: "RAM-verfügbar unter 2 GB auf {{ $labels.host }}"
           description: "Nur noch {{ $value | humanize1024 }}B verfügbar."
+
+      - alert: OOMKill
+        expr: increase(node_vmstat_oom_kill[5m]) > 0
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: "OOM-Killer aktiv auf {{ $labels.host }}"
+          description: "Kernel OOM-Killer hat in den letzten 5 min {{ $value | printf \"%.0f\" }} Prozess(e) erschossen."
+
+      - alert: HighLoadAverage
+        expr: node_load15 / count without(cpu, mode) (node_cpu_seconds_total{mode="idle"}) > 1.5
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Load Average > 1.5× CPU-Cores auf {{ $labels.host }}"
+          description: "15min-Load bei {{ $value | printf \"%.1f\" }} — CPU-Sättigung."
 
       - alert: DiskFillingUp
         expr: |
@@ -45,3 +65,132 @@ groups:
         annotations:
           summary: "Root-Disk unter 10% frei auf {{ $labels.host }}"
           description: "Nur noch {{ $value | printf \"%.1f\" }}% frei auf /."
+
+      # --- VPS-spezifisch (engere Schwellen wegen kritischer Services) ---
+
+      - alert: VPSDiskFillingUp
+        expr: |
+          (node_filesystem_avail_bytes{host="vps", mountpoint="/"} /
+           node_filesystem_size_bytes{host="vps", mountpoint="/"}) * 100 < 15
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "VPS-Root-Disk unter 15% frei"
+          description: "Nur noch {{ $value | printf \"%.1f\" }}% frei (484 GB). Docker wächst schnell."
+
+      - alert: VPSHighMemory
+        expr: |
+          node_memory_MemAvailable_bytes{host="vps"} < 3 * 1024 * 1024 * 1024
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "VPS-RAM unter 3 GB verfügbar"
+          description: "Nur noch {{ $value | humanize1024 }}B frei. Paperless + Dify + Ollama im Speicherdruck."
+
+      # --- VPS-Security: Angriffe, Scans, Anomalien (Live-Alerts wie Cronjob-Reports) ---
+
+      - alert: ZombieProcs
+        expr: node_procs_blocked{host="vps"} > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $value | printf \"%.0f\" }} blockierte Prozesse auf dem VPS"
+          description: "Prozesse hängen im I/O-Wait — Zombie- oder Deadlock-Verdacht. `ps aux | grep ' D'` prüfen."
+
+      - alert: NetworkRXSpike
+        expr: rate(node_network_receive_packets_total{host="vps", device="eth0"}[5m]) * 60 > 10000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Netzwerk-Spike: {{ $value | printf \"%.0f\" }} pkts/min incoming auf VPS"
+          description: "Eingehende Paketrate ungewöhnlich hoch — möglicher Scan/Angriff. Traefik-Logs prüfen."
+
+      - alert: TCPConnectionFlood
+        expr: node_netstat_Tcp_CurrEstab{host="vps"} > 500
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $value | printf \"%.0f\" }} aktive TCP-Verbindungen auf VPS"
+          description: "Ungewöhnlich viele offene TCP-Sessions — SYN-Flood oder Connection-Exhaustion möglich."
+
+      - alert: FDNearLimit
+        expr: |
+          (node_filefd_allocated{host="vps"} / node_filefd_maximum{host="vps"}) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "File-Deskriptoren {{ $value | printf \"%.0f\" }}% ausgeschöpft auf VPS"
+          description: "FD-Limit fast erreicht — Container/Dienst könnte bald keine Verbindungen mehr annehmen."
+
+      - alert: DiskReadSpike
+        expr: rate(node_disk_reads_completed_total{host="vps", device=~"sd.*"}[10m]) * 60 > 500
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Massive Disk-Reads: {{ $value | printf \"%.0f\" }} IOPS auf VPS"
+          description: "Hohe Lese-IOPS — möglicher Massenscan (grep/find über Filesystem) oder Backup-Amok."
+
+      - alert: RebootDetected
+        expr: node_boot_time_seconds{host="vps"} != node_boot_time_seconds{host="vps"} offset 5m
+        labels:
+          severity: info
+        annotations:
+          summary: "VPS wurde neu gestartet (Uptime-Reset)"
+          description: "Boot-Time hat sich geändert — prüfen ob absichtlich oder Crash."
+
+      # --- TODO: Aktivieren, sobald cadvisor-Target vorhanden ---
+      #
+      # Voraussetzung: cadvisor läuft auf dem VPS (port 8080), Scrape-Target in prometheus.yml.
+      #
+      # - alert: ContainerDown
+      #   expr: absent(container_last_seen{name=~"traefik|paperless.*|dify.*|n8n.*|coolify.*"})
+      #   for: 2m
+      #   labels:
+      #     severity: critical
+      #   annotations:
+      #     summary: "Kritischer Container {{ $labels.name }} verschwunden"
+      #
+      # - alert: ContainerRestarting
+      #   expr: rate(container_tasks_state{state="running"}[5m]) == 0 and rate(container_tasks_state[10m]) > 0
+      #   for: 3m
+      #   labels:
+      #     severity: warning
+      #   annotations:
+      #     summary: "Container {{ $labels.name }} restartet dauernd"
+
+      # --- TODO: Aktivieren, sobald Traefik-Metrics-Endpoint vorhanden ---
+      #
+      # Voraussetzung: Traefik --metrics.prometheus in docker-compose.yml, Scrape-Target.
+      #
+      # - alert: TraefikHigh5xx
+      #   expr: rate(traefik_service_requests_total{code=~"5.."}[5m]) > 0.1
+      #   for: 5m
+      #   labels:
+      #     severity: critical
+      #   annotations:
+      #     summary: "Traefik 5xx-Rate {{ $value | printf \"%.2f\" }}/s"
+      #
+      # - alert: TraefikSSLCertExpiring
+      #   expr: traefik_tls_certs_not_after{domain=~".*alexle135\\.de"} - time() < 86400 * 7
+      #   for: 5m
+      #   labels:
+      #     severity: warning
+      #   annotations:
+      #     summary: "TLS-Zertifikat {{ $labels.domain }} läuft in < 7 Tagen ab"
+
+      # --- TODO: Aktivieren, sobald Blackbox-Exporter für CrowdSec eingerichtet ---
+      #
+      # - alert: CrowdSecAPIDown
+      #   expr: probe_success{job="crowdsec"} == 0
+      #   for: 5m
+      #   labels:
+      #     severity: warning
+      #   annotations:
+      #     summary: "CrowdSec LAPI nicht erreichbar — Security-Blindflug"

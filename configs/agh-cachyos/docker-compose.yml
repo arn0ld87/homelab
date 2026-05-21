@@ -15,7 +15,9 @@
 
 services:
   adguardhome:
-    image: adguard/adguardhome:latest
+    # Auf konkrete Version gepinnt — `:latest` macht Recreates non-deterministisch.
+    # Updates landen als bewusster Bump in einem eigenen Commit, dann Journal-Eintrag.
+    image: adguard/adguardhome:v0.107.52
     container_name: adguardhome
     restart: unless-stopped
 

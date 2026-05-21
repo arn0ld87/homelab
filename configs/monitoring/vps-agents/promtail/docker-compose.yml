@@ -1,0 +1,21 @@
+# Promtail auf VPS — pusht journald + Docker-Container-Logs an
+# CachyOS-Loki via Tailnet.
+
+services:
+  promtail:
+    image: grafana/promtail:latest
+    container_name: promtail
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./promtail-config.yml:/etc/promtail/config.yml:ro
+      - /var/log/journal:/var/log/journal:ro
+      - /run/log/journal:/run/log/journal:ro
+      - /etc/machine-id:/etc/machine-id:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - promtail-positions:/tmp
+    command:
+      - '-config.file=/etc/promtail/config.yml'
+
+volumes:
+  promtail-positions:

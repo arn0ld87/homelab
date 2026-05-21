@@ -1,0 +1,27 @@
+# Alertmanager — Routing zu ntfy + Telegram.
+#
+# network_mode: host, weil:
+#   - Port 9093 auf Tailscale-Interface (durch Firewall geschützt)
+#   - simple Konnektivität
+#
+# Entrypoint rendert das yml-Template aus den ENV-Variablen
+# (.secrets.env via env_file). Resulting Config landet als /tmp/alertmanager.yml
+# im Container, chmod 600.
+
+services:
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: alertmanager
+    restart: unless-stopped
+    network_mode: host
+    user: "0:0"            # root im Container, damit chmod-600 Config lesbar
+    volumes:
+      - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager-data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+      - '--web.listen-address=:9093'
+
+volumes:
+  alertmanager-data:

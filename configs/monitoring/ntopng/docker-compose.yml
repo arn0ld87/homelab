@@ -27,6 +27,9 @@ services:
       - '--http-port=3002'
       - '--interface=wlan0'
       - '--data-dir=/var/lib/ntopng'
+      - '--max-num-flows=200000'
+      - '--max-num-hosts=4096'
+      - '--disable-autologout'
     volumes:
       - ntopng-data:/var/lib/ntopng
 

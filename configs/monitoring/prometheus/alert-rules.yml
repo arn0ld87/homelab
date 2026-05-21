@@ -1,0 +1,47 @@
+# Prometheus-Alert-Regeln.
+#
+# Erste Iteration: vier basics, die im Heim-Lab relevant sind.
+# Mehr kommt nach Bedarf (LogQL-basierte Alerts via Grafana später).
+
+groups:
+  - name: host-health
+    interval: 30s
+    rules:
+
+      - alert: TargetDown
+        expr: up == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Target {{ $labels.instance }} ist down"
+          description: "Job {{ $labels.job }} auf Host {{ $labels.host }} antwortet seit 2 min nicht."
+
+      - alert: HighCpuUsage
+        expr: 100 - (avg by (instance, host) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 90
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "CPU > 90% auf {{ $labels.host }}"
+          description: "CPU-Auslastung seit 5 min über 90% ({{ $value | printf \"%.1f\" }}%)."
+
+      - alert: LowMemory
+        expr: node_memory_MemAvailable_bytes < 500 * 1024 * 1024
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "RAM-verfügbar unter 500 MB auf {{ $labels.host }}"
+          description: "Nur noch {{ $value | humanize1024 }}B verfügbar."
+
+      - alert: DiskFillingUp
+        expr: |
+          (node_filesystem_avail_bytes{mountpoint="/"} /
+           node_filesystem_size_bytes{mountpoint="/"}) * 100 < 10
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Root-Disk unter 10% frei auf {{ $labels.host }}"
+          description: "Nur noch {{ $value | printf \"%.1f\" }}% frei auf /."

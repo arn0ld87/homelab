@@ -1,0 +1,24 @@
+# node_exporter auf VPS — identisch zur CachyOS-Variante.
+# Hostmetriken auf :9100. Tailnet-erreichbar.
+#
+# Sicherheit: host-mode bindet auf alle Interfaces inkl. eth0. Die
+# VPS-Firewall sollte eingehendes :9100 von eth0 blockieren (Default
+# bei UFW/nftables auf gehärtetem System). Tailscale-Interface bleibt
+# offen, von dort scraped der CachyOS-Prometheus.
+
+services:
+  node_exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    restart: unless-stopped
+    network_mode: host
+    pid: host
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/host/root'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/host/root:ro,rslave

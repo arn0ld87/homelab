@@ -34,6 +34,9 @@ limits_config:
   retention_period: 168h        # 7 Tage Aufbewahrung
   reject_old_samples: false     # historische Container-Logs nicht ablehnen
   allow_structured_metadata: true
+  ingestion_rate_mb: 16          # max 16 MB/s pro Tenant
+  ingestion_burst_size_mb: 32    # Burst-Erlaubnis
+  max_global_streams_per_user: 5000  # Cardinality-Schutz
 
 compactor:
   working_directory: /loki/compactor

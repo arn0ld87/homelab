@@ -1,0 +1,35 @@
+# Statische Seite mit Caddy auf server-ops.
+#
+# Erreichbar **nur im Tailnet** über die Tailscale-IP des VPS,
+# weil das ports-Mapping explizit `100.92.62.9:8080` als Source-IP
+# setzt — kein `0.0.0.0:8080`, kein WAN-Interface.
+#
+# Was hier serviert wird:
+#   www/index.html  →  http://100.92.62.9:8080/
+#
+# Update-Workflow:
+#   1. devops.html lokal pflegen (im Repo-Root)
+#   2. rsync nach VPS:/home/admin/monitoring/homelab-static/www/index.html
+#   3. docker compose restart homelab-static   (oder nichts, Caddy reload-t selbst)
+
+services:
+  homelab-static:
+    # Auf konkrete Caddy-Version gepinnt — Bumps gehen über eigenen Commit.
+    image: caddy:2.8-alpine
+    container_name: homelab-static
+    restart: unless-stopped
+    ports:
+      # Tailnet-only Bind. Source-IP MUSS die Tailscale-IPv4 des Hosts sein.
+      # Auf einem anderen Host: hier die jeweilige `tailscale ip -4`-Adresse
+      # eintragen, NICHT `0.0.0.0`.
+      #
+      # Host-Port 8081, weil 8080 = Weaviate auf server-ops.
+      # Container-Port bleibt 8080 (Caddy lauscht intern auf 8080).
+      - "100.92.62.9:8081:8080"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./www:/srv:ro
+      - caddy-logs:/var/log/caddy
+
+volumes:
+  caddy-logs:

@@ -1,0 +1,26 @@
+# Caddy serviert die homelab-DevOps-Konsole als statische Seite.
+# Bind nur auf 8080, das Tailnet-Binding macht der ports-Mapping
+# in der docker-compose.yml (100.92.62.9:8080 → container:8080).
+
+:8080 {
+    root * /srv
+    file_server
+    encode gzip zstd
+
+    # Security-Header — auch wenn tailnet-only, kosten nichts
+    header {
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "no-referrer"
+        Permissions-Policy "interest-cohort=()"
+        -Server
+    }
+
+    # Access-Log als JSON, damit Promtail das später nach Loki shippen kann
+    log {
+        output file /var/log/caddy/access.log {
+            roll_size 10mb
+            roll_keep 5
+        }
+        format json
+    }
+}

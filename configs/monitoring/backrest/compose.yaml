@@ -1,0 +1,33 @@
+# Backrest auf CachyOS — analog zur VPS-Installation.
+# Web-UI auf Tailscale-IP gebunden, nicht localhost-only, damit du
+# vom Mac aus drankommst ohne SSH-Tunnel.
+#
+# Restore-Hinweis: Repo-Passwort UND rclone-OAuth müssen
+# **außerhalb** des Backups gespeichert sein (Passwortmanager) —
+# sonst Henne-Ei beim VPS-Total-Verlust.
+
+services:
+  backrest:
+    image: garethgeorge/backrest:latest
+    container_name: backrest
+    restart: unless-stopped
+    hostname: backrest
+    ports:
+      - "100.95.132.54:9898:9898"   # CachyOS-Tailscale-IP
+    volumes:
+      - ./data:/data
+      - ./config:/config
+      - ./cache:/cache
+      - ./restic-cache:/root/.cache/restic
+      # rclone-Config für Google Drive (gemeinsame Cloud-Auth mit Host)
+      - /home/alex/.config/rclone:/root/.config/rclone:ro
+      # Backup-Quellen read-only
+      - /etc:/mnt/host/etc:ro
+      - /home/alex:/mnt/host/home/alex:ro
+      - /var/lib/docker/volumes:/mnt/host/var/lib/docker/volumes:ro
+    environment:
+      - BACKREST_DATA=/data
+      - BACKREST_CONFIG=/config/config.json
+      - XDG_CACHE_HOME=/cache
+      - TZ=Europe/Berlin
+    user: "0:0"

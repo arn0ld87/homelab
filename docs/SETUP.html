@@ -1,0 +1,695 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Homelab Setup — IST-Stand · homelab/docs</title>
+
+<link rel="stylesheet" href="../assets/colors_and_type.css">
+<link rel="stylesheet" href="../assets/doc.css">
+</head>
+<body class="doc-layout">
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <a href="../index.html" class="brand">alex<span class="n">le</span>135.de <span style="color:var(--fg-meta); font-family:var(--ff-mono); font-size:11px; letter-spacing:var(--ls-mono); text-transform:uppercase; margin-left:12px;">/ homelab</span></a>
+    <div class="crumbs">
+      <a href="../index.html">homelab</a>
+      <span class="sep">/</span>
+      <a href="../index.html">docs</a>
+      <span class="sep">/</span>
+      <span class="cur">Setup — IST-Stand</span>
+    </div>
+    <div class="topbar-right">
+      <span class="version">v 1.0.0</span>
+      <span class="status draft"><span class="dot"></span>Lebend</span>
+      <button class="icon-btn" id="theme-toggle" title="Theme wechseln" aria-label="Theme">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      </button>
+      <button class="icon-btn" onclick="window.print()" title="Drucken / PDF" aria-label="Drucken">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="shell">
+
+  <aside class="left-rail" aria-label="Inhaltsverzeichnis">
+    <div class="toc-kicker">Inhalt</div>
+    <ol class="toc" id="toc">
+      <li><span class="n">01</span><a href="#was-steht-hier">Was steht hier</a></li>
+      <li><span class="n">02</span><a href="#hosts">Hosts</a></li>
+      <li><span class="n">03</span><a href="#topologie">Tailnet-Topologie</a></li>
+      <li><span class="n">04</span><a href="#dienste">Dienste im Detail</a></li>
+      <li><span class="n">05</span><a href="#layout">Verzeichnis-Layout</a></li>
+      <li><span class="n">06</span><a href="#secrets">Secrets-Strategie</a></li>
+      <li><span class="n">07</span><a href="#updates">Update-Pfade</a></li>
+      <li><span class="n">08</span><a href="#selfcheck">Monitoring-Selfcheck</a></li>
+      <li><span class="n">09</span><a href="#loose-ends">Loose Ends</a></li>
+      <li><span class="n">10</span><a href="#naechstes">Was als Nächstes</a></li>
+      <li><span class="n">11</span><a href="#changelog">Änderungen</a></li>
+    </ol>
+
+    <div class="rail-meta">
+      <div class="row">
+        <span class="l">Modus</span>
+        <span class="v">IST-Stand</span>
+      </div>
+      <div class="row">
+        <span class="l">Status</span>
+        <span class="v">Lebend</span>
+      </div>
+      <div class="row">
+        <span class="l">Stand</span>
+        <span class="v">21. Mai 2026</span>
+      </div>
+    </div>
+  </aside>
+
+  <main class="doc">
+
+    <header class="hero">
+      <div class="kicker">
+        <span><span class="a">№ 00</span> &nbsp;—&nbsp; IST-STAND</span>
+        <span>STAND 21. MAI 2026</span>
+      </div>
+
+      <h1>Homelab<br><span class="it">Setup</span>.</h1>
+
+      <p class="lead">Lebende Beschreibung des laufenden Setups — was wo läuft, welche Datei zu welchem Container gehört, welche Pfade auf welchem Host liegen. Kein Recovery-Plan, kein Neubau-Wizard.</p>
+
+      <div class="meta-strip">
+        <div class="cell">
+          <span class="l">Version</span>
+          <span class="v mono">1.0.0</span>
+        </div>
+        <div class="cell">
+          <span class="l">Stand</span>
+          <span class="v">21. Mai 2026</span>
+        </div>
+        <div class="cell">
+          <span class="l">Modus</span>
+          <span class="v">IST-Stand</span>
+        </div>
+        <div class="cell">
+          <span class="l">Geltungsbereich</span>
+          <span class="v">cachyos + server-ops + FritzBox</span>
+        </div>
+        <div class="cell">
+          <span class="l">Lesedauer</span>
+          <span class="v">≈ 25 Min.</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ===== 01 WAS STEHT HIER ===== -->
+    <section class="section" id="was-steht-hier" data-screen-label="01 Was steht hier">
+      <div class="sec-head">
+        <div class="sec-num">01</div>
+        <div>
+          <div class="meta">№ 01 &nbsp;—&nbsp; WAS STEHT HIER</div>
+          <h2>Lebende Setup-Doku.</h2>
+        </div>
+      </div>
+      <div class="prose">
+        <p>Lebende Beschreibung des laufenden Homelab-Setups. Kein Wieder-Aufbau-Plan (<a href="runbooks/homelab-recovery.md">runbooks/homelab-recovery.md</a>), kein Roadmap-Dokument (<a href="../specs/">specs/</a>).</p>
+        <p><strong>Update-Zyklus:</strong> bei jedem nicht-trivialen Change (neuer Dienst, Pfadwechsel, Image-Pin, Retention-Anpassung). Source of Truth = die Markdown-Variante, HTML ist 1:1-Spiegel.</p>
+      </div>
+    </section>
+
+    <!-- ===== 02 HOSTS ===== -->
+    <section class="section" id="hosts" data-screen-label="02 Hosts">
+      <div class="sec-head">
+        <div class="sec-num">02</div>
+        <div>
+          <div class="meta">№ 02 &nbsp;—&nbsp; HOSTS</div>
+          <h2>Drei Knoten, klare Rollen.</h2>
+        </div>
+      </div>
+      <div class="prose">
+
+        <h3 data-num="2.1 — cachyos">cachyos — Monitoring-Server, AGH-Primary, Backrest-Server</h3>
+        <table class="data-table">
+          <tbody>
+            <tr><td>Rolle</td><td>Monitoring-Stack, AdGuard-Home DNS-Primary, Backrest-Server, ntopng-Sniffer</td></tr>
+            <tr><td>Hardware</td><td>Desktop (ASUS)</td></tr>
+            <tr><td>OS</td><td>CachyOS (Arch-basiert)</td></tr>
+            <tr><td>Kernel</td><td>TBD</td></tr>
+            <tr><td>Tailnet-IP</td><td><code class="inline">100.95.132.54</code></td></tr>
+            <tr><td>Tailnet-Alias</td><td><code class="inline">cachyos</code> / <code class="inline">asus</code></td></tr>
+            <tr><td>LAN-IP-Hinweis</td><td>private FritzBox-Range (Klartext nicht im Repo)</td></tr>
+            <tr><td>CPU / RAM / Disk</td><td>TBD</td></tr>
+            <tr><td>SSH-Alias</td><td><code class="inline">cachyos</code></td></tr>
+          </tbody>
+        </table>
+
+        <h3 data-num="2.2 — server-ops">server-ops — Alertmanager, AGH-Fallback, Backrest-Client</h3>
+        <table class="data-table">
+          <tbody>
+            <tr><td>Rolle</td><td>Alertmanager, AdGuard-Home Fallback, Backrest-Multihost-Client, agh-sync-Origin</td></tr>
+            <tr><td>Hardware</td><td>Contabo VPS (DE)</td></tr>
+            <tr><td>OS</td><td>Debian-LTS (Ubuntu 24.04 lt. Resume-Journal — TBD verifizieren)</td></tr>
+            <tr><td>Kernel</td><td>TBD</td></tr>
+            <tr><td>Tailnet-IP</td><td><code class="inline">100.92.62.9</code></td></tr>
+            <tr><td>Tailnet-Alias</td><td><code class="inline">tail</code></td></tr>
+            <tr><td>LAN-IP-Hinweis</td><td>nur Tailnet + öffentliches eth0 (WAN-IP nicht im Repo)</td></tr>
+            <tr><td>CPU / RAM / Disk</td><td>TBD</td></tr>
+            <tr><td>SSH-Alias</td><td><code class="inline">tail</code></td></tr>
+          </tbody>
+        </table>
+
+        <h3 data-num="2.3 — FritzBox 7520">FritzBox 7520 — LAN-Gateway</h3>
+        <table class="data-table">
+          <tbody>
+            <tr><td>Rolle</td><td>LAN-Gateway, DHCP, Modem</td></tr>
+            <tr><td>Hardware</td><td>AVM FritzBox 7520</td></tr>
+            <tr><td>DHCP-DNS-Override</td><td>zeigt auf cachyos-LAN-IP (siehe Adblock-Journal Schritt 9)</td></tr>
+            <tr><td>SPAN / NetFlow</td><td>nicht vorhanden — ntopng sieht keinen LAN-internen Cross-Talk</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ===== 03 TOPOLOGIE ===== -->
+    <section class="section" id="topologie" data-screen-label="03 Topologie">
+      <div class="sec-head">
+        <div class="sec-num">03</div>
+        <div>
+          <div class="meta">№ 03 &nbsp;—&nbsp; TAILNET-TOPOLOGIE</div>
+          <h2>Wer redet mit wem.</h2>
+        </div>
+      </div>
+      <div class="prose">
+        <figure class="fig">
+          <div class="figbody">
+            <div class="ascii">┌─────────────────────────────────────────────────────────────────────┐
+│ Tailnet (100.64.0.0/10)                                             │
+│                                                                     │
+│  ┌──────────────────────────┐      ┌──────────────────────────┐    │
+│  │ cachyos                  │      │ server-ops               │    │
+│  │ 100.95.132.54            │◀────▶│ 100.92.62.9              │    │
+│  │                          │      │                          │    │
+│  │ Monitoring-Server:       │      │ Alerting + Fallback:     │    │
+│  │  Prometheus  :9090       │      │  Alertmanager  :9093     │    │
+│  │  Grafana     :3001       │      │  node_exporter :9100     │    │
+│  │  Loki        :3100       │      │  Promtail (push→Loki)    │    │
+│  │  Promtail                │      │                          │    │
+│  │  ntopng      :3002       │      │  Backrest 1.13.0 :9898   │    │
+│  │  node_exporter :9100     │      │   (Multihost-Client)     │    │
+│  │                          │      │                          │    │
+│  │ Backup-Server:           │      │ DNS-Fallback:            │    │
+│  │  Backrest 1.13.0 :9898   │      │  AdGuard Home :3000      │    │
+│  │   → rclone → gdrive      │      │   (Standby)              │    │
+│  │                          │      │                          │    │
+│  │ DNS-Primary:             │      │ agh-sync (Origin→Replica)│    │
+│  │  AdGuard Home :53/:3000  │      │                          │    │
+│  └──────────────────────────┘      └──────────────────────────┘    │
+│         ▲                                                           │
+│         │ DHCP-DNS-Override (LAN)                                   │
+│  ┌──────┴───────────────────┐                                       │
+│  │ FritzBox 7520            │                                       │
+│  │ - LAN-Gateway            │                                       │
+│  │ - kein SPAN, kein NetFlow│                                       │
+│  └──────────────────────────┘                                       │
+└─────────────────────────────────────────────────────────────────────┘</div>
+          </div>
+          <figcaption>
+            <span class="num">Abb. 01</span>
+            <span>Tailnet-Topologie, Stand 2026-05-21</span>
+          </figcaption>
+        </figure>
+
+        <ul>
+          <li><strong>MagicDNS:</strong> aktiv. Global Nameserver = <code class="inline">100.95.132.54</code> (cachyos-AGH) lt. Adblock-Journal Schritt 10.</li>
+          <li><strong>Exit-Node:</strong> TBD (nicht aus Repo belegt).</li>
+          <li><strong>Subnet-Routes:</strong> TBD (nicht aus Repo belegt).</li>
+        </ul>
+
+        <h3 data-num="3.1 — Service-Map">Service-Map</h3>
+        <table class="data-table">
+          <thead>
+            <tr><th>Dienst</th><th>Host</th><th>Port</th><th>Rolle</th><th>Quelle</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Prometheus</td><td>cachyos</td><td>9090</td><td>TSDB + Scraper</td><td><a href="../configs/monitoring/prometheus/docker-compose.yml"><code class="inline">docker-compose.yml</code></a></td></tr>
+            <tr><td>Grafana</td><td>cachyos</td><td>3001</td><td>UI (Default 3000 belegt durch AGH)</td><td><a href="../configs/monitoring/grafana/docker-compose.yml"><code class="inline">docker-compose.yml</code></a></td></tr>
+            <tr><td>Loki</td><td>cachyos</td><td>3100</td><td>Log-Aggregation</td><td><a href="../configs/monitoring/loki/docker-compose.yml"><code class="inline">docker-compose.yml</code></a></td></tr>
+            <tr><td>Promtail</td><td>cachyos + server-ops</td><td>9080</td><td>Journal + Docker-Logs → Loki</td><td><a href="../configs/monitoring/loki/promtail-config.yml">cachyos</a>, <a href="../configs/monitoring/vps-agents/promtail/promtail-config.yml">server-ops</a></td></tr>
+            <tr><td>ntopng</td><td>cachyos</td><td>3002</td><td>Flow-Analyse <code class="inline">wlan0</code></td><td><a href="../configs/monitoring/ntopng/docker-compose.yml"><code class="inline">docker-compose.yml</code></a></td></tr>
+            <tr><td>node_exporter</td><td>beide</td><td>9100</td><td>Host-Metriken</td><td><a href="../configs/monitoring/node_exporter/docker-compose.yml"><code class="inline">docker-compose.yml</code></a></td></tr>
+            <tr><td>Alertmanager</td><td>server-ops</td><td>9093</td><td>ntfy + Telegram</td><td><a href="../configs/monitoring/alertmanager/docker-compose.yml"><code class="inline">docker-compose.yml</code></a></td></tr>
+            <tr><td>Backrest</td><td>beide</td><td>9898</td><td>restic-UI (cachyos=Server, server-ops=Client)</td><td><a href="../configs/monitoring/backrest/compose.yaml"><code class="inline">compose.yaml</code></a></td></tr>
+            <tr><td>AdGuard Home (Primary)</td><td>cachyos</td><td>53/3000</td><td>DNS + Adblock</td><td><a href="../configs/agh-cachyos/docker-compose.yml"><code class="inline">docker-compose.yml</code></a></td></tr>
+            <tr><td>AdGuard Home (Fallback)</td><td>server-ops</td><td>53/3000</td><td>DNS-Fallback + Sync-Origin</td><td>nicht im Repo (bare-metal)</td></tr>
+            <tr><td>agh-sync</td><td>server-ops</td><td>—</td><td>Push Origin → Replica alle 5 min</td><td><a href="../configs/agh-sync/docker-compose.yml"><code class="inline">docker-compose.yml</code></a></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ===== 04 DIENSTE ===== -->
+    <section class="section" id="dienste" data-screen-label="04 Dienste">
+      <div class="sec-head">
+        <div class="sec-num">04</div>
+        <div>
+          <div class="meta">№ 04 &nbsp;—&nbsp; DIENSTE IM DETAIL</div>
+          <h2>Was läuft, woraus, mit welchen Volumes.</h2>
+        </div>
+      </div>
+      <div class="prose">
+
+        <h3 data-num="4.1 — Prometheus">Prometheus</h3>
+        <ul>
+          <li><strong>Compose:</strong> <code class="inline">configs/monitoring/prometheus/docker-compose.yml</code></li>
+          <li><strong>Image:</strong> <code class="inline">prom/prometheus:latest</code> (kein Pin)</li>
+          <li><strong>Network:</strong> <code class="inline">network_mode: host</code> — <code class="inline">:9090</code></li>
+          <li><strong>Volumes:</strong> <code class="inline">prometheus.yml</code> + <code class="inline">alert-rules.yml</code> read-only, Named Volume <code class="inline">tsdb</code> → <code class="inline">/prometheus</code></li>
+          <li><strong>Retention:</strong> <code class="inline">15d</code> / <code class="inline">2GB</code></li>
+          <li><strong>Scrape:</strong> Jobs <code class="inline">node_exporter</code> (cachyos+vps) und <code class="inline">prometheus</code> (self)</li>
+          <li><strong>Alert-Rules:</strong> <code class="inline">TargetDown</code>, <code class="inline">HighCpuUsage</code>, <code class="inline">LowMemory</code>, <code class="inline">DiskFillingUp</code></li>
+          <li><strong>Alertmanager-Ziel:</strong> <code class="inline">100.92.62.9:9093</code></li>
+        </ul>
+
+        <h3 data-num="4.2 — Grafana">Grafana</h3>
+        <ul>
+          <li><strong>Compose:</strong> <code class="inline">configs/monitoring/grafana/docker-compose.yml</code></li>
+          <li><strong>Image:</strong> <code class="inline">grafana/grafana:latest</code></li>
+          <li><strong>Bind:</strong> <code class="inline">GF_SERVER_HTTP_PORT=3001</code> (Default 3000 belegt durch AGH)</li>
+          <li><strong>Volumes:</strong> Named Volume <code class="inline">grafana-data</code>, <code class="inline">./provisioning</code> + <code class="inline">./dashboards</code> read-only</li>
+          <li><strong>Datasources (provisioned):</strong> <code class="inline">Prometheus</code> (UID <code class="inline">prometheus</code>, default), <code class="inline">Loki</code> (UID <code class="inline">loki</code>) — <code class="inline">deleteDatasources</code> räumt Lern-Phase-Reste weg</li>
+          <li><strong>Dashboard-Provider:</strong> File-Watcher, Folder <code class="inline">Homelab</code>, Reload alle 30 s</li>
+        </ul>
+        <table class="data-table">
+          <thead>
+            <tr><th>Dashboard</th><th>UID</th><th>Direkt-Link</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>cachyos-host</td><td><code class="inline">cachyos-host</code></td><td><code class="inline">/d/cachyos-host</code></td></tr>
+            <tr><td>multi-host-overview</td><td><code class="inline">multi-host-overview</code></td><td><code class="inline">/d/multi-host-overview</code></td></tr>
+            <tr><td>network-traffic</td><td><code class="inline">network-traffic</code></td><td><code class="inline">/d/network-traffic</code></td></tr>
+            <tr><td>disk-storage</td><td><code class="inline">disk-storage</code></td><td><code class="inline">/d/disk-storage</code></td></tr>
+            <tr><td>logs-overview</td><td><code class="inline">logs-overview</code></td><td><code class="inline">/d/logs-overview</code></td></tr>
+            <tr><td>alerts-health</td><td><code class="inline">alerts-health</code></td><td><code class="inline">/d/alerts-health</code></td></tr>
+          </tbody>
+        </table>
+
+        <h3 data-num="4.3 — Loki + Promtail">Loki + Promtail</h3>
+        <ul>
+          <li><strong>Images:</strong> <code class="inline">grafana/loki:latest</code>, <code class="inline">grafana/promtail:latest</code>, beide <code class="inline">network_mode: host</code></li>
+          <li><strong>Loki-Storage:</strong> Filesystem, Named Volume <code class="inline">loki-data</code> → <code class="inline">/loki</code>, Schema v13/tsdb, 24 h Index-Periode</li>
+          <li><strong>Retention:</strong> <code class="inline">168h</code> (7 Tage), <code class="inline">reject_old_samples: false</code></li>
+          <li><strong>Limits:</strong> <code class="inline">ingestion_rate_mb: 16</code>, <code class="inline">max_global_streams_per_user: 5000</code></li>
+          <li><strong>Promtail cachyos:</strong> Jobs <code class="inline">journal</code> (Labels <code class="inline">host=cachyos</code>) + <code class="inline">docker</code> (Socket-Discovery)</li>
+          <li><strong>Promtail server-ops:</strong> Push-Ziel <code class="inline">http://100.95.132.54:3100/loki/api/v1/push</code>, Force-Label <code class="inline">host=vps</code></li>
+        </ul>
+
+        <h3 data-num="4.4 — Alertmanager">Alertmanager</h3>
+        <ul>
+          <li><strong>Host:</strong> server-ops, <code class="inline">network_mode: host</code>, <code class="inline">:9093</code>, <code class="inline">user: "0:0"</code></li>
+          <li><strong>Template:</strong> <code class="inline">alertmanager.yml.tpl</code>, gerendert via <code class="inline">envsubst</code> aus <code class="inline">.secrets.env</code> nach <code class="inline">/tmp/alertmanager.yml</code> (chmod 600)</li>
+          <li><strong>Route:</strong> single Receiver <code class="inline">all-channels</code>, <code class="inline">group_by: [alertname, host]</code>, <code class="inline">repeat_interval: 4h</code>, Inhibit <code class="inline">critical → warning</code></li>
+          <li><strong>ntfy:</strong> <code class="inline">https://ntfy.sh/${NTFY_TOPIC}</code>, <code class="inline">send_resolved: true</code> — <strong>roher JSON-Push</strong>, hübsche Titel + Priority-Mapping fehlen (Loose End)</li>
+          <li><strong>Telegram:</strong> HTML-Template mit Status/Host/Severity/Summary, <code class="inline">send_resolved: true</code></li>
+          <li><strong>Priority-Routing (geplant, nicht im Repo):</strong> <code class="inline">critical → high+rotating_light</code>, <code class="inline">warning → default</code>, <code class="inline">resolved → low+check_mark</code> — Teil der offenen ntfy-Bridge-Arbeit</li>
+        </ul>
+
+        <h3 data-num="4.5 — node_exporter, ntopng">node_exporter und ntopng</h3>
+        <ul>
+          <li><strong>node_exporter:</strong> <code class="inline">prom/node-exporter:latest</code>, <code class="inline">network_mode: host</code>, <code class="inline">pid: host</code>, <code class="inline">/proc</code>/<code class="inline">/sys</code>/<code class="inline">/</code> ro nach <code class="inline">/host/...</code>. Identisch auf beiden Hosts.</li>
+          <li><strong>ntopng:</strong> <code class="inline">ntop/ntopng:latest</code>, Caps <code class="inline">NET_ADMIN</code> + <code class="inline">NET_RAW</code>, Sniffer auf <code class="inline">wlan0</code>, Web-UI <code class="inline">:3002</code>. Sieht keinen LAN-internen Cross-Talk (kein SPAN auf FritzBox).</li>
+        </ul>
+
+        <h3 data-num="4.6 — Backrest">Backrest (restic-UI)</h3>
+        <ul>
+          <li><strong>Image:</strong> <code class="inline">garethgeorge/backrest:latest</code>, Version 1.13.0 auf beiden Hosts (Multihost-Voraussetzung)</li>
+          <li><strong>Port:</strong> <code class="inline">100.95.132.54:9898:9898</code> — explizit auf Tailnet-IP gebunden</li>
+          <li><strong>Multihost-Pairing:</strong> cachyos = Server, server-ops = Client, beide Repos in einer UI</li>
+        </ul>
+        <table class="data-table">
+          <thead>
+            <tr><th>Repo</th><th>Host</th><th>Drive-Pfad</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code class="inline">alex</code></td><td>server-ops</td><td><code class="inline">gdrive:alexle135-backrest-backup</code></td></tr>
+            <tr><td><code class="inline">cachyos</code></td><td>cachyos</td><td><code class="inline">gdrive:homelab-backups-restic/cachyos</code></td></tr>
+          </tbody>
+        </table>
+        <ul>
+          <li><strong>Schedule:</strong> TBD — Backrest-internal in <code class="inline">./config/config.json</code>, nicht repo-belegt</li>
+          <li><strong>Retention / Forget-Policy:</strong> TBD — aktiv definiert, Werte in Backrest-DB</li>
+          <li><strong>Mounts cachyos:</strong> <code class="inline">/home/alex/.config/rclone:ro</code> (OAuth gemeinsam mit Host), Backup-Quellen <code class="inline">/etc</code>, <code class="inline">/home/alex</code>, <code class="inline">/var/lib/docker/volumes</code> ro nach <code class="inline">/mnt/host/...</code></li>
+          <li><strong>gdrive-OAuth:</strong> eigenes Google-Cloud-Projekt <code class="inline">temporal-state-497009-n0</code>, OAuth-App auf <strong>„In Production"</strong> seit 2026-05-21 — kein 7-Tage-Token-Tod mehr</li>
+          <li><strong>Restore-Henne-Ei:</strong> Repo-Passphrasen + Google-Konto-Login in NordPass, nicht im Backup. Klartext-Files mit <code class="inline">shred -uz</code> entsorgt</li>
+        </ul>
+
+        <h3 data-num="4.7 — Legacy rclone-Timer">Legacy: rclone → gdrive (systemd-Timer)</h3>
+        <ul>
+          <li><strong>cachyos:</strong> <code class="inline">homelab-backup.{sh,service,timer}</code>, <code class="inline">OnCalendar=*-*-* 03:00:00</code>, Retention 30 Tage</li>
+          <li><strong>server-ops:</strong> <code class="inline">homelab-backup-vps.{sh,service,timer}</code>, <code class="inline">OnCalendar=*-*-* 03:30:00</code></li>
+          <li><strong>Status:</strong> Backrest ist Primary, Timer historisch/Backup-of-Backup. TBD: ob aktuell auf den Hosts aktiv (<code class="inline">systemctl list-timers</code>)</li>
+        </ul>
+
+        <h3 data-num="4.8 — AdGuard Home">DNS / AdGuard Home</h3>
+        <ul>
+          <li><strong>Primary (cachyos):</strong> Compose unter <code class="inline">configs/agh-cachyos/</code>, Image <code class="inline">adguard/adguardhome:latest</code>, Bridge-Network, Ports <code class="inline">53/tcp</code>, <code class="inline">53/udp</code>, <code class="inline">3000/tcp</code>. Host-Bind-Mounts <code class="inline">/home/alex/adguard/{conf,work}</code>. <strong>Compose-Migration auf Host steht aus</strong> (aktueller Container ist <code class="inline">docker run</code>).</li>
+          <li><strong>Fallback (server-ops):</strong> bare-metal/<code class="inline">docker run</code>, Bind-Mounts <code class="inline">/home/admin/agh/{conf,work}</code>. Auf demselben Host läuft <strong>agh-sync</strong> als Sync-Origin.</li>
+          <li><strong>Filterlisten:</strong> AdGuard DNS filter, AdAway, OISD Big, HaGeZi Pro, Steven Black (aus VPS-Sync)</li>
+          <li><strong>Upstreams:</strong> cachyos → Quad9 DoH (<code class="inline">https://dns10.quad9.net/dns-query</code>), Bootstrap <code class="inline">9.9.9.10</code>. server-ops → Quad9 DoT (<code class="inline">tls://dns.quad9.net</code>) + Cloudflare DoT, Bootstrap <code class="inline">9.9.9.9, 1.1.1.1</code>.</li>
+          <li><strong>Encrypted DNS Serving:</strong> DoT/DoH/DoQ-Ports im Compose nur als Kommentar — <strong>nicht aktiv</strong>, AGH dient lokal Plain DNS auf <code class="inline">:53</code></li>
+          <li><strong>DoT-Outbound-Lernpunkt:</strong> wiederholte Timeouts zu Quad9/Cloudflare in Loki sichtbar — Diagnose offen (vermutlich IPv6-Routing oder MTU)</li>
+        </ul>
+
+        <h3 data-num="4.9 — agh-sync">agh-sync</h3>
+        <ul>
+          <li><strong>Host:</strong> server-ops, Image <code class="inline">ghcr.io/bakito/adguardhome-sync:latest</code></li>
+          <li><strong>Schedule:</strong> <code class="inline">CRON=*/5 * * * *</code></li>
+          <li><strong>Synchronisiert:</strong> Filter, Clients, DNS-Server-Config, DNS-Rewrites</li>
+          <li><strong>Bleibt lokal:</strong> General-Settings, Query-Log-Config, Stats-Config, Services</li>
+          <li><strong>Querylog → Loki:</strong> <strong>NICHT verdrahtet</strong>. Loose End — zweiter Promtail-Job auf <code class="inline">/opt/adguardhome/work/data/querylog.json</code> fehlt</li>
+        </ul>
+
+        <h3 data-num="4.10 — Netzwerk-Flow">Netzwerk-Flow / ntopng</h3>
+        <ul>
+          <li><strong>Sniffer-Interface:</strong> <code class="inline">wlan0</code> (cachyos)</li>
+          <li><strong>Sichtbar:</strong> eigener WLAN-Verkehr, evtl. Multicast/Broadcast</li>
+          <li><strong>NICHT sichtbar:</strong> LAN-internen Cross-Talk (IoT ↔ Apple TV ↔ Drucker) — FritzBox 7520 hat keinen SPAN. Andere WLAN-Clients ebenfalls nicht (WLAN-Treiber zeigt im Promiscuous-Modus oft nur eigenen Traffic).</li>
+          <li><strong>Workaround:</strong> Managed Switch mit Port-Mirror (z. B. Mikrotik CRS112) — nicht angeschafft.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ===== 05 LAYOUT ===== -->
+    <section class="section" id="layout" data-screen-label="05 Layout">
+      <div class="sec-head">
+        <div class="sec-num">05</div>
+        <div>
+          <div class="meta">№ 05 &nbsp;—&nbsp; VERZEICHNIS-LAYOUT</div>
+          <h2>Pfade auf den Hosts.</h2>
+        </div>
+      </div>
+      <div class="prose">
+
+        <h3 data-num="5.1 — cachyos">cachyos</h3>
+        <table class="data-table">
+          <thead><tr><th>Pfad</th><th>Inhalt</th></tr></thead>
+          <tbody>
+            <tr><td><code class="inline">/home/alex/monitoring/prometheus/</code></td><td>Compose + <code class="inline">prometheus.yml</code> + <code class="inline">alert-rules.yml</code></td></tr>
+            <tr><td><code class="inline">/home/alex/monitoring/grafana/</code></td><td>Compose + <code class="inline">provisioning/</code> + <code class="inline">dashboards/</code></td></tr>
+            <tr><td><code class="inline">/home/alex/monitoring/loki/</code></td><td>Compose + <code class="inline">loki-config.yml</code> + <code class="inline">promtail-config.yml</code></td></tr>
+            <tr><td><code class="inline">/home/alex/monitoring/node_exporter/</code></td><td>Compose</td></tr>
+            <tr><td><code class="inline">/home/alex/monitoring/ntopng/</code></td><td>Compose</td></tr>
+            <tr><td><code class="inline">/home/alex/adguard/conf/</code></td><td>AGH-Config (<code class="inline">AdGuardHome.yaml</code>)</td></tr>
+            <tr><td><code class="inline">/home/alex/adguard/work/</code></td><td>AGH-Querylog, Stats-DB, Filter-Cache</td></tr>
+            <tr><td><code class="inline">/var/lib/docker/volumes/prometheus_tsdb/_data/</code></td><td>Prometheus-TSDB (UID 65534)</td></tr>
+            <tr><td><code class="inline">/var/lib/docker/volumes/loki_loki-data/_data/</code></td><td>Loki-Chunks</td></tr>
+            <tr><td><code class="inline">/var/lib/docker/volumes/grafana_grafana-data/_data/</code></td><td>Grafana-DB (SQLite)</td></tr>
+            <tr><td><code class="inline">/var/lib/docker/volumes/ntopng-data/_data/</code></td><td>ntopng-State</td></tr>
+            <tr><td><code class="inline">/home/alex/.config/rclone/</code></td><td>rclone-OAuth (Drive-Token)</td></tr>
+            <tr><td>Backrest-Bind-Mount-Pfad cachyos</td><td>TBD (vermutlich <code class="inline">/home/alex/backrest/{data,config,cache,restic-cache}</code>, nicht hart belegbar)</td></tr>
+          </tbody>
+        </table>
+
+        <h3 data-num="5.2 — server-ops">server-ops</h3>
+        <table class="data-table">
+          <thead><tr><th>Pfad</th><th>Inhalt</th></tr></thead>
+          <tbody>
+            <tr><td><code class="inline">/home/admin/agh/conf/</code></td><td>VPS-AGH-Config (Primary lt. Sync-Logik, lokal Fallback-DNS)</td></tr>
+            <tr><td><code class="inline">/home/admin/agh/work/</code></td><td>VPS-AGH-Querylog</td></tr>
+            <tr><td><code class="inline">/home/admin/agh-sync/</code></td><td>agh-sync Compose + <code class="inline">.env</code> (<code class="inline">chmod 600</code>)</td></tr>
+            <tr><td><code class="inline">/home/admin/monitoring/alertmanager/</code></td><td>Compose + <code class="inline">.secrets.env</code> + Template</td></tr>
+            <tr><td><code class="inline">/home/admin/monitoring/node_exporter/</code></td><td>Compose</td></tr>
+            <tr><td><code class="inline">/home/admin/monitoring/promtail/</code></td><td>Compose + <code class="inline">promtail-config.yml</code></td></tr>
+            <tr><td><code class="inline">/var/lib/docker/volumes/alertmanager_alertmanager-data/_data/</code></td><td>Alertmanager-State</td></tr>
+            <tr><td>Backrest-Bind-Mount-Pfad server-ops</td><td>TBD (vermutlich <code class="inline">/home/admin/backrest/...</code>, nicht hart belegbar)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ===== 06 SECRETS ===== -->
+    <section class="section" id="secrets" data-screen-label="06 Secrets">
+      <div class="sec-head">
+        <div class="sec-num">06</div>
+        <div>
+          <div class="meta">№ 06 &nbsp;—&nbsp; SECRETS-STRATEGIE</div>
+          <h2>Wo Tokens liegen, was nicht im Repo landet.</h2>
+        </div>
+      </div>
+      <div class="prose">
+        <ul>
+          <li><strong><code class="inline">.env</code>-Files:</strong> <code class="inline">chmod 600</code>, gitignored via <code class="inline">.env</code>, <code class="inline">.env.*</code> (Ausnahme <code class="inline">.env.example</code>)</li>
+          <li><strong>Templates im Repo:</strong> <code class="inline">configs/agh-sync/.env.example</code>, Alertmanager <code class="inline">alertmanager.yml.tpl</code> mit Platzhaltern (<code class="inline">${NTFY_TOPIC}</code>, <code class="inline">${TELEGRAM_BOT_TOKEN}</code>, <code class="inline">${TELEGRAM_CHAT_ID}</code>)</li>
+          <li><strong>Restic-Passphrasen:</strong> <strong>NordPass</strong> ist Single Source of Truth. Klartext-Files mit <code class="inline">shred -uz</code> entsorgt (2026-05-21)</li>
+          <li><strong>Google-Konto-Login (rclone-OAuth):</strong> NordPass</li>
+          <li><strong>Grafana-Admin-Passwort:</strong> bei Erst-Login geändert, neuer Wert in NordPass — Default <code class="inline">admin/admin</code> im Compose ist nur Bootstrap</li>
+          <li><strong>AGH-Web-UI-Passwörter:</strong> beide Instanzen eigene Logins, NordPass</li>
+          <li><strong>Token-Validity-Falle:</strong> gdrive-OAuth-App auf „In Production" — kein 7-Tage-Token-Tod</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ===== 07 UPDATES ===== -->
+    <section class="section" id="updates" data-screen-label="07 Updates">
+      <div class="sec-head">
+        <div class="sec-num">07</div>
+        <div>
+          <div class="meta">№ 07 &nbsp;—&nbsp; UPDATE-PFADE</div>
+          <h2>Wie aktualisiert wird.</h2>
+        </div>
+      </div>
+      <div class="prose">
+        <p>Allgemein: <code class="inline">docker compose pull &amp;&amp; docker compose up -d</code> im jeweiligen Compose-Ordner. Bei <code class="inline">:latest</code>-Tags kann jeder <code class="inline">pull</code> Breaking-Changes ziehen.</p>
+        <table class="data-table">
+          <thead>
+            <tr><th>Komponente</th><th>Befehl</th><th>Owner</th><th>Downtime</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Prometheus</td><td><code class="inline">cd /home/alex/monitoring/prometheus &amp;&amp; docker compose pull &amp;&amp; docker compose up -d</code></td><td>Alex</td><td>~5 s</td></tr>
+            <tr><td>Grafana</td><td><code class="inline">cd .../grafana &amp;&amp; docker compose pull &amp;&amp; docker compose up -d</code></td><td>Alex</td><td>~10 s</td></tr>
+            <tr><td>Loki + Promtail</td><td><code class="inline">cd .../loki &amp;&amp; docker compose pull &amp;&amp; docker compose up -d</code></td><td>Alex</td><td>~5 s (reject_old_samples=false)</td></tr>
+            <tr><td>Alertmanager (server-ops)</td><td><code class="inline">cd /home/admin/monitoring/alertmanager &amp;&amp; docker compose pull &amp;&amp; docker compose up -d</code></td><td>Alex</td><td>~5 s</td></tr>
+            <tr><td>node_exporter</td><td><code class="inline">cd .../node_exporter &amp;&amp; docker compose pull &amp;&amp; docker compose up -d</code></td><td>Alex</td><td>~5 s</td></tr>
+            <tr><td>ntopng</td><td><code class="inline">cd .../ntopng &amp;&amp; docker compose pull &amp;&amp; docker compose up -d</code></td><td>Alex</td><td>~5 s</td></tr>
+            <tr><td>Backrest (beide)</td><td><code class="inline">docker compose pull &amp;&amp; docker compose up -d</code> — Pairing-Status vor Update sichern</td><td>Alex</td><td>~10 s</td></tr>
+            <tr><td>AGH cachyos</td><td><code class="inline">cd /home/alex/adguard &amp;&amp; docker compose pull &amp;&amp; docker compose up -d</code></td><td>Alex</td><td>5–10 s DNS-Lücke — LAN-Clients fallen auf server-ops-AGH</td></tr>
+            <tr><td>AGH server-ops</td><td>bare-metal <code class="inline">docker pull &amp;&amp; docker run</code> (Compose-Migration ausstehend)</td><td>Alex</td><td>~10 s</td></tr>
+            <tr><td>agh-sync</td><td><code class="inline">cd /home/admin/agh-sync &amp;&amp; docker compose pull &amp;&amp; docker compose up -d</code></td><td>Alex</td><td>nein (Push-Job)</td></tr>
+          </tbody>
+        </table>
+        <ul>
+          <li><strong>Grafana-Dashboards:</strong> kein Container-Restart — File-Provider scannt alle 30 s</li>
+          <li><strong>Alert-Rules:</strong> <code class="inline">curl -X POST http://localhost:9090/-/reload</code> (Lifecycle enabled)</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ===== 08 SELFCHECK ===== -->
+    <section class="section" id="selfcheck" data-screen-label="08 Selfcheck">
+      <div class="sec-head">
+        <div class="sec-num">08</div>
+        <div>
+          <div class="meta">№ 08 &nbsp;—&nbsp; MONITORING-SELFCHECK</div>
+          <h2>Wie merkt man, dass das Monitoring selbst lebt.</h2>
+        </div>
+      </div>
+      <div class="prose">
+        <table class="data-table">
+          <thead>
+            <tr><th>Check</th><th>Wo</th><th>Erwartung</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Prometheus-Targets</td><td><code class="inline">http://100.95.132.54:9090/targets</code></td><td>alle UP, beide <code class="inline">host=cachyos</code> und <code class="inline">host=vps</code> grün</td></tr>
+            <tr><td>Loki-Ready</td><td><code class="inline">curl http://100.95.132.54:3100/ready</code></td><td><code class="inline">ready</code></td></tr>
+            <tr><td>Loki-Ingest</td><td>Grafana <code class="inline">/d/logs-overview</code></td><td>Logs der letzten 5 min sichtbar</td></tr>
+            <tr><td>Promtail-Push (server-ops)</td><td>Grafana Explore, <code class="inline">{host="vps"}</code></td><td>letzte Minuten gefüllt</td></tr>
+            <tr><td>Alertmanager</td><td><code class="inline">http://100.92.62.9:9093/#/status</code></td><td>grün, Cluster-Status <code class="inline">ready</code></td></tr>
+            <tr><td>ntfy-Bridge</td><td>Test-Alert via Prometheus-Rule + <code class="inline">amtool</code></td><td>Notification kommt auf ntfy-Topic + Telegram</td></tr>
+            <tr><td>Backrest</td><td><code class="inline">http://100.95.132.54:9898/</code></td><td>beide Repos sichtbar, letzter Snapshot &lt; 24 h alt</td></tr>
+            <tr><td>Grafana-Dashboards live</td><td><code class="inline">/d/multi-host-overview</code></td><td>beide Hosts mit aktuellen Daten</td></tr>
+          </tbody>
+        </table>
+        <p><strong>Heartbeat-Alert:</strong> TBD — kein bewusster Watchdog (<code class="inline">absent()</code> o. Ä.) für das Monitoring-System selbst. Loose End.</p>
+      </div>
+    </section>
+
+    <!-- ===== 09 LOOSE ENDS ===== -->
+    <section class="section" id="loose-ends" data-screen-label="09 Loose Ends">
+      <div class="sec-head">
+        <div class="sec-num">09</div>
+        <div>
+          <div class="meta">№ 09 &nbsp;—&nbsp; LOOSE ENDS (Stand 2026-05-21)</div>
+          <h2>Offene Baustellen.</h2>
+        </div>
+      </div>
+      <div class="prose">
+        <ol>
+          <li><strong>Alertmanager-ntfy-Bridge</strong> — roher JSON-Push, hübsche Titel + Priority-Mapping (<code class="inline">critical → high+rotating_light</code>, <code class="inline">warning → default</code>, <code class="inline">resolved → low+check_mark</code>) via <code class="inline">alertmanager-webhook-ntfy</code> o. Ä. fehlt.</li>
+          <li><strong>AGH-Query-Log → Loki</strong> — zweiter Promtail-Job auf <code class="inline">/opt/adguardhome/work/data/querylog.json</code> (VPS + cachyos). Stand: in flight via PR #4, im Repo-Stand noch nicht gemerged.</li>
+          <li><strong>CachyOS-AGH Compose-Migration</strong> — Compose-File im Repo, Deploy auf Host ausstehend (aktueller Container ist <code class="inline">docker run</code>).</li>
+          <li><strong>CachyOS-AGH DoT-Timeouts</strong> — Quad9/Cloudflare-Timeouts in Loki sichtbar, Diagnose offen (vermutlich IPv6-Routing oder MTU).</li>
+          <li><strong>Grafana-Datasource-Diskrepanz</strong> — DB-Cleanup durch, aber UI meldet „immer noch 2 Prometheus"; Hard-Reload-Check + ggf. Screenshot ausstehend.</li>
+          <li><strong>Doppelte Prometheus-Datasource</strong> (aus CLAUDE.md) — überschneidet sich mit Punkt 5.</li>
+          <li><strong>OAuth-App auf „In Production"</strong> — <strong>erledigt</strong> (2026-05-21). Kein 7-Tage-Token-Tod mehr.</li>
+          <li><strong>MD→HTML-Pipeline</strong> — <code class="inline">tools/build-singlefile.py</code> ist HTML→Standalone, kein MD→HTML. Spec-Pflege erfordert manuelles HTML-Nachziehen.</li>
+          <li><strong>Backrest-Metriken-Dashboard</strong> — Backrest exposed <code class="inline">/metrics</code> auf <code class="inline">:9898</code>, Prometheus scrapt noch nicht.</li>
+          <li><strong>Heartbeat-Watchdog</strong> — kein Selbst-Überwachungs-Alert.</li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ===== 10 NÄCHSTES ===== -->
+    <section class="section" id="naechstes" data-screen-label="10 Was als Nächstes">
+      <div class="sec-head">
+        <div class="sec-num">10</div>
+        <div>
+          <div class="meta">№ 10 &nbsp;—&nbsp; WAS ALS NÄCHSTES</div>
+          <h2>Offene Specs.</h2>
+        </div>
+      </div>
+      <div class="prose">
+        <table class="data-table">
+          <thead>
+            <tr><th>Spec</th><th>Status</th><th>Inhalt</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><a href="../specs/2026-05-20-tailnet-adblock-design.html">2026-05-20-tailnet-adblock-design</a></td>
+              <td>v0.1.1 Entwurf, alle 5 Phasen umgesetzt</td>
+              <td>Tailnet-Werbeblocker — siehe Adblock-Journal</td>
+            </tr>
+            <tr>
+              <td><a href="../specs/2026-05-20-monitoring-stack-design.html">2026-05-20-monitoring-stack-design</a></td>
+              <td>v0.1.1 Entwurf · Tutor, Phase 1–3 + Dashboards umgesetzt</td>
+              <td>Heim-Monitoring-Stack</td>
+            </tr>
+            <tr>
+              <td><a href="../specs/2026-05-21-devops-control-daemon-design.html">2026-05-21-devops-control-daemon-design</a></td>
+              <td>v0.1.1 Entwurf</td>
+              <td>DevOps Control Daemon — REST-API auf Tailnet, Tailscale-Identity-Auth, Allowlist. Implementation steht aus.</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>Empfehlung (lt. RESUME): erst Grafana-Discrepancy klären, dann Loose Ends in Reihenfolge — ntfy zuerst, Query-Log danach, AGH-Compose-Migration und DoT-Diagnose parallel.</p>
+      </div>
+    </section>
+
+    <!-- ===== 11 CHANGELOG ===== -->
+    <section class="section" id="changelog" data-screen-label="11 Änderungen">
+      <div class="sec-head">
+        <div class="sec-num">11</div>
+        <div>
+          <div class="meta">№ 11 &nbsp;—&nbsp; ÄNDERUNGEN</div>
+          <h2>Versionshistorie.</h2>
+        </div>
+      </div>
+      <div class="prose">
+        <ul class="changelog">
+          <li>
+            <span class="date">21. Mai 2026</span>
+            <span class="ver">v1.0.0</span>
+            <span class="summary">Erstaufnahme des IST-Stands.</span>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <nav class="page-nav">
+      <a href="../index.html">
+        <span class="l">← Übersicht</span>
+        <span class="t">homelab</span>
+      </a>
+      <a href="../devops.html" class="next">
+        <span class="l">DevOps-Console →</span>
+        <span class="t">Live-Endpoints</span>
+      </a>
+    </nav>
+
+  </main>
+
+  <aside class="right-rail" aria-label="Auf dieser Seite">
+    <div class="rr-kicker">Auf dieser Seite</div>
+    <ul class="rr-list" id="rr-list"><!-- auto --></ul>
+
+    <div class="edit-link">
+      <a href="SETUP.md">Markdown-Quelle</a>
+    </div>
+  </aside>
+
+</div>
+
+<footer class="docfoot">
+  <div class="col">
+    <span class="l">Letzte Änderung</span>
+    <span class="v">21. Mai 2026</span>
+    <span>v1.0.0</span>
+  </div>
+  <div class="col">
+    <span class="l">Modus</span>
+    <span class="v">IST-Stand · lebend</span>
+  </div>
+  <div class="col">
+    <span class="l">Autor</span>
+    <span class="v">Alexander Schneider</span>
+    <span><a href="mailto:schneider@alexle135.de">schneider@alexle135.de</a></span>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const html = document.documentElement;
+  const themeBtn = document.getElementById('theme-toggle');
+  const saved = localStorage.getItem('doc-theme');
+  if (saved) html.setAttribute('data-theme', saved);
+  themeBtn?.addEventListener('click', () => {
+    const cur = html.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+    html.setAttribute('data-theme', cur);
+    localStorage.setItem('doc-theme', cur);
+  });
+
+  function buildRightRail() {
+    const ul = document.getElementById('rr-list');
+    if (!ul) return;
+    const headings = document.querySelectorAll('section.section h3');
+    ul.innerHTML = '';
+    headings.forEach(h => {
+      if (!h.id) {
+        h.id = (h.textContent || '').toLowerCase()
+          .replace(/[^a-z0-9äöüß ]/gi, '').trim().replace(/\s+/g, '-');
+      }
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+      a.href = '#' + h.id; a.textContent = h.textContent.trim();
+      li.appendChild(a); ul.appendChild(li);
+    });
+  }
+  buildRightRail();
+
+  const tocLinks = document.querySelectorAll('#toc a');
+  const sections = document.querySelectorAll('section.section');
+  const sectionObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const id = e.target.id;
+        tocLinks.forEach(a => a.parentElement.classList.toggle('active', a.getAttribute('href') === '#' + id));
+      }
+    });
+  }, { rootMargin: '-30% 0px -60% 0px' });
+  sections.forEach(s => sectionObserver.observe(s));
+
+  const headings = document.querySelectorAll('section.section h3');
+  const rrLinks = () => document.querySelectorAll('#rr-list a');
+  const headingObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const id = e.target.id;
+        rrLinks().forEach(a => a.parentElement.classList.toggle('active', a.getAttribute('href') === '#' + id));
+      }
+    });
+  }, { rootMargin: '-25% 0px -65% 0px' });
+  headings.forEach(h => headingObserver.observe(h));
+})();
+</script>
+
+</body>
+</html>

@@ -98,6 +98,18 @@ außerhalb des Repos kopieren und mit Datum benennen.
 | 2026-05-20  | Heim-Monitoring-Stack       | 0.1.1   | Entwurf · Tutor-Modus  |
 | 2026-05-21  | DevOps Control Daemon       | 0.1.1   | Entwurf                |
 
+## Lebende Doku
+
+| Pfad                                                                     | Zweck                                | Version |
+|--------------------------------------------------------------------------|--------------------------------------|---------|
+| [`docs/SETUP.md`](docs/SETUP.md)                                         | IST-Stand: Hosts, Dienste, Volumes   | 1.0.0   |
+| [`docs/runbooks/homelab-recovery.md`](docs/runbooks/homelab-recovery.md) | Wiederherstellung nach Total-Verlust | 1.0.0   |
+
+Trennung: **Spec** beschreibt vorher den Plan, **Doku** beschreibt
+jetzt den IST-Stand, **Runbook** ist die operative Schritt-Anleitung,
+**Journal** dokumentiert nachher den Verlauf einer Umsetzung
+(`Soll → Ist → Lernpunkt`).
+
 ## DevOps Console
 
 [`devops.html`](devops.html) ist die zweite Top-Level-Seite neben der

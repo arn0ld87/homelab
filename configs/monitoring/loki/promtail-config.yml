@@ -43,3 +43,26 @@ scrape_configs:
         target_label: 'container'
       - source_labels: ['__meta_docker_container_log_stream']
         target_label: 'stream'
+
+  # ───── 3) AdGuard-Querylog ─────────────────────────────────────────
+  # Original-JSON-Zeile bleibt im Body; ad-hoc Filter via `| json` in
+  # Grafana. Nur niedrig-kardinale Felder als Labels.
+  - job_name: adguard
+    static_configs:
+      - targets: [localhost]
+        labels:
+          job: adguard
+          host: cachyos
+          __path__: /var/agh-log/querylog.json*
+    pipeline_stages:
+      - json:
+          expressions:
+            ts: T
+            qtype: QT
+            upstream: Upstream
+      - labels:
+          qtype:
+          upstream:
+      - timestamp:
+          source: ts
+          format: RFC3339Nano

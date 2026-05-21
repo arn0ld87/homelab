@@ -15,7 +15,9 @@ route:
 receivers:
   - name: 'all-channels'
     webhook_configs:
-      - url: 'https://ntfy.sh/${NTFY_TOPIC}'
+      # ntfy via Bridge (alertmanager-ntfy) — formatiert Title/Tags/Priority
+      # aus Labels. Direkter Push an ntfy.sh würde nur rohes JSON liefern.
+      - url: 'http://127.0.0.1:9095/hook'
         send_resolved: true
         http_config:
           follow_redirects: true

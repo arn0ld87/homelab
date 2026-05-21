@@ -1,0 +1,23 @@
+# xenrox/ntfy-alertmanager — Bridge zwischen Alertmanager-Webhook und ntfy.
+#
+# Warum: Alertmanager schickt JSON-Body, ntfy steuert Title/Tags/Priority
+# über HTTP-Header. Direkt verdrahtet würde nur rohes JSON ankommen.
+#
+# Architektur:
+#   Alertmanager → http://127.0.0.1:9095 → ntfy.sh/${NTFY_TOPIC}
+#
+# Port 9095, weil 8080 = Weaviate (host), 9093 = Alertmanager,
+# 9094 = AM-Cluster-Port.
+#
+# Topic kommt aus ../alertmanager/.secrets.env (NTFY_TOPIC).
+# Config-Template wird via envsubst → config.scfg gerendert
+# (gleicher Pattern wie alertmanager.yml.tpl).
+
+services:
+  alertmanager-ntfy:
+    image: xenrox/ntfy-alertmanager:latest
+    container_name: alertmanager-ntfy
+    restart: unless-stopped
+    network_mode: host        # damit Alertmanager localhost:9095 erreicht
+    volumes:
+      - ./config.scfg:/etc/ntfy-alertmanager/config:ro

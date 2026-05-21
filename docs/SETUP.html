@@ -229,20 +229,20 @@
         <h3 data-num="3.1 — Service-Map">Service-Map</h3>
         <table class="data-table">
           <thead>
-            <tr><th>Dienst</th><th>Host</th><th>Port</th><th>Rolle</th></tr>
+            <tr><th>Dienst</th><th>Host</th><th>Port</th><th>Rolle</th><th>Quelle</th></tr>
           </thead>
           <tbody>
-            <tr><td>Prometheus</td><td>cachyos</td><td>9090</td><td>TSDB + Scraper</td></tr>
-            <tr><td>Grafana</td><td>cachyos</td><td>3001</td><td>UI (Default 3000 belegt durch AGH)</td></tr>
-            <tr><td>Loki</td><td>cachyos</td><td>3100</td><td>Log-Aggregation</td></tr>
-            <tr><td>Promtail</td><td>cachyos + server-ops</td><td>9080</td><td>Journal + Docker-Logs → Loki</td></tr>
-            <tr><td>ntopng</td><td>cachyos</td><td>3002</td><td>Flow-Analyse <code class="inline">wlan0</code></td></tr>
-            <tr><td>node_exporter</td><td>beide</td><td>9100</td><td>Host-Metriken</td></tr>
-            <tr><td>Alertmanager</td><td>server-ops</td><td>9093</td><td>ntfy + Telegram</td></tr>
-            <tr><td>Backrest</td><td>beide</td><td>9898</td><td>restic-UI (cachyos=Server, server-ops=Client)</td></tr>
-            <tr><td>AdGuard Home (Primary)</td><td>cachyos</td><td>53/3000</td><td>DNS + Adblock</td></tr>
-            <tr><td>AdGuard Home (Fallback)</td><td>server-ops</td><td>53/3000</td><td>DNS-Fallback + Sync-Origin</td></tr>
-            <tr><td>agh-sync</td><td>server-ops</td><td>—</td><td>Push Origin → Replica alle 5 min</td></tr>
+            <tr><td>Prometheus</td><td>cachyos</td><td>9090</td><td>TSDB + Scraper</td><td><a href="../configs/monitoring/prometheus/docker-compose.yml"><code class="inline">docker-compose.yml</code></a></td></tr>
+            <tr><td>Grafana</td><td>cachyos</td><td>3001</td><td>UI (Default 3000 belegt durch AGH)</td><td><a href="../configs/monitoring/grafana/docker-compose.yml"><code class="inline">docker-compose.yml</code></a></td></tr>
+            <tr><td>Loki</td><td>cachyos</td><td>3100</td><td>Log-Aggregation</td><td><a href="../configs/monitoring/loki/docker-compose.yml"><code class="inline">docker-compose.yml</code></a></td></tr>
+            <tr><td>Promtail</td><td>cachyos + server-ops</td><td>9080</td><td>Journal + Docker-Logs → Loki</td><td><a href="../configs/monitoring/loki/promtail-config.yml">cachyos</a>, <a href="../configs/monitoring/vps-agents/promtail/promtail-config.yml">server-ops</a></td></tr>
+            <tr><td>ntopng</td><td>cachyos</td><td>3002</td><td>Flow-Analyse <code class="inline">wlan0</code></td><td><a href="../configs/monitoring/ntopng/docker-compose.yml"><code class="inline">docker-compose.yml</code></a></td></tr>
+            <tr><td>node_exporter</td><td>beide</td><td>9100</td><td>Host-Metriken</td><td><a href="../configs/monitoring/node_exporter/docker-compose.yml"><code class="inline">docker-compose.yml</code></a></td></tr>
+            <tr><td>Alertmanager</td><td>server-ops</td><td>9093</td><td>ntfy + Telegram</td><td><a href="../configs/monitoring/alertmanager/docker-compose.yml"><code class="inline">docker-compose.yml</code></a></td></tr>
+            <tr><td>Backrest</td><td>beide</td><td>9898</td><td>restic-UI (cachyos=Server, server-ops=Client)</td><td><a href="../configs/monitoring/backrest/compose.yaml"><code class="inline">compose.yaml</code></a></td></tr>
+            <tr><td>AdGuard Home (Primary)</td><td>cachyos</td><td>53/3000</td><td>DNS + Adblock</td><td><a href="../configs/agh-cachyos/docker-compose.yml"><code class="inline">docker-compose.yml</code></a></td></tr>
+            <tr><td>AdGuard Home (Fallback)</td><td>server-ops</td><td>53/3000</td><td>DNS-Fallback + Sync-Origin</td><td>nicht im Repo (bare-metal)</td></tr>
+            <tr><td>agh-sync</td><td>server-ops</td><td>—</td><td>Push Origin → Replica alle 5 min</td><td><a href="../configs/agh-sync/docker-compose.yml"><code class="inline">docker-compose.yml</code></a></td></tr>
           </tbody>
         </table>
       </div>

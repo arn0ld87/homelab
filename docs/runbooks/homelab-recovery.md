@@ -126,7 +126,7 @@ wenn die Voraussetzungen aus §2 alle da sind.
      --include /var/lib/docker/volumes
    sudo cp -a /tmp/restore/home/alex/monitoring/. ~/monitoring/
    sudo cp -a /tmp/restore/home/alex/adguard      /home/alex/adguard
-   sudo cp -a /tmp/restore/var/lib/docker/volumes/* /var/lib/docker/volumes/
+   sudo cp -a /tmp/restore/var/lib/docker/volumes/. /var/lib/docker/volumes/
    ```
    Volumes-Restore nur, wenn Prometheus-TSDB / Loki-Chunks /
    Grafana-DB wirklich gebraucht werden. Wer mit leerem TSDB starten
@@ -199,7 +199,10 @@ Backrest-Client. Recovery-Zeit realistisch 45–60 min.
    damit ACLs greifen):
    ```bash
    curl -fsSL https://tailscale.com/install.sh | sh
-   tailscale up --hostname=server-ops --authkey=${TAILSCALE_AUTHKEY}
+   # --accept-dns=false aus dem gleichen Grund wie auf cachyos (Schritt 3):
+   # der Host soll seinen eigenen AGH-Resolver (Primary) selbst betreiben
+   # und nicht via MagicDNS überschrieben werden.
+   tailscale up --hostname=server-ops --authkey=${TAILSCALE_AUTHKEY} --accept-dns=false
    tailscale ip -4   # erwartet 100.92.62.9 oder neue IP
    ```
 4. **Docker + Compose.**
@@ -259,6 +262,10 @@ Backrest-Client. Recovery-Zeit realistisch 45–60 min.
     `~/agh/docker-compose.yml` (Schritt 5 oben). AGH-yaml-Restore
     optional aus Restic-Snapshot:
     ```bash
+    # Passphrase aus Bitwarden-Eintrag "Homelab · restic · server-ops"
+    # in lokale Datei mit chmod 600. Niemals committen.
+    echo -n "${RESTIC_PASSWORD}" > ~/restic-passphrase.txt
+    chmod 600 ~/restic-passphrase.txt
     export RESTIC_REPOSITORY="rclone:gdrive:homelab-backups-restic/vps"
     export RESTIC_PASSWORD_FILE=~/restic-passphrase.txt
     restic restore latest --target /tmp/restore --include /home/admin/agh

@@ -102,7 +102,7 @@ Das ist die **lebende Beschreibung** des laufenden Homelab-Setups — was wo lä
 | Prometheus | cachyos | 9090 | TSDB + Scraper | [docker-compose.yml](configs/monitoring/prometheus/docker-compose.yml) |
 | Grafana | cachyos | 3001 | UI (Default 3000 belegt durch AGH) | [docker-compose.yml](configs/monitoring/grafana/docker-compose.yml) |
 | Loki | cachyos | 3100 | Log-Aggregation | [docker-compose.yml](configs/monitoring/loki/docker-compose.yml) |
-| Promtail | cachyos + server-ops | 9080 (interne HTTP) | Journal + Docker-Logs → Loki | [promtail-config.yml](configs/monitoring/loki/promtail-config.yml) |
+| Promtail | cachyos + server-ops | 9080 (interne HTTP) | Journal + Docker-Logs → Loki | [cachyos](configs/monitoring/loki/promtail-config.yml), [server-ops](configs/monitoring/vps-agents/promtail/promtail-config.yml) |
 | ntopng | cachyos | 3002 | Flow-Analyse `wlan0` | [docker-compose.yml](configs/monitoring/ntopng/docker-compose.yml) |
 | node_exporter | beide | 9100 | Host-Metriken | [docker-compose.yml](configs/monitoring/node_exporter/docker-compose.yml) |
 | Alertmanager | server-ops | 9093 | ntfy + Telegram | [docker-compose.yml](configs/monitoring/alertmanager/docker-compose.yml) |

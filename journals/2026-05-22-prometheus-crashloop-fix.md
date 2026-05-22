@@ -63,11 +63,17 @@
 
 Das `"` → `.` deutet auf einen Editor- oder `sed`-Unfall hin. Hätte das File über den Repo-Workflow geändert, wäre der Bug entweder beim `git diff` aufgefallen oder beim CI-`promtool`-Check. Beides existiert aktuell nicht — siehe Folgearbeit.
 
-## Folgearbeit (offen)
+## Folgearbeit
 
-- [ ] `promtool check rules` als Pre-Commit-Hook für `configs/monitoring/prometheus/*.yml`.
-- [ ] CI-Step in GitHub Actions: Rules + Config-Validierung bei jedem PR auf `configs/monitoring/**`.
-- [ ] Ein Skript / `Makefile`-Target `make deploy-monitoring`, das `alert-rules.yml` + `prometheus.yml` aus dem Repo deployt und `curl -X POST http://localhost:9090/-/reload` triggert. Damit „Host-Edit" gar nicht erst nötig ist.
-- [ ] Drift-Check als Cron auf cachyos: `sha256sum` der deployten Files vs. erwarteter Hash → ntfy bei Mismatch.
-- [ ] cadvisor auf VPS prüfen — Container down, separater Vorgang.
-- [ ] [SETUP.md](../docs/SETUP.md) ergänzen um Hinweis, dass Threshold-Tuning ein Repo-Workflow ist, kein Host-Workflow.
+**Erledigt am 2026-05-22 (Folge-Session):**
+
+- [x] Pre-Commit-Hook für `configs/**` → [.pre-commit-config.yaml](../.pre-commit-config.yaml), ruft `make validate`.
+- [x] GitHub Actions CI: promtool + yamllint + `docker compose config` bei jedem PR → [.github/workflows/validate.yml](../.github/workflows/validate.yml).
+- [x] `make deploy-monitoring` → scp + `curl -X POST /-/reload` (Prometheus hat `--web.enable-lifecycle` an, kein Container-Restart mehr nötig). Siehe [Makefile](../Makefile).
+- [x] `make drift` → `sha256sum` deploy ↔ Repo, markiert Mismatches sofort.
+- [x] cadvisor auf VPS: lief auf `127.0.0.1:8180` (Bridge-Mode) statt Tailnet-IP. Repo enthält jetzt [configs/monitoring/vps-cadvisor/docker-compose.yml](../configs/monitoring/vps-cadvisor/docker-compose.yml) mit `network_mode: host` + `--port=8180` (analog `node_exporter`), Image gepinnt auf `v0.49.1`. Target: `up=1 down=0`.
+
+**Noch offen:**
+
+- [ ] Drift-Check als Cron auf cachyos: `make drift` per `systemd.timer` → ntfy bei Mismatch (proaktiv statt manuell).
+- [ ] [SETUP.md](../docs/SETUP.md) ergänzen um Hinweis, dass Tuning ein Repo-Workflow ist (`make deploy-monitoring`), kein Host-Workflow.

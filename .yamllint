@@ -1,0 +1,17 @@
+# yamllint config für homelab — pragmatisch, kein Style-Zwang.
+# Was wirklich kaputt geht (Indentation, Syntax), wird gefangen.
+
+extends: default
+
+rules:
+  line-length: disable        # Prometheus-Expressions können lang sein.
+  comments-indentation: disable
+  comments:
+    min-spaces-from-content: 1
+  document-start: disable     # `---` ist optional bei single-doc.
+  truthy:
+    allowed-values: ['true', 'false', 'on', 'off']
+    check-keys: false         # GitHub Actions nutzt `on:` als Key.
+  indentation:
+    spaces: 2
+    indent-sequences: consistent

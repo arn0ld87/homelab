@@ -1,0 +1,73 @@
+name: validate-monitoring
+
+# Verhindert Drift Repo ↔ Hosts.
+# Prüft alles, was beim 2026-05-22-Crash-Loop versagt hat:
+#   - promtool für Rules + prometheus.yml
+#   - yamllint für alle YAMLs unter configs/
+#   - docker compose config für alle Stacks
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'configs/**'
+      - '.github/workflows/validate.yml'
+  pull_request:
+    paths:
+      - 'configs/**'
+      - '.github/workflows/validate.yml'
+
+jobs:
+  prometheus:
+    name: promtool check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: promtool check rules
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}/configs/monitoring/prometheus":/etc/prometheus:ro \
+            --entrypoint promtool \
+            prom/prometheus:latest \
+            check rules /etc/prometheus/alert-rules.yml
+      - name: promtool check config
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}/configs/monitoring/prometheus":/etc/prometheus:ro \
+            --entrypoint promtool \
+            prom/prometheus:latest \
+            check config /etc/prometheus/prometheus.yml
+
+  yamllint:
+    name: yamllint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install yamllint
+        run: pip install yamllint
+      - name: Lint
+        run: yamllint -c .yamllint configs/
+
+  compose-config:
+    name: docker compose config
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate alle compose-Stacks
+        run: |
+          set -e
+          fail=0
+          while IFS= read -r f; do
+            dir=$(dirname "$f")
+            tmpenv=""
+            if [ -f "$dir/.env.example" ] && [ ! -f "$dir/.env" ]; then
+              cp "$dir/.env.example" "$dir/.env"
+              tmpenv="$dir/.env"
+              echo "--- $f (using .env.example as tmp .env)"
+            else
+              echo "--- $f"
+            fi
+            docker compose -f "$f" config -q || fail=1
+            [ -n "$tmpenv" ] && rm -f "$tmpenv"
+          done < <(find configs -name 'docker-compose.yml' -o -name 'compose.yaml')
+          exit $fail

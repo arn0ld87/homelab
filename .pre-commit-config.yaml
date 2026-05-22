@@ -1,0 +1,13 @@
+# Aktivieren: `pre-commit install` (einmalig pro Clone).
+# Läuft `make validate` vor jedem Commit, der configs/ anfasst.
+
+repos:
+  - repo: local
+    hooks:
+      - id: validate-monitoring
+        name: validate monitoring configs (promtool + yamllint + compose)
+        entry: make validate
+        language: system
+        pass_filenames: false
+        files: ^configs/.*\.(yml|yaml)$
+        stages: [pre-commit]

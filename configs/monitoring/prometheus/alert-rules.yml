@@ -129,13 +129,13 @@ groups:
           description: "FD-Limit fast erreicht — Container/Dienst könnte bald keine Verbindungen mehr annehmen."
 
       - alert: DiskReadSpike
-        expr: rate(node_disk_reads_completed_total{host="vps", device=~"sd.*"}[10m]) * 60 > 500
+        expr: rate(node_disk_reads_completed_total{host="vps", device=~"sd.*"}[10m]) * 60 > 2000
         for: 10m
         labels:
           severity: warning
         annotations:
           summary: "Massive Disk-Reads: {{ $value | printf \"%.0f\" }} IOPS auf VPS"
-          description: "Hohe Lese-IOPS — möglicher Massenscan (grep/find über Filesystem) oder Backup-Amok."
+          description: "Hohe reine Lese-IOPS (>2000) — möglicher Massenscan (grep/find) oder Backup-Amok. Systemd-Journal-Writes schlagen hier NICHT an."
 
       - alert: RebootDetected
         expr: node_boot_time_seconds{host="vps"} != node_boot_time_seconds{host="vps"} offset 5m
